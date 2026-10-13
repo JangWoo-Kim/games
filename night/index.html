@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>밤의 교실</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Brush+Script&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* A dark classroom: the whole scene is covered by darkness except a flashlight beam that follows your finger.
+   Single fixed night palette by design. Fits one phone screen (scene sized by JS). */
+:root{
+  --bg:#0A0B10; --panel:#161922; --panel2:#1F2430; --ink:#E9ECF2; --muted:#8C93A3;
+  --accent:#C7F0FF; --blood:#E0565B; --uv:#B07CFF; --line:#2A3040;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;overflow-x:hidden}
+.wrap{max-width:480px;margin:0 auto;padding-inline:12px;padding-block:8px 10px;display:flex;flex-direction:column;gap:8px;height:100%;min-height:520px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
+h1{font-family:"Nanum Brush Script","Gothic A1",sans-serif;font-weight:400;font-size:34px;margin:0;line-height:1;color:#F2F4F8;text-shadow:0 0 12px rgba(199,240,255,.25)}
+.chips{display:flex;gap:6px;align-items:center}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.iconBtn{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-size:13px}
+.hintBtn{background:var(--accent);color:#0A0B10;border:0;border-radius:999px;padding:7px 11px;font-weight:800;font-size:13px}
+.stage{flex:1 1 0;min-height:0;display:flex;justify-content:center;align-items:center}
+#scene{display:block;border-radius:14px;border:2px solid var(--line);background:#000;touch-action:none}
+#scene [data-obj]{cursor:pointer}
+.flick{animation:flick .5s steps(2) 1}
+@keyframes flick{0%{filter:brightness(.1)}40%{filter:brightness(1)}60%{filter:brightness(.05)}100%{filter:none}}
+.msg{flex:none;min-height:46px;background:var(--panel);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.45;display:flex;align-items:center}
+.msg.pop{animation:pop .25s ease}
+.msg.scary{color:#FFB3B5}
+@keyframes pop{from{opacity:.4}to{opacity:1}}
+.bagHead{flex:none;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.bag{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.slot{height:62px;min-width:0;background:var(--panel);border:2px dashed var(--line);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:24px;padding:2px}
+.slot small{font-size:10px;color:var(--muted);font-weight:600;white-space:nowrap}
+.slot.has{border-style:solid;background:var(--panel2)}
+.slot.sel{border-color:var(--uv);box-shadow:0 0 0 3px rgba(176,124,255,.35)}
+.slot.sel small{color:var(--uv)}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.card h2{font-family:"Nanum Brush Script","Gothic A1",sans-serif;font-weight:400;font-size:38px;margin:0;line-height:1.1}
+.card p{margin:0;line-height:1.65;color:var(--muted)}
+.big{background:var(--accent);color:#0A0B10;border:0;border-radius:12px;padding:12px;font-weight:800;font-size:16px}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:12px;padding:10px;font-weight:700}
+.paper{background:#E9E4D6;color:#2A2622;border-radius:4px;padding:16px;font-family:"Nanum Brush Script","Gothic A1",sans-serif;font-size:26px;line-height:1.35;transform:rotate(1.5deg);box-shadow:0 4px 0 rgba(0,0,0,.4)}
+.dials{display:flex;justify-content:center;gap:10px}
+.dial{display:flex;flex-direction:column;align-items:center;gap:6px}
+.dial button{width:52px;height:38px;border-radius:10px;border:0;background:var(--panel2);font-size:16px}
+.dial .d{width:52px;height:58px;border-radius:10px;background:#05070A;color:#C7F0FF;font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;border:1px solid var(--line)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.stats .chip{font-size:15px}
+#scare{position:fixed;inset:0;z-index:20;background:#000;display:flex;align-items:center;justify-content:center}
+#scare svg{width:min(80vw,380px);height:auto;animation:lunge .9s ease-out forwards}
+@keyframes lunge{0%{transform:scale(.3);opacity:0}15%{transform:scale(1.05);opacity:1}70%{transform:scale(1.15)}100%{transform:scale(1.4);opacity:0}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>밤의 교실</h1>
+    <div class="chips">
+      <span class="chip" id="timer">0:00</span>
+      <button class="iconBtn" id="snd" aria-label="소리">🔊</button>
+      <button class="hintBtn" id="hintBtn">💡 힌트</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <svg id="scene" viewBox="0 0 360 400" aria-label="어두운 교실">
+      <defs>
+        <radialGradient id="beamG">
+          <stop offset="0" stop-color="#000"/>
+          <stop offset=".55" stop-color="#111"/>
+          <stop offset="1" stop-color="#fff"/>
+        </radialGradient>
+        <mask id="darkMask" maskUnits="userSpaceOnUse" x="0" y="0" width="360" height="400">
+          <rect width="360" height="400" fill="#fff"/>
+          <circle id="beamHole" cx="180" cy="220" r="74" fill="url(#beamG)"/>
+        </mask>
+        <filter id="glow"><feGaussianBlur stdDeviation="1.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+
+      <!-- room -->
+      <rect width="360" height="272" fill="#2B3446"/>
+      <rect y="262" width="360" height="10" fill="#222A38"/>
+      <rect y="272" width="360" height="128" fill="#1D2230"/>
+      <g stroke="#262C3B" stroke-width="2">
+        <line x1="0" y1="300" x2="360" y2="300"/><line x1="0" y1="334" x2="360" y2="334"/><line x1="0" y1="370" x2="360" y2="370"/>
+        <line x1="60" y1="272" x2="40" y2="400"/><line x1="140" y1="272" x2="130" y2="400"/><line x1="220" y1="272" x2="230" y2="400"/><line x1="300" y1="272" x2="320" y2="400"/>
+      </g>
+      <g fill="#3A2A2A" opacity=".5"><ellipse cx="200" cy="30" rx="30" ry="6"/><ellipse cx="60" cy="200" rx="8" ry="20"/></g>
+
+      <!-- window + moon -->
+      <g data-obj="window">
+        <rect x="16" y="36" width="76" height="108" fill="#16233A" stroke="#4A4A50" stroke-width="5"/>
+        <circle cx="62" cy="64" r="15" fill="#E8EED9"/><circle cx="56" cy="60" r="3" fill="#C9D0BC"/>
+        <line x1="54" y1="36" x2="54" y2="144" stroke="#4A4A50" stroke-width="4"/>
+        <line x1="16" y1="90" x2="92" y2="90" stroke="#4A4A50" stroke-width="4"/>
+        <g id="winGhost" display="none" opacity=".85">
+          <path d="M28,140 Q28,98 44,98 Q60,98 60,140 L55,134 L50,140 L44,134 L39,140 L34,134 Z" fill="#E9F2F5"/>
+          <ellipse cx="39" cy="114" rx="3" ry="5" fill="#000"/><ellipse cx="49" cy="114" rx="3" ry="5" fill="#000"/>
+          <ellipse cx="44" cy="126" rx="3" ry="4" fill="#000"/>
+        </g>
+      </g>
+
+      <!-- blackboard -->
+      <g data-obj="board">
+        <rect x="108" y="44" width="170" height="92" rx="2" fill="#1E3A2D" stroke="#5A4632" stroke-width="5"/>
+        <text x="122" y="70" font-size="14" fill="#AFC2B5" opacity=".7" font-family="Nanum Brush Script,sans-serif">숙제: 없음</text>
+        <text x="200" y="100" font-size="20" fill="#AFC2B5" opacity=".35" font-family="Nanum Brush Script,sans-serif">나 가 지 마</text>
+        <rect x="120" y="136" width="50" height="5" fill="#5A4632"/>
+        <g id="uvBoard" display="none" filter="url(#glow)">
+          <text x="193" y="124" text-anchor="middle" font-size="18" fill="#C9A2FF" font-family="Nanum Brush Script,sans-serif">문 비밀번호 앞자리 → 0 7</text>
+        </g>
+      </g>
+
+      <!-- clock stopped at 4:44 -->
+      <g data-obj="clock">
+        <circle cx="322" cy="44" r="17" fill="#D9D6CC" stroke="#4A4A50" stroke-width="3"/>
+        <line x1="322" y1="44" x2="322" y2="35" stroke="#222" stroke-width="3" stroke-linecap="round" transform="rotate(142 322 44)"/>
+        <line x1="322" y1="44" x2="322" y2="31" stroke="#222" stroke-width="2" stroke-linecap="round" transform="rotate(264 322 44)"/>
+        <circle cx="322" cy="44" r="2" fill="#A33"/>
+      </g>
+
+      <!-- lockers 11-14 -->
+      <g data-obj="locker">
+        <rect x="14" y="166" width="84" height="104" fill="#3C4A5C"/>
+        <g stroke="#2A3443" stroke-width="2" fill="#475870">
+          <rect x="16" y="168" width="19" height="100"/><rect x="37" y="168" width="19" height="100"/><rect x="58" y="168" width="19" height="100"/><rect x="79" y="168" width="17" height="100"/>
+        </g>
+        <g fill="#2A3443"><rect x="20" y="176" width="11" height="2"/><rect x="41" y="176" width="11" height="2"/><rect x="62" y="176" width="11" height="2"/><rect x="83" y="176" width="9" height="2"/></g>
+        <g font-size="8" fill="#C8D2DE" font-weight="800" font-family="Gothic A1,sans-serif" text-anchor="middle">
+          <text x="25" y="194">11</text><text x="46" y="194">12</text><text x="67" y="194">13</text><text x="87" y="194">14</text>
+        </g>
+        <g id="padlock"><rect x="62" y="214" width="10" height="9" rx="1" fill="#B9A15A"/><path d="M64,214 v-3 a3,3 0 0 1 6,0 v3" fill="none" stroke="#B9A15A" stroke-width="1.6"/></g>
+        <g id="lockerOpen" display="none">
+          <rect x="58" y="168" width="19" height="100" fill="#0B0D12"/>
+          <polygon points="58,168 46,174 46,262 58,268" fill="#5A6C86"/>
+        </g>
+      </g>
+
+      <!-- trash bin -->
+      <g data-obj="trash">
+        <polygon points="104,240 128,240 125,270 107,270" fill="#59606E"/>
+        <rect x="102" y="237" width="28" height="5" rx="2" fill="#6B7383"/>
+        <circle cx="113" cy="236" r="4" fill="#D8D2C2"/>
+      </g>
+
+      <!-- teacher desk -->
+      <g data-obj="desk">
+        <rect x="146" y="196" width="96" height="10" fill="#5A4632"/>
+        <rect x="150" y="206" width="88" height="64" fill="#4A3A2A"/>
+        <rect x="180" y="214" width="28" height="14" rx="2" fill="#3A2E22" stroke="#2A2018"/>
+        <circle cx="194" cy="221" r="2.4" fill="#B9A15A"/>
+        <rect x="162" y="186" width="24" height="10" fill="#7A6A5A"/><rect x="164" y="182" width="20" height="4" fill="#8F7F6E"/>
+        <g id="deskOpen" display="none"><rect x="176" y="226" width="36" height="10" fill="#2A2018"/></g>
+      </g>
+
+      <!-- skeleton model -->
+      <g data-obj="skeleton">
+        <rect x="270" y="262" width="20" height="6" fill="#4A4A50"/><rect x="278" y="150" width="4" height="114" fill="#4A4A50"/>
+        <g fill="#DCD8CC" stroke="#9E9A8F" stroke-width=".8">
+          <ellipse cx="280" cy="150" rx="11" ry="12"/>
+          <rect x="277" y="162" width="6" height="8"/>
+          <g fill="none" stroke="#DCD8CC" stroke-width="2.6">
+            <path d="M270,174 q10,4 20,0"/><path d="M269,181 q11,4 22,0"/><path d="M270,188 q10,4 20,0"/><path d="M271,195 q9,3 18,0"/>
+            <line x1="280" y1="170" x2="280" y2="215"/>
+            <path d="M268,172 L260,200 L262,224"/><path d="M292,172 L300,200 L298,224"/>
+            <path d="M274,218 L270,248 L268,262"/><path d="M286,218 L290,248 L292,262"/>
+          </g>
+          <ellipse cx="280" cy="216" rx="11" ry="5"/>
+        </g>
+        <ellipse cx="276" cy="148" rx="3" ry="4" fill="#111"/><ellipse cx="284" cy="148" rx="3" ry="4" fill="#111"/>
+        <path d="M274,156 h12" stroke="#111" stroke-width="1.5"/>
+        <g id="uvSkel" display="none" filter="url(#glow)">
+          <text x="280" y="208" text-anchor="middle" font-size="11" font-weight="800" fill="#C9A2FF" font-family="Gothic A1,sans-serif">3 1</text>
+          <text x="280" y="236" text-anchor="middle" font-size="8" fill="#C9A2FF" font-family="Gothic A1,sans-serif">뒷자리</text>
+        </g>
+      </g>
+
+      <!-- door -->
+      <g data-obj="door">
+        <rect x="300" y="100" width="54" height="170" fill="#3D3226"/>
+        <rect x="306" y="108" width="42" height="40" fill="#22303F" stroke="#2A2018" stroke-width="2"/>
+        <rect x="306" y="156" width="42" height="104" fill="none" stroke="#2A2018" stroke-width="2"/>
+        <rect x="306" y="186" width="14" height="20" rx="2" fill="#1A1E26" stroke="#555"/>
+        <g fill="#9BB"><circle cx="310" cy="191" r="1.2"/><circle cx="313" cy="191" r="1.2"/><circle cx="316" cy="191" r="1.2"/><circle cx="310" cy="196" r="1.2"/><circle cx="313" cy="196" r="1.2"/><circle cx="316" cy="196" r="1.2"/><circle cx="313" cy="201" r="1.2"/></g>
+        <circle cx="342" cy="196" r="4" fill="#B9A15A"/>
+        <text x="327" y="96" text-anchor="middle" font-size="9" fill="#8C93A3" font-family="Gothic A1,sans-serif">5-3</text>
+        <g id="doorOpen" display="none">
+          <rect x="300" y="100" width="54" height="170" fill="#0C1A10"/>
+          <rect x="300" y="100" width="54" height="170" fill="#5BE08A" opacity=".18"/>
+          <polygon points="300,100 288,94 288,276 300,270" fill="#3D3226"/>
+        </g>
+      </g>
+
+      <!-- student desks -->
+      <g data-obj="desks">
+        <g fill="#5A4A3A"><rect x="26" y="300" width="84" height="10"/><rect x="140" y="300" width="84" height="10"/><rect x="254" y="300" width="84" height="10"/></g>
+        <g fill="#3E3328"><rect x="30" y="310" width="6" height="44"/><rect x="100" y="310" width="6" height="44"/><rect x="144" y="310" width="6" height="44"/><rect x="214" y="310" width="6" height="44"/><rect x="258" y="310" width="6" height="44"/><rect x="328" y="310" width="6" height="44"/></g>
+        <g fill="#2E3542"><rect x="50" y="340" width="40" height="8"/><rect x="164" y="340" width="40" height="8"/><rect x="278" y="340" width="40" height="8"/></g>
+        <text x="182" y="307" text-anchor="middle" font-size="7" fill="#C8B8A0" opacity=".6" font-family="Gothic A1,sans-serif">뒤를 보지마</text>
+      </g>
+
+      <!-- darkness + beam -->
+      <rect id="dark" width="360" height="400" fill="#020306" opacity=".9" mask="url(#darkMask)" pointer-events="none"/>
+      <circle id="beamTint" cx="180" cy="220" r="60" fill="#8A4DFF" opacity="0" pointer-events="none"/>
+    </svg>
+  </div>
+
+  <div class="msg" id="msg">화면을 문질러 손전등을 비추고, 비친 물건을 눌러 살펴보세요.</div>
+  <div class="bagHead">가방 · 아이템을 골라 쓸 곳을 누르세요</div>
+  <div class="bag" id="bag"></div>
+</div>
+
+<div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
+<div id="scare" hidden>
+  <svg viewBox="0 0 200 220">
+    <ellipse cx="100" cy="100" rx="78" ry="92" fill="#E8E6E1"/>
+    <path d="M30,60 Q100,-20 170,60 L172,40 Q100,-40 28,40 Z" fill="#1A1A1A"/>
+    <path d="M24,70 Q20,170 40,200 L50,120 Z M176,70 Q180,170 160,200 L150,120 Z" fill="#1A1A1A"/>
+    <ellipse cx="70" cy="95" rx="16" ry="20" fill="#000"/><ellipse cx="130" cy="95" rx="16" ry="20" fill="#000"/>
+    <circle cx="72" cy="98" r="3" fill="#E0565B"/><circle cx="132" cy="98" r="3" fill="#E0565B"/>
+    <path d="M60,150 Q100,175 140,150" fill="none" stroke="#000" stroke-width="4"/>
+    <g stroke="#000" stroke-width="2.5"><line x1="70" y1="146" x2="70" y2="160"/><line x1="85" y1="152" x2="85" y2="166"/><line x1="100" y1="155" x2="100" y2="169"/><line x1="115" y1="152" x2="115" y2="166"/><line x1="130" y1="146" x2="130" y2="160"/></g>
+  </svg>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const svg = $('scene');
+  const R = 74;
+  const ITEMS = {
+    note:{icon:'📄', name:'구겨진 쪽지', read:true},
+    deskKey:{icon:'🔑', name:'교탁 열쇠'},
+    uv:{icon:'🔦', name:'보라색 손전등'}
+  };
+  const LOCKER_CODE = [4,4,4], DOOR_CODE = [0,7,3,1];
+  const BEST_KEY = 'night1:best';
+  let S;
+  function reset(){
+    S = {inv:[], sel:null, note:false, locker:false, desk:false, uvBoard:false, uvSkel:false, escaped:false,
+         hints:0, t0:0, running:false, light:{x:180,y:220}, windowSeen:0};
+  }
+
+  // ---------- sound (Web Audio, starts on first button press)
+  let AC = null, master = null, muted = false;
+  function audioInit(){
+    if (AC) { AC.resume && AC.resume(); return; }
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      master = AC.createGain(); master.gain.value = muted ? 0 : 0.9; master.connect(AC.destination);
+      // low ambient drone
+      const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 180;
+      const g = AC.createGain(); g.gain.value = 0.05; lp.connect(g); g.connect(master);
+      [55, 58.3, 82.5].forEach(f => { const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(lp); o.start(); });
+      const lfo = AC.createOscillator(), lg = AC.createGain(); lfo.frequency.value = 0.12; lg.gain.value = 0.03; lfo.connect(lg); lg.connect(g.gain); lfo.start();
+    } catch(e){ AC = null; }
+  }
+  function noiseBuf(sec){ const b = AC.createBuffer(1, AC.sampleRate*sec, AC.sampleRate), d = b.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1; return b; }
+  function stinger(){
+    if (!AC) return; const t = AC.currentTime;
+    [196, 277, 370, 523].forEach((f,i) => {
+      const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f*1.06, t+0.8);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t+0.03); g.gain.exponentialRampToValueAtTime(0.0001, t+1.1);
+      o.connect(g); g.connect(master); o.start(t); o.stop(t+1.2);
+    });
+    const n = AC.createBufferSource(), ng = AC.createGain(), hp = AC.createBiquadFilter(); n.buffer = noiseBuf(0.6); hp.type = 'highpass'; hp.frequency.value = 1500;
+    ng.gain.setValueAtTime(0.25, t); ng.gain.exponentialRampToValueAtTime(0.0001, t+0.6); n.connect(hp); hp.connect(ng); ng.connect(master); n.start(t);
+  }
+  function creak(){
+    if (!AC) return; const t = AC.currentTime;
+    const n = AC.createBufferSource(), bp = AC.createBiquadFilter(), g = AC.createGain(); n.buffer = noiseBuf(1.2);
+    bp.type = 'bandpass'; bp.Q.value = 18; bp.frequency.setValueAtTime(300, t); bp.frequency.linearRampToValueAtTime(900, t+0.5); bp.frequency.linearRampToValueAtTime(400, t+1.1);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5, t+0.1); g.gain.exponentialRampToValueAtTime(0.0001, t+1.2);
+    n.connect(bp); bp.connect(g); g.connect(master); n.start(t);
+  }
+  function whisper(){
+    if (!AC) return; const t = AC.currentTime;
+    const n = AC.createBufferSource(), bp = AC.createBiquadFilter(), g = AC.createGain(); n.buffer = noiseBuf(1.6);
+    bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 3;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.08, t+0.4); g.gain.linearRampToValueAtTime(0.0001, t+1.5);
+    n.connect(bp); bp.connect(g); g.connect(master); n.start(t);
+  }
+  function click(){
+    if (!AC) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'square'; o.frequency.value = 900; g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.0001, t+0.06);
+    o.connect(g); g.connect(master); o.start(t); o.stop(t+0.07);
+  }
+  $('snd').onclick = () => {
+    muted = !muted; $('snd').textContent = muted ? '🔇' : '🔊';
+    if (master) master.gain.value = muted ? 0 : 0.9;
+  };
+
+  // ---------- layout fit
+  const stage = document.querySelector('.stage');
+  function fit(){
+    const r = stage.getBoundingClientRect();
+    const w = Math.max(200, Math.min(r.width, r.height * 0.9));
+    svg.style.width = w + 'px'; svg.style.height = (w / 0.9) + 'px';
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(stage);
+  window.addEventListener('resize', fit); fit();
+
+  // ---------- flashlight
+  function toSvg(e){
+    const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    const m = svg.getScreenCTM(); return m ? p.matrixTransform(m.inverse()) : {x:180,y:220};
+  }
+  function setLight(x, y){
+    S.light = {x, y};
+    $('beamHole').setAttribute('cx', x); $('beamHole').setAttribute('cy', y);
+    $('beamTint').setAttribute('cx', x); $('beamTint').setAttribute('cy', y);
+  }
+  function beamColor(){ $('beamTint').setAttribute('opacity', S.sel === 'uv' ? '.22' : '0'); }
+  svg.addEventListener('pointermove', e => { if (!S || !S.running) return; const p = toSvg(e); setLight(p.x, p.y); });
+  svg.addEventListener('pointerdown', e => { if (!S || !S.running) return; if (e.pointerType !== 'mouse') { const p = toSvg(e); S.pendingDown = p; } });
+  svg.addEventListener('click', e => { if (!S || !S.running) return; const p = toSvg(e); setLight(p.x, p.y); });
+
+  // ---------- render helpers
+  function show(id, on){ $(id).setAttribute('display', on ? 'inline' : 'none'); }
+  function render(){
+    show('lockerOpen', S.locker); show('padlock', !S.locker); show('deskOpen', S.desk);
+    show('uvBoard', S.uvBoard); show('uvSkel', S.uvSkel); show('doorOpen', S.escaped);
+    beamColor();
+    const bag = $('bag'); bag.innerHTML = '';
+    for (let i = 0; i < 4; i++){
+      const k = S.inv[i], b = document.createElement('button');
+      b.className = 'slot' + (k ? ' has' : '') + (k && S.sel === k ? ' sel' : '');
+      if (k){ b.innerHTML = `${ITEMS[k].icon}<small>${ITEMS[k].name}</small>`; b.onclick = () => tapItem(k); }
+      else b.disabled = true;
+      bag.appendChild(b);
+    }
+  }
+  function say(t, scary){
+    const m = $('msg'); m.textContent = t; m.classList.toggle('scary', !!scary);
+    m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop');
+  }
+  function give(k){ if (!S.inv.includes(k)) S.inv.push(k); }
+  function take(k){ S.inv = S.inv.filter(x => x !== k); if (S.sel === k) S.sel = null; }
+  function flicker(){ svg.classList.remove('flick'); void svg.offsetWidth; svg.classList.add('flick'); }
+  function jumpScare(after){
+    $('scare').hidden = false; stinger();
+    setTimeout(() => { $('scare').hidden = true; after && after(); }, 950);
+  }
+
+  // ---------- timer
+  function fmt(ms){ const s = Math.floor(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+  function fmtKo(ms){ const s = Math.floor(ms/1000), m = Math.floor(s/60); return m ? `${m}분 ${s%60}초` : `${s%60}초`; }
+  setInterval(() => { if (S && S.running) $('timer').textContent = fmt(Date.now() - S.t0); }, 500);
+
+  // ---------- random spooky events
+  let spookT = null;
+  function scheduleSpook(){
+    clearTimeout(spookT);
+    spookT = setTimeout(() => {
+      if (!S.running || !$('ov').hidden) { scheduleSpook(); return; }
+      const r = Math.random();
+      if (r < 0.34){ flicker(); say('손전등이 깜빡였다… 배터리 탓이겠지?', true); }
+      else if (r < 0.67){ whisper(); say('…어디선가 속삭이는 소리가 들린다. "같이 놀자…"', true); }
+      else { show('winGhost', true); whisper(); say('창문 쪽에서 무언가 움직인 것 같다…!', true); setTimeout(() => show('winGhost', false), 1600); }
+      scheduleSpook();
+    }, 28000 + Math.random()*22000);
+  }
+
+  // ---------- interactions
+  function tapItem(k){
+    if (!S.running) return;
+    if (ITEMS[k].read){ openNote(); return; }
+    S.sel = (S.sel === k) ? null : k;
+    if (S.sel === 'uv') say('보라색 손전등을 켰다. 숨겨진 글씨가 보일지도…');
+    else if (S.sel) say(`${ITEMS[k].icon} ${ITEMS[k].name}을(를) 골랐다. 쓸 곳을 눌러 보자.`);
+    render();
+  }
+
+  const FLAVOR = {
+    window:['달이 유난히 밝다. 창문은 녹슬어서 꿈쩍도 안 해.', '창밖은 운동장… 아무도 없다. 아무도.'],
+    clock:['시계가 4시 44분에 멈춰 있다… 기분 나쁜 숫자야.', '초침이 움직이지 않는다. 4시 44분.'],
+    desks:['책상에 "뒤를 보지마"라고 새겨져 있다…', '의자 하나가 혼자 살짝 움직인 것 같다.'],
+    skeleton:['과학실에 있어야 할 해골 모형이 왜 여기에…?', '해골이 나를 보고 있는 것 같다.'],
+    board:['칠판에 희미하게 "나 가 지 마"라고 적혀 있다.', '분필 가루 냄새… 누가 방금 쓴 것 같다.']
+  };
+  const fIdx = {};
+
+  function near(e){ const p = toSvg(e); const d = Math.hypot(p.x - S.light.x, p.y - S.light.y); return {p, ok: d < R * 0.85}; }
+
+  function tapObj(o, e){
+    if (!S.running) return;
+    const n = near(e);
+    if (!n.ok){ setLight(n.p.x, n.p.y); return; } // first tap just shines the light there
+    const sel = S.sel;
+    switch(o){
+      case 'trash':
+        if (!S.note){ S.note = true; give('note'); creak(); say('휴지통 속에 구겨진 쪽지가 있다. 📄'); render(); openNote(); return; }
+        say('휴지통엔 이제 아무것도 없다.'); break;
+      case 'locker':
+        if (S.locker){ say('13번 사물함은 텅 비었다. 다행이다…'); break; }
+        openDials('🔒 13번 사물함', '자물쇠에 숫자 세 개를 맞춰야 한다.', 3, LOCKER_CODE, () => {
+          S.locker = true; render();
+          jumpScare(() => { give('deskKey'); render(); say('끼이익… 사물함 안에서 인형이 튀어나왔다!! …발밑에 교탁 열쇠가 떨어져 있다. 🔑', true); });
+        });
+        break;
+      case 'desk':
+        if (S.desk){ say('교탁 서랍은 비었다.'); break; }
+        if (sel === 'deskKey'){ S.desk = true; take('deskKey'); give('uv'); creak(); say('딸깍. 교탁 서랍 안에 보라색 손전등이 있다. 🔦'); }
+        else if (sel) say(`${ITEMS[sel].name}은(는) 여기에 쓸 수 없다.`);
+        else say('교탁 서랍이 잠겨 있다. 작은 열쇠 구멍이 있다.');
+        break;
+      case 'board':
+        if (sel === 'uv' && !S.uvBoard){ S.uvBoard = true; flicker(); say('보라색 빛을 비추자 칠판에 글씨가 떠올랐다! "앞자리 → 0 7"', true); break; }
+        if (S.uvBoard){ say('칠판의 보라색 글씨: 문 비밀번호 앞자리 → 0 7'); break; }
+        flavor('board'); break;
+      case 'skeleton':
+        if (sel === 'uv' && !S.uvSkel){ S.uvSkel = true; stinger(); say('해골 갈비뼈에 숫자가 빛난다… "뒷자리 3 1"', true); break; }
+        if (S.uvSkel){ say('해골 갈비뼈의 보라색 숫자: 뒷자리 3 1'); break; }
+        flavor('skeleton'); break;
+      case 'window':
+        S.windowSeen++;
+        if (S.windowSeen === 2){ show('winGhost', true); stinger(); say('창문에 하얀 얼굴이…!!', true); setTimeout(() => show('winGhost', false), 1200); break; }
+        flavor('window'); break;
+      case 'door':
+        openDials('🚪 교실 문', '문에 숫자 네 개짜리 잠금장치가 달려 있다.', 4, DOOR_CODE, escape);
+        break;
+      default: flavor(o);
+    }
+    render();
+  }
+  function flavor(o){
+    const list = FLAVOR[o]; if (!list) return;
+    if (S.sel){ say(`${ITEMS[S.sel].name}을(를) 비춰 봤지만… 아무 일도 없다.`); return; }
+    fIdx[o] = ((fIdx[o] ?? -1) + 1) % list.length; say(list[fIdx[o]]);
+  }
+  svg.querySelectorAll('[data-obj]').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); tapObj(el.dataset.obj, e); }));
+
+  // ---------- overlays
+  function openOv(html, bind){ $('card').innerHTML = html; $('ov').hidden = false; bind && bind(); }
+  function closeOv(){ $('ov').hidden = true; }
+  $('ov').addEventListener('click', e => { if (e.target === $('ov') && S.running) closeOv(); });
+
+  function openNote(){
+    openOv(`<h2>구겨진 쪽지</h2>
+      <div class="paper">사물함 13번… 자물쇠 번호는<br>시계가 멈춘 그 시각이야.<br><span style="color:#A33">늦기 전에 나가.</span></div>
+      <button class="big" id="okBtn">…알겠어</button>`, () => $('okBtn').onclick = closeOv);
+  }
+  function openDials(title, desc, n, code, onOk){
+    const v = Array(n).fill(0);
+    const dial = i => `<div class="dial"><button data-i="${i}" data-d="1">▲</button><div class="d" id="d${i}">0</div><button data-i="${i}" data-d="-1">▼</button></div>`;
+    openOv(`<h2>${title}</h2><p>${desc}</p>
+      <div class="dials" id="dials">${Array.from({length:n}, (_, i) => dial(i)).join('')}</div>
+      <button class="big" id="tryBtn">열어 보기</button>
+      <button class="ghost" id="noBtn">닫기</button>`, () => {
+        $('dials').querySelectorAll('button').forEach(b => b.onclick = () => {
+          const i = +b.dataset.i; v[i] = (v[i] + (+b.dataset.d) + 10) % 10; $('d'+i).textContent = v[i]; click();
+        });
+        $('noBtn').onclick = closeOv;
+        $('tryBtn').onclick = () => {
+          if (v.every((x, i) => x === code[i])){ closeOv(); onOk(); }
+          else { const c = $('card'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); say('철컥… 열리지 않는다.', true); }
+        };
+      });
+  }
+
+  // ---------- hints
+  $('hintBtn').onclick = () => {
+    if (!S.running) return; S.hints++;
+    let t;
+    if (!S.note) t = '어둠 속을 손전등으로 구석구석 비춰 봐. 사물함 옆 휴지통 안은?';
+    else if (!S.locker) t = S.hints % 2 ? '쪽지를 다시 읽어 봐. 오른쪽 위 벽시계는 몇 시에 멈춰 있지?' : '시계는 4시 44분. 13번 사물함에 4·4·4!';
+    else if (!S.desk) t = '🔑 교탁 열쇠를 고르고 가운데 교탁을 눌러 봐.';
+    else if (!S.uvBoard || !S.uvSkel) t = !S.uvBoard ? '🔦 보라색 손전등을 고르고 칠판을 비춰 봐.' : '보라색 손전등으로 해골 모형도 비춰 봐!';
+    else t = '칠판의 0 7 + 해골의 3 1 → 문에 0731!';
+    say('💡 ' + t);
+  };
+
+  // ---------- start / end
+  function loadBest(){ try { return JSON.parse(localStorage.getItem(BEST_KEY)); } catch(e){ return null; } }
+  function saveBest(b){ try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch(e){} }
+
+  function intro(){
+    reset(); setLight(180, 220); render(); $('timer').textContent = '0:00'; clearTimeout(spookT);
+    say('화면을 문질러 손전등을 비추고, 비친 물건을 눌러 살펴보세요.');
+    const best = loadBest();
+    openOv(`<p style="font-size:12px;letter-spacing:.2em;color:#B07CFF">방탈출 2단계</p><h2>밤의 교실</h2>
+      <p>깜빡 두고 온 휴대폰을 찾으러<br>밤늦게 5학년 3반 교실에 왔다.<br>그런데… <b style="color:var(--ink)">쾅!</b> 문이 저절로 잠겼다.</p>
+      <p style="font-size:12px">🔊 소리를 켜고 하면 더 무서워요 · 손가락으로 화면을 문질러 비추기</p>
+      ${best ? `<p>내 최고 기록: <b style="color:var(--ink)">${fmtKo(best.ms)}</b> · 힌트 ${best.hints}번</p>` : ''}
+      <button class="big" id="goBtn">손전등 켜기</button>`, () => {
+        $('goBtn').onclick = () => { audioInit(); creak(); closeOv(); S.running = true; S.t0 = Date.now(); scheduleSpook(); };
+      });
+  }
+
+  function shareText(ms){
+    let t = `👻 방탈출 2단계 '밤의 교실' 탈출 성공!\n⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
+    if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
+    return t.trim();
+  }
+  function copy(text, btn){
+    const done = () => { btn.textContent = '복사됐어요! 카톡에 붙여 넣기'; };
+    const fb = () => { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch(e){ btn.textContent = '복사 실패 — 화면을 캡처해 주세요'; } ta.remove(); };
+    try { navigator.clipboard.writeText(text).then(done, fb); } catch(e){ fb(); }
+  }
+
+  function escape(){
+    S.escaped = true; S.running = false; S.sel = null; clearTimeout(spookT); render(); creak();
+    setLight(327, 185);
+    const ms = Date.now() - S.t0, best = loadBest(), isBest = !best || ms < best.ms;
+    if (isBest) saveBest({ms, hints:S.hints});
+    say('문이 열렸다! 복도로 뛰쳐나왔다… 등 뒤에서 "내일 또 와…"', true);
+    setTimeout(() => openOv(`<h2>탈출 성공…?</h2>
+      <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
+      <p>휴대폰은 찾았지만… 화면에 낯선 문자가 와 있다.<br><span style="color:#FFB3B5">"내일 밤에도 기다릴게 👻"</span></p>
+      <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
+      <button class="big" id="shareBtn">결과 복사</button>
+      <button class="ghost" id="againBtn">다시 하기</button>`, () => {
+        $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
+        $('againBtn').onclick = intro;
+      }), 1400);
+  }
+
+  intro();
+})();
+</script>
+
+</html>
