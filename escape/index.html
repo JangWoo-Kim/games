@@ -436,7 +436,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   }
 
   function shareText(ms){
-    let t = `🚪 잠긴 방 탈출 성공!\n⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
+    let t = `🚪 방탈출 1단계 '잠긴 방' 탈출 성공!\n⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
     if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
     return t.trim();
   }
@@ -461,6 +461,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     setTimeout(() => openOv(`<h2>🎉 탈출 성공!</h2>
       <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
       <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
+      <a class="big" href="https://jangwoo-kim.github.io/games/night/" target="_top" style="text-decoration:none;background:#1B1F2A;color:#C7F0FF">👻 2단계: 밤의 교실로</a>
       <button class="big" id="shareBtn">결과 복사</button>
       <button class="ghost" id="againBtn">다시 하기</button>`, () => {
         $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
