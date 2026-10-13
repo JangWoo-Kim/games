@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>잠긴 방</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* One cozy kid's room drawn in SVG; tap objects, pick items from the bag, use them on things. Single fixed palette by design. */
+:root{
+  --bg:#2B2233; --panel:#3A2F45; --panel2:#463954; --ink:#FFF7EA; --muted:#CDBFD9;
+  --accent:#F2C230; --accent-ink:#2B2233; --good:#7DDB8F; --bad:#FF8A80; --line:#5A4B6B;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+/* Whole game fits one phone screen: header, scene (flex, sized by JS to fit), message, bag. */
+.wrap{max-width:480px;margin:0 auto;padding-inline:12px;padding-block:8px 10px;display:flex;flex-direction:column;gap:8px;height:100%;min-height:520px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+h1{font-family:"Jua","Gothic A1",sans-serif;font-weight:400;font-size:24px;margin:0;letter-spacing:.5px}
+.sub{display:none}
+.chips{display:flex;gap:6px;align-items:center}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.hintBtn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:7px 12px;font-weight:800;font-size:13px}
+.stage{flex:1 1 0;min-height:0;display:flex;justify-content:center;align-items:center}
+#scene{display:block;width:100%;height:auto;border-radius:14px;border:2px solid var(--line);background:#F4E4C8}
+#scene [data-obj]{cursor:pointer}
+#scene [data-obj]:active{filter:brightness(1.12)}
+.msg{flex:none;min-height:46px;background:var(--panel);border-radius:12px;padding:8px 12px;font-size:14px;line-height:1.45;display:flex;align-items:center}
+.msg.pop{animation:pop .25s ease}
+@keyframes pop{from{transform:scale(.98);opacity:.5}to{transform:none;opacity:1}}
+.bagHead{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--muted);letter-spacing:.06em}
+.bagHead{flex:none}
+.bag{flex:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.slot{height:62px;min-width:0;background:var(--panel);border:2px dashed var(--line);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:24px;padding:2px}
+.slot small{font-size:10px;color:var(--muted);font-weight:600}
+.slot.has{border-style:solid;background:var(--panel2)}
+.slot.sel{border-color:var(--accent);box-shadow:0 0 0 3px rgba(242,194,48,.35)}
+.slot.sel small{color:var(--accent)}
+.foot{font-size:12px;color:var(--muted);line-height:1.6}
+/* overlays */
+.ov{position:fixed;inset:0;background:rgba(20,14,26,.72);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.card{background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.card h2{font-family:"Jua","Gothic A1",sans-serif;font-weight:400;font-size:26px;margin:0}
+.card p{margin:0;line-height:1.6;color:var(--muted)}
+.big{background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:12px;font-weight:800;font-size:16px}
+.ghost{background:transparent;border:1px solid var(--line);border-radius:12px;padding:10px;font-weight:700}
+.note{background:#FFF6DA;color:#4A3A2A;border-radius:6px;padding:16px;font-family:"Jua","Gothic A1",sans-serif;font-size:20px;line-height:1.7;transform:rotate(-1.5deg);box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.dials{display:flex;justify-content:center;gap:12px}
+.dial{display:flex;flex-direction:column;align-items:center;gap:6px}
+.dial button{width:56px;height:40px;border-radius:10px;border:0;background:var(--panel2);font-size:18px}
+.dial .d{width:56px;height:60px;border-radius:10px;background:#1F2937;color:#9AF7B0;font-size:34px;font-weight:800;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
+.dial .c{width:14px;height:14px;border-radius:50%}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-4px)}}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.stats .chip{font-size:15px}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>🚪 잠긴 방</h1>
+      <div class="sub">단서를 찾아 방을 탈출하자</div>
+    </div>
+    <div class="chips">
+      <span class="chip" id="timer">⏱ 0:00</span>
+      <button class="hintBtn" id="hintBtn">💡 힌트</button>
+    </div>
+  </div>
+
+  <div class="stage">
+    <svg id="scene" viewBox="0 0 360 400" aria-label="방 그림">
+      <!-- wall & floor -->
+      <rect x="0" y="0" width="360" height="272" fill="#F4E4C8"/>
+      <g opacity=".35" fill="#E8D2AA">
+        <rect x="0" y="0" width="360" height="6"/>
+        <circle cx="40" cy="40" r="3"/><circle cx="210" cy="140" r="3"/><circle cx="330" cy="40" r="3"/><circle cx="110" cy="150" r="3"/>
+      </g>
+      <rect x="0" y="266" width="360" height="8" fill="#E2C9A0"/>
+      <rect x="0" y="272" width="360" height="128" fill="#C8955F"/>
+      <g stroke="#B5814F" stroke-width="2"><line x1="0" y1="302" x2="360" y2="302"/><line x1="0" y1="334" x2="360" y2="334"/><line x1="0" y1="368" x2="360" y2="368"/></g>
+
+      <!-- exit sign -->
+      <rect x="30" y="88" width="56" height="16" rx="3" fill="#2E9E5B"/>
+      <text x="58" y="100" text-anchor="middle" font-size="11" font-weight="800" fill="#fff" font-family="Gothic A1,sans-serif">EXIT</text>
+
+      <!-- door -->
+      <g data-obj="door">
+        <rect x="26" y="112" width="64" height="158" rx="3" fill="#8A5A3B"/>
+        <rect x="34" y="122" width="48" height="56" rx="2" fill="none" stroke="#6F4529" stroke-width="3"/>
+        <rect x="34" y="188" width="48" height="72" rx="2" fill="none" stroke="#6F4529" stroke-width="3"/>
+        <circle cx="80" cy="196" r="5" fill="#E8C25A"/>
+        <rect x="78" y="204" width="4" height="7" rx="1" fill="#3A2A20"/>
+        <g id="doorOpen" display="none">
+          <rect x="26" y="112" width="64" height="158" fill="#FFF3C4"/>
+          <polygon points="26,112 46,104 46,278 26,270" fill="#6F4529"/>
+          <text x="62" y="196" text-anchor="middle" font-size="22">☀️</text>
+        </g>
+      </g>
+
+      <!-- window -->
+      <g data-obj="window">
+        <rect x="130" y="40" width="76" height="70" fill="#A8DAF5" stroke="#7A5236" stroke-width="6"/>
+        <ellipse cx="152" cy="62" rx="12" ry="6" fill="#fff"/><ellipse cx="162" cy="58" rx="9" ry="6" fill="#fff"/>
+        <line x1="168" y1="40" x2="168" y2="110" stroke="#7A5236" stroke-width="4"/>
+        <line x1="130" y1="75" x2="206" y2="75" stroke="#7A5236" stroke-width="4"/>
+      </g>
+
+      <!-- clock -->
+      <g data-obj="clock">
+        <circle cx="250" cy="62" r="21" fill="#fff" stroke="#7A5236" stroke-width="4"/>
+        <line id="hHand" x1="250" y1="62" x2="250" y2="51" stroke="#3A2A20" stroke-width="3" stroke-linecap="round"/>
+        <line id="mHand" x1="250" y1="62" x2="250" y2="46" stroke="#3A2A20" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="250" cy="62" r="2" fill="#D9534F"/>
+      </g>
+
+      <!-- lamp -->
+      <g data-obj="lamp">
+        <polygon points="124,178 146,178 152,198 118,198" fill="#F2C230" stroke="#C99A1E" stroke-width="2"/>
+        <rect x="133" y="198" width="4" height="14" fill="#7A5236"/>
+        <rect x="124" y="208" width="22" height="4" rx="2" fill="#7A5236"/>
+      </g>
+
+      <!-- desk + drawer -->
+      <g data-obj="desk">
+        <rect x="112" y="212" width="108" height="8" rx="2" fill="#9B6A43"/>
+        <rect x="116" y="220" width="8" height="50" fill="#8A5A3B"/>
+        <rect x="208" y="220" width="8" height="50" fill="#8A5A3B"/>
+        <rect x="186" y="196" width="20" height="16" rx="2" fill="#6FA8DC"/>
+        <rect x="190" y="200" width="12" height="2" fill="#fff"/>
+      </g>
+      <g data-obj="drawer">
+        <rect x="140" y="220" width="52" height="22" rx="2" fill="#B07B50" stroke="#8A5A3B" stroke-width="2"/>
+        <rect x="160" y="229" width="12" height="4" rx="2" fill="#E8C25A"/>
+        <g id="drawerOpen" display="none">
+          <rect x="134" y="236" width="64" height="18" rx="2" fill="#8C5F3C" stroke="#6F4529" stroke-width="2"/>
+          <rect x="140" y="238" width="52" height="6" fill="#5A3A24"/>
+        </g>
+      </g>
+
+      <!-- plant -->
+      <g data-obj="plant">
+        <ellipse cx="232" cy="236" rx="7" ry="14" fill="#4CAF6A" transform="rotate(-25 232 236)"/>
+        <ellipse cx="248" cy="236" rx="7" ry="14" fill="#3E9A5A" transform="rotate(25 248 236)"/>
+        <ellipse cx="240" cy="230" rx="6" ry="15" fill="#5CC27A"/>
+        <polygon points="228,246 252,246 248,270 232,270" fill="#C0603A"/>
+      </g>
+
+      <!-- bookshelf -->
+      <g data-obj="shelf">
+        <rect x="262" y="118" width="78" height="152" rx="2" fill="#8C5F3C"/>
+        <rect x="268" y="124" width="66" height="140" fill="#6E4529"/>
+        <rect x="268" y="168" width="66" height="5" fill="#8C5F3C"/>
+        <rect x="268" y="214" width="66" height="5" fill="#8C5F3C"/>
+        <g id="booksSmall"></g>
+      </g>
+
+      <!-- safe -->
+      <g data-obj="safe">
+        <rect x="278" y="224" width="46" height="38" rx="3" fill="#6B7280" stroke="#4B5563" stroke-width="2"/>
+        <circle cx="301" cy="243" r="8" fill="#4B5563" stroke="#E5E7EB" stroke-width="2"/>
+        <line x1="301" y1="243" x2="301" y2="237" stroke="#E5E7EB" stroke-width="2"/>
+        <g id="safeOpen" display="none">
+          <rect x="280" y="226" width="42" height="34" fill="#1F2937"/>
+          <polygon points="278,224 262,230 262,266 278,262" fill="#6B7280" stroke="#4B5563" stroke-width="2"/>
+        </g>
+      </g>
+
+      <!-- rug -->
+      <g data-obj="rug">
+        <ellipse cx="100" cy="350" rx="72" ry="27" fill="#C8504A"/>
+        <ellipse cx="100" cy="350" rx="55" ry="18" fill="none" stroke="#F2C230" stroke-width="3" stroke-dasharray="6 5"/>
+        <ellipse cx="100" cy="350" rx="22" ry="7" fill="#E07A5F"/>
+        <g id="rugFlip" display="none">
+          <polygon points="146,331 172,350 150,366" fill="#C8955F"/>
+          <polygon points="146,331 150,366 128,348" fill="#9E3B36"/>
+        </g>
+      </g>
+
+      <!-- bed -->
+      <g data-obj="bed">
+        <rect x="200" y="272" width="12" height="70" rx="3" fill="#7A5236"/>
+        <rect x="205" y="292" width="145" height="46" rx="3" fill="#A0704A"/>
+        <rect x="208" y="282" width="142" height="16" rx="4" fill="#FFFFFF"/>
+        <ellipse cx="226" cy="285" rx="14" ry="7" fill="#FFF8E7" stroke="#E5D9C3"/>
+        <rect x="240" y="279" width="110" height="30" rx="8" fill="#6FA8DC"/>
+        <g fill="#5A92C8"><circle cx="262" cy="292" r="3"/><circle cx="292" cy="296" r="3"/><circle cx="322" cy="290" r="3"/></g>
+      </g>
+      <g data-obj="under">
+        <rect x="205" y="336" width="145" height="30" fill="transparent"/>
+        <rect x="210" y="338" width="135" height="18" fill="#3A2A20"/>
+        <rect x="208" y="338" width="6" height="22" fill="#7A5236"/>
+        <rect x="341" y="338" width="6" height="22" fill="#7A5236"/>
+        <ellipse id="lightSpot" cx="278" cy="347" rx="40" ry="8" fill="#FFE9A8" opacity=".55" display="none"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="msg" id="msg">방 안의 물건을 눌러서 살펴보세요.</div>
+
+  <div class="bagHead"><span>가방 · 아이템을 눌러 고른 뒤, 쓸 곳을 누르세요</span></div>
+  <div class="bag" id="bag"></div>
+
+</div>
+
+<div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const ITEMS = {
+    smallKey:{icon:'🔑', name:'작은 열쇠'},
+    flashlight:{icon:'🔦', name:'손전등'},
+    note:{icon:'📜', name:'쪽지', read:true},
+    doorKey:{icon:'🗝️', name:'문 열쇠'}
+  };
+  // bookshelf: R=red B=blue Y=yellow G=green — answer is count of R,B,Y = 3,5,2
+  const COLORS = {R:'#D9534F', B:'#3B6FD4', Y:'#F2C230', G:'#4CAF6A'};
+  const SHELF1 = ['R','B','G','B','Y','R'];
+  const SHELF2 = ['B','R','B','Y','G','B'];
+  const CODE = [3,5,2];
+  const BEST_KEY = 'escape1:best';
+
+  let S;
+  function reset(){
+    S = {inv:[], sel:null, rug:false, drawer:false, lit:false, safe:false, escaped:false,
+         hints:0, t0:0, running:false, dials:[0,0,0]};
+  }
+
+  // ---- drawing
+  function drawBooks(g, shelves, x0, w, tops, bottoms, scale){
+    let html = '';
+    shelves.forEach((row, r) => {
+      const n = row.length, gap = 1.5*scale, bw = (w - gap*(n+1))/n;
+      row.forEach((c, i) => {
+        const hgt = (bottoms[r]-tops[r]) - ((i*7+r*3)%4)*2.2*scale - 3*scale;
+        const x = x0 + gap + i*(bw+gap), y = bottoms[r]-hgt;
+        html += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${hgt.toFixed(1)}" rx="${scale}" fill="${COLORS[c]}"/>`;
+        html += `<rect x="${(x+bw*0.2).toFixed(1)}" y="${(y+hgt*0.2).toFixed(1)}" width="${(bw*0.6).toFixed(1)}" height="${(1.4*scale).toFixed(1)}" fill="rgba(255,255,255,.55)"/>`;
+      });
+    });
+    g.innerHTML = html;
+  }
+  drawBooks($('booksSmall'), [SHELF1, SHELF2], 268, 66, [126,173], [168,214], 1);
+
+  // fit the scene into whatever height is left on screen (keeps 360:400 ratio)
+  const stage = document.querySelector('.stage'), svg = $('scene');
+  function fit(){
+    const r = stage.getBoundingClientRect();
+    const w = Math.max(200, Math.min(r.width, r.height * 0.9));
+    svg.style.width = w + 'px'; svg.style.height = (w / 0.9) + 'px';
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(fit).observe(stage);
+  window.addEventListener('resize', fit); fit();
+
+  function show(id, on){ $(id).setAttribute('display', on ? 'inline' : 'none'); }
+  function render(){
+    show('rugFlip', S.rug); show('drawerOpen', S.drawer); show('lightSpot', S.lit);
+    show('safeOpen', S.safe); show('doorOpen', S.escaped);
+    const bag = $('bag'); bag.innerHTML = '';
+    for (let i = 0; i < 4; i++){
+      const k = S.inv[i];
+      const b = document.createElement('button');
+      b.className = 'slot' + (k ? ' has' : '') + (k && S.sel === k ? ' sel' : '');
+      if (k){
+        b.innerHTML = `${ITEMS[k].icon}<small>${ITEMS[k].name}</small>`;
+        b.onclick = () => tapItem(k);
+      } else b.disabled = true;
+      bag.appendChild(b);
+    }
+  }
+  function say(t){ const m = $('msg'); m.textContent = t; m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
+  function give(k){ if (!S.inv.includes(k)) S.inv.push(k); }
+  function take(k){ S.inv = S.inv.filter(x => x !== k); if (S.sel === k) S.sel = null; }
+
+  // ---- clock & timer
+  function tickClock(){
+    const d = new Date(), m = d.getMinutes(), h = d.getHours()%12 + m/60;
+    $('mHand').setAttribute('transform', `rotate(${m*6} 250 62)`);
+    $('hHand').setAttribute('transform', `rotate(${h*30} 250 62)`);
+  }
+  function fmt(ms){ const s = Math.floor(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+  function fmtKo(ms){ const s = Math.floor(ms/1000), m = Math.floor(s/60); return m ? `${m}분 ${s%60}초` : `${s%60}초`; }
+  setInterval(() => {
+    tickClock();
+    if (S && S.running) $('timer').textContent = '⏱ ' + fmt(Date.now() - S.t0);
+  }, 500);
+  tickClock();
+
+  // ---- interactions
+  function tapItem(k){
+    if (ITEMS[k].read){ openNote(); return; }
+    S.sel = (S.sel === k) ? null : k;
+    if (S.sel) say(`${ITEMS[k].icon} ${ITEMS[k].name}을(를) 골랐다. 이제 쓸 곳을 눌러 보자.`);
+    render();
+  }
+
+  const FLAVOR = {
+    window:['밖은 맑은데… 창문은 꽉 잠겨 있어.', '창밖에서 새가 짹짹. 나가고 싶다!'],
+    clock:['째깍째깍… 시간이 흐르고 있어. 서두르자!', '시계는 지금 시각을 가리키고 있어.'],
+    lamp:['스탠드 불은 켜져 있어. 책상 위는 밝네.'],
+    desk:['책상 위엔 파란 공책 하나. 펼쳐 보니 낙서뿐이야.', '책상 아래 서랍이 있어.'],
+    plant:['화분엔 흙만 가득. 아무것도 없어.', '잎이 싱싱해. 누가 물을 잘 줬나 봐.'],
+    bed:['폭신한 침대… 지금은 잘 때가 아니야!', '이불을 들춰 봤지만 아무것도 없어.']
+  };
+  const flavorIdx = {};
+
+  function tapObj(o){
+    if (!S.running) return;
+    const sel = S.sel;
+    switch(o){
+      case 'rug':
+        if (!S.rug){ S.rug = true; give('smallKey'); say('러그 귀퉁이를 들춰 보니… 작은 열쇠 발견! 🔑'); }
+        else say('러그 밑엔 이제 아무것도 없어.');
+        break;
+      case 'drawer':
+        if (S.drawer) say('서랍은 텅 비었어.');
+        else if (sel === 'smallKey'){ S.drawer = true; take('smallKey'); give('flashlight'); say('딸깍! 서랍이 열렸다. 안에서 손전등을 찾았다! 🔦'); }
+        else say('서랍이 잠겨 있어. 작은 열쇠 구멍이 보여.');
+        break;
+      case 'under':
+        if (S.lit){ say('침대 밑엔 더 이상 아무것도 없어.'); }
+        else if (sel === 'flashlight'){ S.lit = true; S.sel = null; give('note'); say('손전등으로 비추니… 침대 밑에 쪽지가 있다! 📜'); render(); openNote(); return; }
+        else say('침대 밑이 너무 어두워서 아무것도 안 보여.');
+        break;
+      case 'shelf': openShelf(); break;
+      case 'safe':
+        if (S.safe) say('금고는 텅 비었어.');
+        else openSafe();
+        break;
+      case 'door':
+        if (sel === 'doorKey'){ escape(); return; }
+        if (S.inv.includes('doorKey')) say('문 열쇠를 먼저 골라서 문을 눌러 봐!');
+        else if (sel) say(`${ITEMS[sel].name}은(는) 문에 맞지 않아.`);
+        else say('문이 꽉 잠겨 있어. 커다란 열쇠 구멍이 보여.');
+        break;
+      default: {
+        const list = FLAVOR[o]; if (!list) break;
+        flavorIdx[o] = ((flavorIdx[o] ?? -1) + 1) % list.length;
+        say(sel ? `${ITEMS[sel].name}을(를) 써 봤지만… 아무 일도 없어.` : list[flavorIdx[o]]);
+      }
+    }
+    render();
+  }
+  document.querySelectorAll('#scene [data-obj]').forEach(el => {
+    el.addEventListener('click', e => { e.stopPropagation(); tapObj(el.dataset.obj); });
+  });
+
+  // ---- overlays
+  function openOv(html, onBind){
+    $('card').innerHTML = html; $('ov').hidden = false;
+    if (onBind) onBind();
+  }
+  function closeOv(){ $('ov').hidden = true; }
+  $('ov').addEventListener('click', e => { if (e.target === $('ov') && S.running) closeOv(); });
+
+  function openNote(){
+    openOv(`<h2>📜 쪽지</h2>
+      <div class="note">책장의 책을 세어 봐.<br>
+        <span style="color:${COLORS.R}">● 빨강</span> → <span style="color:${COLORS.B}">● 파랑</span> → <span style="color:#C99A1E">● 노랑</span><br>
+        이 순서가 비밀번호야!</div>
+      <button class="big" id="okBtn">알겠어!</button>`, () => $('okBtn').onclick = closeOv);
+  }
+  function openShelf(){
+    openOv(`<h2>📚 책장</h2>
+      <svg viewBox="0 0 264 196" style="width:100%;height:auto;border-radius:10px">
+        <rect x="0" y="0" width="264" height="196" fill="#6E4529"/>
+        <rect x="0" y="88" width="264" height="10" fill="#8C5F3C"/>
+        <rect x="0" y="186" width="264" height="10" fill="#8C5F3C"/>
+        <g id="booksBig"></g>
+      </svg>
+      <p>${S.lit ? '쪽지에 적힌 대로 색깔별로 세어 볼까?' : '알록달록한 책들이 꽂혀 있어.'}</p>
+      <button class="big" id="okBtn">닫기</button>`, () => {
+        drawBooks($('booksBig'), [SHELF1, SHELF2], 6, 252, [6,104], [88,186], 3);
+        $('okBtn').onclick = closeOv;
+      });
+    say('책장에 책이 색깔별로 꽂혀 있어. 아래 칸엔 금고가 있네.');
+  }
+  function openSafe(){
+    const dot = c => `<span class="c" style="background:${COLORS[c]}"></span>`;
+    const dial = (i, c) => `<div class="dial">${dot(c)}<button data-i="${i}" data-d="1">▲</button><div class="d" id="d${i}">${S.dials[i]}</div><button data-i="${i}" data-d="-1">▼</button></div>`;
+    openOv(`<h2>🔒 금고</h2>
+      <p>숫자 세 개를 맞춰야 열리는 금고야.</p>
+      <div class="dials" id="dials">${dial(0,'R')}${dial(1,'B')}${dial(2,'Y')}</div>
+      <button class="big" id="tryBtn">열어 보기</button>
+      <button class="ghost" id="noBtn">닫기</button>`, () => {
+        $('dials').querySelectorAll('button').forEach(b => b.onclick = () => {
+          const i = +b.dataset.i; S.dials[i] = (S.dials[i] + (+b.dataset.d) + 10) % 10; $('d'+i).textContent = S.dials[i];
+        });
+        $('noBtn').onclick = closeOv;
+        $('tryBtn').onclick = () => {
+          if (S.dials.every((v,i) => v === CODE[i])){
+            S.safe = true; give('doorKey'); closeOv(); say('철컥! 금고가 열렸다. 커다란 문 열쇠 발견! 🗝️'); render();
+          } else {
+            const c = $('card'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+            say('삐빅… 안 열린다. 숫자가 틀렸나 봐.');
+          }
+        };
+      });
+  }
+
+  // ---- hints
+  function hint(){
+    if (!S.running) return;
+    S.hints++;
+    let t;
+    if (!S.rug) t = '바닥을 잘 살펴봐. 빨간 러그 밑에 뭔가 있을지도?';
+    else if (!S.drawer) t = '가방의 🔑 작은 열쇠를 누르고, 책상 서랍을 눌러 봐.';
+    else if (!S.lit) t = '🔦 손전등을 고르고 어두운 곳을 비춰 봐. 침대 밑!';
+    else if (!S.safe) t = S.hints % 2 ? '책장을 눌러 크게 보고, 빨강·파랑·노랑 책이 각각 몇 권인지 세어 봐.' : '센 숫자를 금고 다이얼에 빨강·파랑·노랑 순서로 맞춰 봐.';
+    else t = '🗝️ 문 열쇠를 고르고 문을 눌러!';
+    say('💡 ' + t);
+  }
+  $('hintBtn').onclick = hint;
+
+  // ---- start / end
+  function loadBest(){ try { return JSON.parse(localStorage.getItem(BEST_KEY)); } catch(e){ return null; } }
+  function saveBest(b){ try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch(e){} }
+
+  function intro(){
+    reset(); render(); $('timer').textContent = '⏱ 0:00';
+    say('방 안의 물건을 눌러서 살펴보세요.');
+    const best = loadBest();
+    openOv(`<h2>🚪 잠긴 방</h2>
+      <p>눈을 떠 보니 낯선 방…<br>문이 꽁꽁 잠겨 있다!<br>단서를 찾아 방을 탈출하자.</p>
+      ${best ? `<p>내 최고 기록: <b style="color:var(--ink)">${fmtKo(best.ms)}</b> · 힌트 ${best.hints}번</p>` : ''}
+      <button class="big" id="goBtn">탈출 시작!</button>`, () => {
+        $('goBtn').onclick = () => { closeOv(); S.running = true; S.t0 = Date.now(); };
+      });
+  }
+
+  function shareText(ms){
+    let t = `🚪 잠긴 방 탈출 성공!\n⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
+    if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
+    return t.trim();
+  }
+  function copy(text, btn){
+    const done = () => { btn.textContent = '복사됐어요! 카톡에 붙여 넣기'; };
+    const fallback = () => {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch(e){ btn.textContent = '복사 실패 — 화면을 캡처해 주세요'; }
+      ta.remove();
+    };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch(e){ fallback(); }
+  }
+
+  function escape(){
+    S.escaped = true; S.running = false; S.sel = null; render();
+    const ms = Date.now() - S.t0;
+    const best = loadBest();
+    const isBest = !best || ms < best.ms;
+    if (isBest) saveBest({ms, hints:S.hints});
+    say('문이 열렸다! 밝은 빛이 쏟아진다… ☀️');
+    setTimeout(() => openOv(`<h2>🎉 탈출 성공!</h2>
+      <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
+      <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
+      <button class="big" id="shareBtn">결과 복사</button>
+      <button class="ghost" id="againBtn">다시 하기</button>`, () => {
+        $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
+        $('againBtn').onclick = intro;
+      }), 700);
+  }
+
+  intro();
+})();
+</script>
+
+</html>
