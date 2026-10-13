@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}</style>
+<title>오늘의 탑</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* Layout: one narrow phone-shaped column — header, play stage, three stat cells, one line of rules. */
+:root{
+  --bg:#eef2f7; --surface:#ffffff; --ink:#1b2333; --muted:#5f6b7f;
+  --accent:#2f5bea; --accent-ink:#ffffff; --line:#d6dde8;
+  --sky-top:#d6e3f5; --sky-bot:#f6f9fd; --ground:#c7d0dd;
+  --block-s:62%; --block-l:58%; --scrim:rgba(238,242,247,.82);
+  --f-display:"Black Han Sans","Gothic A1",system-ui,sans-serif;
+  --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#11151d; --surface:#1a2029; --ink:#e7ecf4; --muted:#93a0b4;
+  --accent:#7d9bff; --accent-ink:#0d1220; --line:#2a3240;
+  --sky-top:#0b1020; --sky-bot:#1b2333; --ground:#2a3342;
+  --block-s:55%; --block-l:55%; --scrim:rgba(17,21,29,.82); color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#11151d; --surface:#1a2029; --ink:#e7ecf4; --muted:#93a0b4;
+  --accent:#7d9bff; --accent-ink:#0d1220; --line:#2a3240;
+  --sky-top:#0b1020; --sky-bot:#1b2333; --ground:#2a3342;
+  --block-s:55%; --block-l:55%; --scrim:rgba(17,21,29,.82); color-scheme:dark }
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);padding:16px;padding-block:16px;box-sizing:border-box}
+.app{max-width:420px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:2rem;line-height:1;margin:0;letter-spacing:.02em}
+.date{margin:4px 0 0;color:var(--muted);font-size:.85rem}
+.modes{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:3px}
+.mode{border:0;background:transparent;color:var(--muted);font:600 .85rem var(--f-body);padding:7px 12px;border-radius:999px;cursor:pointer}
+.mode.is-on{background:var(--ink);color:var(--bg)}
+.mode:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stage{position:relative;width:100%;aspect-ratio:3/4;max-height:68vh;border-radius:14px;overflow:hidden;border:1px solid var(--line);touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer;background:var(--sky-bot)}
+canvas{display:block;width:100%;height:100%}
+.panel{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:24px;text-align:center;background:var(--scrim);backdrop-filter:blur(2px)}
+.panel h2{font-family:var(--f-display);font-weight:400;font-size:2.4rem;margin:0;line-height:1.05;text-wrap:balance}
+.panel p{margin:0;color:var(--muted);line-height:1.55;max-width:28ch}
+.pActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.btn{font:800 1rem var(--f-body);border-radius:10px;padding:12px 20px;cursor:pointer;border:1px solid var(--line)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:var(--surface);color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.note{font-size:.8rem}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.k{font-size:.72rem;color:var(--muted);letter-spacing:.04em}
+.v{font-family:var(--f-display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.how{margin:0;color:var(--muted);font-size:.85rem;line-height:1.6}
+</style>
+
+<main class="app">
+  <header class="top">
+    <div>
+      <h1>오늘의 탑</h1>
+      <p class="date" id="dateLabel"></p>
+    </div>
+    <div class="modes" role="tablist" aria-label="모드">
+      <button id="modeDaily" class="mode is-on" role="tab" aria-selected="true">오늘의 도전</button>
+      <button id="modeFree" class="mode" role="tab" aria-selected="false">연습</button>
+    </div>
+  </header>
+
+  <div class="stage" id="stage" aria-label="게임 화면">
+    <canvas id="cv"></canvas>
+    <div class="panel" id="panel">
+      <h2 id="pTitle">몇 층까지?</h2>
+      <p id="pBody">오늘은 모두가 같은 탑을 쌓아요. 기회는 하루 3번.</p>
+      <div class="pActions">
+        <button id="btnStart" class="btn primary">시작</button>
+        <button id="btnShare" class="btn ghost" hidden>결과 복사</button>
+      </div>
+      <p id="pNote" class="note"></p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div><span class="k">오늘 최고</span><span class="v" id="sToday">–</span></div>
+    <div><span class="k">남은 도전</span><span class="v" id="sTries">3</span></div>
+    <div><span class="k">내 최고</span><span class="v" id="sBest">–</span></div>
+  </div>
+  <p class="how">화면을 탭하거나 스페이스바를 누르면 블록이 떨어져요. 아래 블록과 겹친 부분만 남고, 딱 맞추면 PERFECT. 연속 3번 PERFECT면 블록이 조금 넓어져요.</p>
+</main>
+
+<script>
+(() => {
+  const MAX_TRIES = 3;
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d'), stage = $('stage');
+
+  const store = {
+    get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+    set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+  };
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dateKey = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  const dateText = `${now.getMonth()+1}월 ${now.getDate()}일`;
+  $('dateLabel').textContent = `${dateText} · 오늘의 탑은 모두 같아요`;
+
+  function hash(s){ let h = 2166136261; for (const c of s){ h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function rngFrom(seed){ let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  let W = 360, H = 480, dpr = 1;
+  function resize(){
+    const r = stage.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+
+  let mode = 'daily', g = null, rafOn = false;
+  function dayData(){ return store.get('tower:'+dateKey, {tries:0, best:0, acc:[], perfects:0}); }
+
+  function newGame(running){
+    const rng = mode === 'daily' ? rngFrom(hash('tower'+dateKey)) : rngFrom((Math.random()*1e9)|0);
+    const bh = Math.max(18, Math.min(30, W * 0.072));
+    const baseW = W * 0.56;
+    g = {
+      rng, bh, baseW, running, over:false,
+      hue: rng()*360, factor: mode === 'daily' ? 0.95 + rng()*0.15 : 1,
+      groundY: H - Math.max(48, H*0.12),
+      blocks: [{x:(W-baseW)/2, w:baseW}],
+      cur: null, falling: [], pops: [], cam: 0,
+      score: 0, perfects: 0, combo: 0, acc: []
+    };
+    spawn();
+  }
+  function spawn(){
+    const lvl = g.blocks.length, prev = g.blocks[lvl-1];
+    const dir = g.rng() < 0.5 ? 1 : -1;
+    const sp = Math.min(6.4, (2.0 + lvl*0.075) * g.factor * (0.92 + g.rng()*0.16)) * (W/360);
+    const minX = -W*0.06, maxX = W*1.06 - prev.w;
+    g.cur = { x: dir === 1 ? minX : maxX, w: prev.w, dir, sp };
+  }
+  function color(level, dl){
+    const cs = getComputedStyle(document.documentElement);
+    const s = cs.getPropertyValue('--block-s').trim() || '60%';
+    const l = parseFloat(cs.getPropertyValue('--block-l')) || 56;
+    return `hsl(${(g.hue + level*8) % 360} ${s} ${l + (dl||0)}%)`;
+  }
+
+  function drop(){
+    if (!g || !g.running || g.over) return;
+    const prev = g.blocks[g.blocks.length-1], c = g.cur;
+    const lvl = g.blocks.length;
+    const tol = Math.max(3, prev.w * 0.035);
+    const left = Math.max(c.x, prev.x), right = Math.min(c.x + c.w, prev.x + prev.w);
+    const ov = right - left;
+    const y = g.groundY - (lvl+1)*g.bh;
+    if (ov <= 0){
+      g.falling.push({x:c.x, w:c.w, y, vy:0, lvl});
+      g.cur = null; return gameOver();
+    }
+    let nb;
+    if (Math.abs(c.x - prev.x) <= tol){
+      g.combo++; g.perfects++;
+      let w = prev.w, x = prev.x;
+      if (g.combo >= 3){ const grow = Math.min(W*0.02, g.baseW - w); w += grow; x -= grow/2; }
+      nb = {x, w}; g.acc.push(1);
+      g.pops.push({t:'PERFECT', y, life:1});
+    } else {
+      g.combo = 0;
+      nb = {x:left, w:ov};
+      g.acc.push(ov / c.w);
+      const cutX = c.x < prev.x ? c.x : right;
+      g.falling.push({x:cutX, w:c.w - ov, y, vy:0, lvl});
+    }
+    g.blocks.push(nb); g.score++;
+    spawn();
+  }
+
+  function gameOver(){
+    g.running = false; g.over = true;
+    if (mode === 'daily'){
+      const d = dayData();
+      if (g.score > d.best){ d.best = g.score; d.acc = g.acc.slice(); d.perfects = g.perfects; }
+      store.set('tower:'+dateKey, d);
+    }
+    const best = store.get('tower:best', 0);
+    if (g.score > best) store.set('tower:best', g.score);
+    setTimeout(showOver, 650);
+    refreshStats();
+  }
+
+  function shareText(){
+    const d = dayData();
+    const sq = a => a >= 0.999 ? '🟩' : a >= 0.75 ? '🟨' : '🟧';
+    const rows = [];
+    for (let i = 0; i < d.acc.length; i += 8) rows.push(d.acc.slice(i, i+8).map(sq).join(''));
+    let shown = rows.reverse();
+    if (shown.length > 5) shown = ['⋯'].concat(shown.slice(-5));
+    return `오늘의 탑 ${dateText}\n🏗️ ${d.best}층 · PERFECT ${d.perfects}번\n${shown.join('\n')}`;
+  }
+  async function copyShare(){
+    const text = shareText(), note = $('pNote');
+    try { await navigator.clipboard.writeText(text); note.textContent = '복사했어요. 단톡방에 붙여넣어 보세요.'; }
+    catch(e){
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+      document.body.appendChild(ta); ta.select();
+      let ok = false; try { ok = document.execCommand('copy'); } catch(_){}
+      ta.remove();
+      note.textContent = ok ? '복사했어요. 단톡방에 붙여넣어 보세요.' : text;
+    }
+  }
+
+  function showPanel(title, body, startLabel, startDisabled, share, note){
+    $('pTitle').textContent = title; $('pBody').textContent = body;
+    $('btnStart').textContent = startLabel; $('btnStart').disabled = !!startDisabled;
+    $('btnShare').hidden = !share; $('pNote').textContent = note || '';
+    $('panel').hidden = false;
+  }
+  function showIntro(){
+    if (mode === 'daily'){
+      const d = dayData(), left = MAX_TRIES - d.tries;
+      if (left <= 0) showPanel(`오늘 ${d.best}층`, '오늘의 도전은 끝났어요. 내일 새 탑이 열려요. 연습 모드는 계속할 수 있어요.', '내일 다시', true, true);
+      else showPanel('몇 층까지?', `오늘은 모두가 같은 탑을 쌓아요. 기회는 하루 ${MAX_TRIES}번, 가장 높은 기록이 남아요.`, d.tries ? `다시 도전 (${left}번 남음)` : '시작', false, d.tries > 0);
+    } else {
+      showPanel('연습', '횟수 제한 없이 마음껏 쌓아보세요. 기록은 내 최고에만 반영돼요.', '시작', false, false);
+    }
+  }
+  function showOver(){
+    const msg = g.score >= 30 ? '이 정도면 점심시간 지배자예요.' : g.score >= 15 ? '꽤 높이 쌓았어요.' : '한 판만 더?';
+    if (mode === 'daily'){
+      const d = dayData(), left = MAX_TRIES - d.tries;
+      showPanel(`${g.score}층`, `PERFECT ${g.perfects}번 · 오늘 최고 ${d.best}층. ${msg}`, left > 0 ? `다시 도전 (${left}번 남음)` : '내일 다시', left <= 0, true);
+    } else {
+      showPanel(`${g.score}층`, `PERFECT ${g.perfects}번. ${msg}`, '다시 하기', false, false);
+    }
+  }
+
+  function start(){
+    if (mode === 'daily'){
+      const d = dayData();
+      if (d.tries >= MAX_TRIES) return;
+      d.tries++; store.set('tower:'+dateKey, d);
+    }
+    newGame(true);
+    $('panel').hidden = true;
+    refreshStats();
+  }
+
+  function refreshStats(){
+    const d = dayData();
+    $('sToday').textContent = d.best ? d.best + '층' : '–';
+    $('sTries').textContent = mode === 'daily' ? Math.max(0, MAX_TRIES - d.tries) : '∞';
+    const b = store.get('tower:best', 0);
+    $('sBest').textContent = b ? b + '층' : '–';
+  }
+
+  function setMode(m){
+    if (g && g.running) return;
+    mode = m;
+    $('modeDaily').classList.toggle('is-on', m === 'daily'); $('modeDaily').setAttribute('aria-selected', m === 'daily');
+    $('modeFree').classList.toggle('is-on', m === 'free'); $('modeFree').setAttribute('aria-selected', m === 'free');
+    newGame(false); showIntro(); refreshStats();
+  }
+
+  function update(dt){
+    if (!g) return;
+    const c = g.cur;
+    if (c){
+      const prevW = g.blocks[g.blocks.length-1].w;
+      const minX = -W*0.06, maxX = W*1.06 - prevW;
+      c.x += c.dir * c.sp * dt;
+      if (c.x > maxX){ c.x = maxX; c.dir = -1; }
+      if (c.x < minX){ c.x = minX; c.dir = 1; }
+    }
+    for (const f of g.falling){ f.vy += 0.55*dt; f.y += f.vy*dt; }
+    g.falling = g.falling.filter(f => f.y - g.cam < H + 200);
+    for (const p of g.pops){ p.life -= 0.02*dt; }
+    g.pops = g.pops.filter(p => p.life > 0);
+    const target = Math.max(0, (g.blocks.length+1)*g.bh - (g.groundY - H*0.38));
+    g.cam += (target - g.cam) * Math.min(1, 0.1*dt);
+  }
+
+  function rr(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+  function drawBlock(x, y, w, lvl){
+    const h = g.bh;
+    ctx.fillStyle = color(lvl); rr(x, y, w, h-1, 3); ctx.fill();
+    ctx.fillStyle = color(lvl, 12); ctx.fillRect(x+2, y+2, Math.max(0, w-4), 3);
+    ctx.fillStyle = color(lvl, -14); ctx.fillRect(x+2, y+h-4, Math.max(0, w-4), 2);
+  }
+
+  function draw(){
+    const cs = getComputedStyle(document.documentElement);
+    const sky = ctx.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, cs.getPropertyValue('--sky-top').trim());
+    sky.addColorStop(1, cs.getPropertyValue('--sky-bot').trim());
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
+    if (!g) return;
+    ctx.save(); ctx.translate(0, g.cam);
+    ctx.fillStyle = cs.getPropertyValue('--ground').trim();
+    ctx.fillRect(0, g.groundY, W, H + 400);
+    g.blocks.forEach((b, i) => drawBlock(b.x, g.groundY - (i+1)*g.bh, b.w, i));
+    if (g.cur && (g.running || !g.over)) drawBlock(g.cur.x, g.groundY - (g.blocks.length+1)*g.bh, g.cur.w, g.blocks.length);
+    for (const f of g.falling) drawBlock(f.x, f.y, f.w, f.lvl);
+    ctx.textAlign = 'center';
+    for (const p of g.pops){
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = cs.getPropertyValue('--accent').trim();
+      ctx.font = `400 ${Math.round(W*0.06)}px "Black Han Sans", sans-serif`;
+      ctx.fillText(p.t, W/2, p.y - 10 - (1-p.life)*30);
+    }
+    ctx.globalAlpha = 1; ctx.restore();
+    if (g.running || g.over){
+      ctx.fillStyle = cs.getPropertyValue('--ink').trim();
+      ctx.textAlign = 'center';
+      ctx.font = `400 ${Math.round(W*0.16)}px "Black Han Sans", sans-serif`;
+      ctx.fillText(String(g.score), W/2, H*0.17);
+      if (g.combo >= 2){
+        ctx.fillStyle = cs.getPropertyValue('--muted').trim();
+        ctx.font = `600 ${Math.round(W*0.04)}px "Gothic A1", sans-serif`;
+        ctx.fillText(`PERFECT ${g.combo}연속`, W/2, H*0.17 + W*0.07);
+      }
+    }
+  }
+
+  let last = performance.now();
+  function frame(t){
+    const dt = Math.min(2, (t - last) / 16.67); last = t;
+    update(dt); draw();
+    requestAnimationFrame(frame);
+  }
+
+  stage.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    if (g && g.running){ e.preventDefault(); drop(); }
+  });
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space' || e.code === 'Enter'){
+      if (g && g.running){ e.preventDefault(); drop(); }
+    }
+  });
+  $('btnStart').addEventListener('click', start);
+  $('btnShare').addEventListener('click', copyShare);
+  $('modeDaily').addEventListener('click', () => setMode('daily'));
+  $('modeFree').addEventListener('click', () => setMode('free'));
+  window.addEventListener('resize', () => { const was = g && g.running; resize(); if (!was){ newGame(false); } });
+
+  resize(); newGame(false); showIntro(); refreshStats();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</html>
