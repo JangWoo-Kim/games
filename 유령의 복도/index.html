@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>유령의 복도</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Brush+Script&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* Horror "red light, green light": hold to walk down a dark school corridor; freeze when the ghost turns.
+   Single fixed night palette by design. Whole game fits one phone screen; canvas fills the free space. */
+:root{
+  --bg:#07080C; --panel:#14171F; --panel2:#1E222C; --ink:#ECEEF3; --muted:#8C93A3;
+  --accent:#C7F0FF; --red:#FF4D57; --green:#59E08C; --line:#272C38;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  -webkit-tap-highlight-color:transparent;touch-action:manipulation;overflow-x:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.wrap{max-width:480px;margin:0 auto;padding-inline:12px;padding-block:8px 10px;display:flex;flex-direction:column;gap:8px;height:100%;min-height:520px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none}
+h1{font-family:"Nanum Brush Script","Gothic A1",sans-serif;font-weight:400;font-size:34px;margin:0;line-height:1}
+.chips{display:flex;gap:6px;align-items:center}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+button{font:inherit;color:inherit;cursor:pointer}
+.iconBtn{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 9px;font-size:13px}
+.hud{flex:none;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted)}
+.bar{flex:1;height:8px;border-radius:99px;background:var(--panel2);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4B6BFF,var(--green));border-radius:99px}
+.stage{flex:1 1 0;min-height:0;position:relative;border-radius:14px;overflow:hidden;border:2px solid var(--line);background:#000;touch-action:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.chant{position:absolute;left:0;right:0;top:10px;text-align:center;font-family:"Nanum Brush Script","Gothic A1",sans-serif;font-size:clamp(22px,8vw,34px);letter-spacing:1px;pointer-events:none;white-space:nowrap;text-shadow:0 2px 8px #000}
+.chant span{color:rgba(236,238,243,.18);transition:color .08s}
+.chant span.on{color:#F4F1E8}
+.chant.look{color:var(--red);font-size:40px}
+.state{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-weight:800;font-size:15px;pointer-events:none;text-shadow:0 2px 6px #000}
+.holdBtn{flex:none;height:64px;border-radius:16px;border:0;background:var(--panel2);font-weight:800;font-size:17px;letter-spacing:.02em;color:var(--ink);touch-action:none}
+.holdBtn.on{background:var(--green);color:#06210F}
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:400px;display:flex;flex-direction:column;gap:12px;text-align:center}
+.card h2{font-family:"Nanum Brush Script","Gothic A1",sans-serif;font-weight:400;font-size:40px;margin:0;line-height:1.1}
+.card p{margin:0;line-height:1.65;color:var(--muted)}
+.big{background:var(--accent);color:#07080C;border:0;border-radius:12px;padding:12px;font-weight:800;font-size:16px}
+.ghostBtn{background:transparent;border:1px solid var(--line);border-radius:12px;padding:10px;font-weight:700}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.stats .chip{font-size:15px}
+#scare{position:fixed;inset:0;z-index:20;background:#000;display:flex;align-items:center;justify-content:center}
+#scare svg{width:min(85vw,400px);height:auto;animation:lunge .95s ease-out forwards}
+@keyframes lunge{0%{transform:scale(.2);opacity:0}12%{transform:scale(1.05);opacity:1}70%{transform:scale(1.2)}100%{transform:scale(1.5);opacity:0}}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <h1>유령의 복도</h1>
+    <div class="chips">
+      <span class="chip" id="hearts">❤️❤️❤️</span>
+      <span class="chip" id="timer">0:00</span>
+      <button class="iconBtn" id="snd" aria-label="소리">🔊</button>
+    </div>
+  </div>
+  <div class="hud"><span id="stageLbl">1단계</span><div class="bar"><i id="prog"></i></div><span>🚪</span></div>
+  <div class="stage" id="stage">
+    <canvas id="cv"></canvas>
+    <div class="chant" id="chant"></div>
+    <div class="state" id="state"></div>
+  </div>
+  <button class="holdBtn" id="hold">꾹 누르고 있으면 걸어요</button>
+</div>
+
+<div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
+<div id="scare" hidden>
+  <svg viewBox="0 0 200 230">
+    <path d="M18,80 Q10,200 34,228 L54,120 Z M182,80 Q190,200 166,228 L146,120 Z" fill="#0E0E0E"/>
+    <ellipse cx="100" cy="105" rx="74" ry="90" fill="#E3E1DB"/>
+    <path d="M24,78 Q100,-24 176,78 Q150,40 100,36 Q50,40 24,78 Z" fill="#0E0E0E"/>
+    <ellipse cx="70" cy="100" rx="17" ry="22" fill="#000"/><ellipse cx="130" cy="100" rx="17" ry="22" fill="#000"/>
+    <circle cx="72" cy="103" r="4" fill="#FF4D57"/><circle cx="132" cy="103" r="4" fill="#FF4D57"/>
+    <ellipse cx="100" cy="160" rx="22" ry="28" fill="#000"/>
+  </svg>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  const SYL = [...'무궁화꽃이피었습니다'];
+  const NOTES = [659,659,587,523,523,587,659,587,523,440];
+  const STAGES = [
+    {chant:[2.6,3.6], look:[1.4,1.8], turn:.42, grace:.22, feint:0,   walk:9.5, uneven:false, flicker:false},
+    {chant:[1.5,3.2], look:[1.2,2.2], turn:.32, grace:.18, feint:.25, walk:9.0, uneven:false, flicker:false},
+    {chant:[0.9,3.0], look:[1.0,2.6], turn:.24, grace:.15, feint:.35, walk:8.5, uneven:true,  flicker:true}
+  ];
+  const L = 15;           // corridor length (world units)
+  const BEST_KEY = 'hall1:best';
+
+  let G;                  // game state
+  function newRun(){ G = {stage:0, lives:3, t0:0, elapsed:0, running:false}; resetStage(); }
+  function resetStage(){
+    Object.assign(G, {d:100, hold:false, step:0, ghost:{st:'chant', t:0, dur:0, face:0, sylT:[], feint:-1, feintT:0}, flick:0, caught:false});
+    startChant();
+  }
+  const rand = (a,b) => a + Math.random()*(b-a);
+
+  // ---------- audio
+  let AC=null, master=null, muted=false;
+  function audioInit(){
+    if (AC){ AC.resume && AC.resume(); return; }
+    try{
+      AC = new (window.AudioContext||window.webkitAudioContext)();
+      master = AC.createGain(); master.gain.value = muted?0:.9; master.connect(AC.destination);
+      const lp = AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=160;
+      const g = AC.createGain(); g.gain.value=.045; lp.connect(g); g.connect(master);
+      [49,51.9,73.4].forEach(f=>{const o=AC.createOscillator(); o.type='sawtooth'; o.frequency.value=f; o.connect(lp); o.start();});
+    }catch(e){AC=null;}
+  }
+  function tone(f, dur, type='sine', vol=.12){
+    if(!AC) return; const t=AC.currentTime, o=AC.createOscillator(), o2=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o2.type=type; o.frequency.value=f; o2.frequency.value=f*1.012;
+    g.gain.setValueAtTime(.0001,t); g.gain.exponentialRampToValueAtTime(vol,t+.01); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    o.connect(g); o2.connect(g); g.connect(master); o.start(t); o2.start(t); o.stop(t+dur+.05); o2.stop(t+dur+.05);
+  }
+  function noise(dur, freq, q, vol){
+    if(!AC) return; const t=AC.currentTime, b=AC.createBuffer(1,AC.sampleRate*dur,AC.sampleRate), d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const s=AC.createBufferSource(), f=AC.createBiquadFilter(), g=AC.createGain(); s.buffer=b; f.type='bandpass'; f.frequency.value=freq; f.Q.value=q;
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur); s.connect(f); f.connect(g); g.connect(master); s.start(t);
+  }
+  const thump = () => { tone(70,.35,'sine',.35); };
+  const step = () => { noise(.09, 300, 2, .25); };
+  function stinger(){ [196,277,370,523].forEach(f=>tone(f,1.1,'sawtooth',.09)); noise(.6,3000,.7,.3); }
+  $('snd').onclick = () => { muted=!muted; $('snd').textContent = muted?'🔇':'🔊'; if(master) master.gain.value = muted?0:.9; };
+
+  // ---------- ghost state machine
+  function startChant(){
+    const P = STAGES[G.stage], gh = G.ghost;
+    gh.st='chant'; gh.t=0; gh.dur=rand(...P.chant); gh.face=0;
+    let w = SYL.map(()=> P.uneven ? rand(.35,1.7) : 1); const sum = w.reduce((a,b)=>a+b,0);
+    let acc=0; gh.sylT = w.map(x => { const s=acc; acc += x/sum*gh.dur; return s; });
+    gh.played = -1;
+    gh.feint = Math.random() < P.feint ? rand(.25,.7)*gh.dur : -1; gh.feintT = 0;
+  }
+  function updateGhost(dt){
+    const P = STAGES[G.stage], gh = G.ghost; gh.t += dt;
+    if (gh.st==='chant'){
+      const k = gh.sylT.filter(s => s <= gh.t).length - 1;
+      if (k > gh.played){ gh.played = k; tone(NOTES[k], .45, 'sine', .14); }
+      if (gh.feint > 0 && gh.t >= gh.feint && gh.feintT === 0){ gh.feintT = .16; thump(); }
+      if (gh.feintT > 0){ gh.feintT -= dt; gh.face = .22; if (gh.feintT <= 0){ gh.feintT = -1; gh.face = 0; } }
+      if (gh.t >= gh.dur){ gh.st='turn'; gh.t=0; thump(); }
+    } else if (gh.st==='turn'){
+      gh.face = Math.min(1, gh.t / P.turn);
+      if (gh.t >= P.turn){ gh.st='look'; gh.t=0; gh.dur=rand(...P.look); gh.face=1; }
+    } else if (gh.st==='look'){
+      if (gh.t > P.grace && G.hold){ caught(); return; }
+      if (Math.floor(gh.t*1.6) !== Math.floor((gh.t-dt)*1.6)) tone(55,.25,'sine',.3);  // heartbeat
+      if (gh.t >= gh.dur){ gh.st='back'; gh.t=0; }
+    } else if (gh.st==='back'){
+      gh.face = Math.max(0, 1 - gh.t/.25);
+      if (gh.t >= .25) startChant();
+    }
+  }
+
+  // ---------- input
+  function setHold(v){ if (!G || !G.running) v = false; G && (G.hold = v); $('hold').classList.toggle('on', !!v); $('hold').textContent = v ? '걷는 중… 👣' : '꾹 누르고 있으면 걸어요'; }
+  ['stage','hold'].forEach(id => {
+    const el = $(id);
+    el.addEventListener('pointerdown', e => { e.preventDefault(); try{ el.setPointerCapture(e.pointerId); }catch(_){} setHold(true); });
+    ['pointerup','pointercancel','lostpointercapture'].forEach(ev => el.addEventListener(ev, () => setHold(false)));
+    el.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  window.addEventListener('blur', () => setHold(false));
+  window.addEventListener('keydown', e => { if (e.code==='Space' && !e.repeat){ e.preventDefault(); setHold(true); } });
+  window.addEventListener('keyup', e => { if (e.code==='Space') setHold(false); });
+
+  // ---------- drawing
+  let W=0, H=0, DPR=1;
+  function resize(){
+    const r = $('stage').getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio||1);
+    W = r.width; H = r.height; cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe($('stage')); window.addEventListener('resize', resize); resize();
+
+  function shade(hex, k){ // darken color by k (0..1)
+    const n = parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    return `rgb(${Math.round(r*k)},${Math.round(g*k)},${Math.round(b*k)})`;
+  }
+  function draw(){
+    const P = G.stage, bob = G.hold ? Math.sin(G.step*2)*3 : 0;
+    const cx = W/2, cy = H*0.47 + bob, fx = W*0.5, fy = H*0.42;
+    const pos = (100 - G.d)/100 * L;              // player world position
+    const zBack = L + 1 - pos;                    // distance to back wall
+    const pr = (X,Y,z) => [cx + X*fx/z, cy + Y*fy/z];
+    const YT = -1.15, YB = 1;
+    ctx.fillStyle = '#000'; ctx.fillRect(0,0,W,H);
+
+    // surfaces (near z=.35 so they overshoot screen edges)
+    const zn = .35;
+    const quad = (pts, col) => { ctx.beginPath(); pts.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.fillStyle=col; ctx.fill(); };
+    quad([pr(-1,YB,zn),pr(1,YB,zn),pr(1,YB,zBack),pr(-1,YB,zBack)], '#2A2F3B');           // floor
+    quad([pr(-1,YT,zn),pr(1,YT,zn),pr(1,YT,zBack),pr(-1,YT,zBack)], '#1A1D25');           // ceiling
+    quad([pr(-1,YT,zn),pr(-1,YB,zn),pr(-1,YB,zBack),pr(-1,YT,zBack)], '#394050');         // left wall
+    quad([pr(1,YT,zn),pr(1,YB,zn),pr(1,YB,zBack),pr(1,YT,zBack)], '#343A49');             // right wall
+
+    // floor tiles + ceiling lamps + doors (world-anchored, scroll as you walk)
+    ctx.lineWidth = 1;
+    for (let wz = Math.ceil(pos+zn); wz < L+1; wz += .75){
+      const z = wz - pos; if (z <= zn) continue;
+      const a = pr(-1,YB,z), b = pr(1,YB,z);
+      ctx.strokeStyle = `rgba(80,88,104,${Math.min(.6, 1.2/z)})`; ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke();
+    }
+    for (let i = 0; i < 7; i++){
+      const wz = 1.5 + i*2.1, z = wz - pos; if (z <= zn || z >= zBack) continue;
+      const on = !(STAGES[P].flicker && ((i*37 + Math.floor(G.elapsed*8)) % 11 === 0));
+      quad([pr(-.25,YT,z),pr(.25,YT,z),pr(.25,YT,z+.5),pr(-.25,YT,z+.5)], on ? `rgba(200,230,255,${Math.min(.55, .9/z)})` : '#222');
+      const side = i % 2 ? 1 : -1, z1 = z, z2 = z + .9;
+      quad([pr(side,-.55,z1),pr(side,YB,z1),pr(side,YB,z2),pr(side,-.55,z2)], shade('#5A4634', Math.max(.25, 1.1 - z*.06)));
+      const wn = pr(side, -.4, z1 + .3), wn2 = pr(side, -.1, z1 + .6);
+      ctx.fillStyle = 'rgba(20,30,48,.9)'; ctx.fillRect(Math.min(wn[0],wn2[0]), wn[1], Math.abs(wn2[0]-wn[0]), wn2[1]-wn[1]);
+      if (i === 3){ const t = pr(side, -.85, z1 + .45); ctx.fillStyle = 'rgba(220,210,190,.6)'; ctx.font = `${Math.max(8, 26/z)}px Gothic A1, sans-serif`; ctx.textAlign='center'; ctx.fillText('5-3', t[0], t[1]); }
+    }
+
+    // back wall + exit door
+    const bl = pr(-1,YT,zBack), br = pr(1,YB,zBack);
+    ctx.fillStyle = '#272C38'; ctx.fillRect(bl[0], bl[1], br[0]-bl[0], br[1]-bl[1]);
+    const d1 = pr(-.38,-.45,zBack), d2 = pr(.38,YB,zBack);
+    ctx.fillStyle = '#3B2E22'; ctx.fillRect(d1[0], d1[1], d2[0]-d1[0], d2[1]-d1[1]);
+    const ex = pr(0,-.72,zBack), s = fy/zBack;
+    ctx.fillStyle = '#1F9A50'; ctx.fillRect(ex[0]-.22*s, ex[1]-.08*s, .44*s, .16*s);
+    ctx.fillStyle = '#E8FFF0'; ctx.font = `800 ${Math.max(7,.11*s)}px Gothic A1, sans-serif`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('EXIT', ex[0], ex[1]+.01*s);
+    ctx.textBaseline='alphabetic';
+
+    // ghost standing in front of the exit
+    drawGhost(...pr(0, YB, zBack - .15), fy/(zBack - .15), fx/(zBack - .15), G.ghost.face, G.ghost.st === 'look');
+
+    // flashlight / darkness
+    const rad = Math.max(W,H) * .62;
+    const gr = ctx.createRadialGradient(cx, cy, Math.min(W,H)*.12, cx, cy, rad);
+    let dark = .9; if (G.flick > 0) dark = .985;
+    gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(.55,`rgba(0,0,0,${dark*.55})`); gr.addColorStop(1,`rgba(0,0,0,${dark})`);
+    ctx.fillStyle = gr; ctx.fillRect(0,0,W,H);
+    if (G.ghost.st === 'look' || G.ghost.st === 'turn'){
+      const a = G.ghost.st === 'look' ? .28 : .12 * G.ghost.face;
+      const rg = ctx.createRadialGradient(cx, cy, Math.min(W,H)*.3, cx, cy, rad);
+      rg.addColorStop(0,'rgba(255,0,20,0)'); rg.addColorStop(1,`rgba(255,0,20,${a})`); ctx.fillStyle = rg; ctx.fillRect(0,0,W,H);
+    }
+  }
+
+  function drawGhost(x, yFloor, sy, sx, face, looking){
+    const front = face >= .5, flip = Math.max(.08, Math.abs(Math.cos(Math.PI*face)));
+    const h = 1.55*sy, top = yFloor - h, u = sx;
+    ctx.save(); ctx.translate(x, 0); ctx.scale(flip, 1);
+    // dress
+    ctx.beginPath(); ctx.moveTo(-.2*u, top+.38*h); ctx.lineTo(.2*u, top+.38*h); ctx.lineTo(.36*u, yFloor);
+    for (let i = 0; i <= 6; i++) ctx.lineTo(.36*u - i*.12*u, yFloor - (i%2 ? .05*h : 0));
+    ctx.closePath(); ctx.fillStyle = '#D9D6CE'; ctx.fill();
+    // arms
+    ctx.fillStyle = '#C9C5BC'; ctx.fillRect(-.27*u, top+.4*h, .07*u, .32*h); ctx.fillRect(.2*u, top+.4*h, .07*u, .32*h);
+    // head
+    const hy = top + .2*h, hr = .15*u;
+    if (!front){
+      ctx.fillStyle = '#0B0B0B';
+      ctx.beginPath(); ctx.ellipse(0, hy, hr*1.1, hr*1.25, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-hr*1.15, hy); ctx.lineTo(hr*1.15, hy); ctx.lineTo(hr*1.3, top+.62*h); ctx.lineTo(-hr*1.3, top+.62*h); ctx.closePath(); ctx.fill();
+    } else {
+      ctx.fillStyle = '#0B0B0B';
+      ctx.beginPath(); ctx.moveTo(-hr*1.2, hy-hr*.4); ctx.lineTo(-hr*1.35, top+.6*h); ctx.lineTo(-hr*.7, top+.42*h); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(hr*1.2, hy-hr*.4); ctx.lineTo(hr*1.35, top+.6*h); ctx.lineTo(hr*.7, top+.42*h); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#E6E3DC'; ctx.beginPath(); ctx.ellipse(0, hy, hr, hr*1.2, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0B0B0B'; ctx.beginPath(); ctx.ellipse(0, hy - hr*.85, hr*1.08, hr*.55, 0, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.beginPath(); ctx.ellipse(-hr*.4, hy, hr*.24, hr*.32, 0, 0, Math.PI*2); ctx.ellipse(hr*.4, hy, hr*.24, hr*.32, 0, 0, Math.PI*2); ctx.fill();
+      if (looking){ ctx.fillStyle = '#FF2A35'; ctx.shadowColor = '#FF2A35'; ctx.shadowBlur = 10;
+        ctx.beginPath(); ctx.arc(-hr*.4, hy, hr*.08, 0, Math.PI*2); ctx.arc(hr*.4, hy, hr*.08, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0; }
+      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.ellipse(0, hy + hr*.6, hr*.18, hr*.26, 0, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // ---------- HUD
+  function fmt(ms){ const s=Math.floor(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+  function fmtKo(ms){ const s=Math.floor(ms/1000), m=Math.floor(s/60); return m ? `${m}분 ${s%60}초` : `${s%60}초`; }
+  const heartStr = () => '❤️'.repeat(G.lives) + '🖤'.repeat(3-G.lives);
+  function hud(){
+    $('hearts').textContent = heartStr();
+    $('stageLbl').textContent = `${G.stage+1}단계`;
+    $('prog').style.width = (100 - G.d) + '%';
+    $('timer').textContent = fmt(G.elapsed*1000);
+    const gh = G.ghost, ch = $('chant'), st = $('state');
+    if (gh.st === 'look'){ ch.className = 'chant look'; ch.textContent = '움직이지 마…'; st.textContent = G.hold ? '' : '숨 참기…'; st.style.color = 'var(--red)'; }
+    else {
+      ch.className = 'chant';
+      const n = gh.st === 'chant' ? gh.played + 1 : SYL.length;
+      ch.innerHTML = SYL.map((c,i) => `<span class="${i < n ? 'on' : ''}">${c}</span>`).join('');
+      st.textContent = gh.st === 'turn' ? '돌아본다! 멈춰!' : (G.hold ? '' : '지금 걸어!'); st.style.color = gh.st === 'turn' ? 'var(--red)' : 'var(--green)';
+    }
+  }
+
+  // ---------- loop
+  let last = 0;
+  function frame(ts){
+    const dt = Math.min(.05, (ts - (last||ts))/1000); last = ts;
+    if (G.running){
+      G.elapsed += dt;
+      updateGhost(dt);
+      if (G.running && G.hold){
+        const prevStep = Math.floor(G.step);
+        G.d = Math.max(0, G.d - STAGES[G.stage].walk * dt); G.step += dt*4.2;
+        if (Math.floor(G.step) !== prevStep) step();
+        if (G.d <= 0) stageClear();
+      }
+      if (STAGES[G.stage].flicker){ if (G.flick > 0) G.flick -= dt; else if (Math.random() < dt*.25) G.flick = rand(.08,.3); }
+    }
+    draw(); hud();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- flow
+  function openOv(html, bind){ $('card').innerHTML = html; $('ov').hidden = false; bind && bind(); }
+  function closeOv(){ $('ov').hidden = true; }
+  function loadBest(){ try { return JSON.parse(localStorage.getItem(BEST_KEY)); } catch(e){ return null; } }
+  function saveBest(b){ try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch(e){} }
+
+  function caught(){
+    G.running = false; setHold(false);
+    $('scare').hidden = false; stinger();
+    setTimeout(() => {
+      $('scare').hidden = true; G.lives--;
+      if (G.lives <= 0){
+        openOv(`<h2>잡혔다…</h2><p>복도의 그녀가 웃는다.<br>"이제 너도 술래야."</p>
+          <p>${G.stage+1}단계에서 잡혔어요.</p>
+          <button class="big" id="b1">처음부터 다시</button>`, () => $('b1').onclick = () => { newRun(); begin(); });
+      } else {
+        openOv(`<h2>들켰다!</h2><p>귀신이 돌아볼 땐 손을 떼야 해요.<br>남은 목숨 ${heartStr()}</p>
+          <button class="big" id="b1">${G.stage+1}단계 다시 도전</button>`, () => $('b1').onclick = () => { resetStage(); begin(); });
+      }
+    }, 1000);
+  }
+  function stageClear(){
+    G.running = false; setHold(false); tone(880,.3,'sine',.15);
+    if (G.stage < STAGES.length - 1){
+      const msgs = ['귀신이 사라졌다… 문 너머에 또 복도가 있다.', '숨이 가쁘다. 마지막 복도… 불이 깜빡거린다.'];
+      openOv(`<h2>${G.stage+1}단계 통과!</h2><p>${msgs[G.stage]}</p>
+        <p>다음 단계는 귀신이 더 빨라지고, 가끔 <b style="color:var(--ink)">속임 동작</b>도 해요.</p>
+        <button class="big" id="b1">${G.stage+2}단계로</button>`, () => $('b1').onclick = () => { G.stage++; resetStage(); begin(); });
+    } else win();
+  }
+  function win(){
+    const ms = G.elapsed*1000, best = loadBest(), isBest = !best || ms < best.ms;
+    if (isBest) saveBest({ms, lives:G.lives});
+    openOv(`<h2>탈출 성공!</h2>
+      <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">${heartStr()}</span></div>
+      <p>학교 밖으로 나왔다. 뒤를 돌아보니…<br>창문마다 하얀 얼굴이 손을 흔들고 있다. 👋</p>
+      <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
+      <button class="big" id="b1">결과 복사</button>
+      <button class="ghostBtn" id="b2">다시 하기</button>`, () => {
+        $('b1').onclick = () => copy(shareText(ms), $('b1'));
+        $('b2').onclick = () => { newRun(); begin(); };
+      });
+  }
+  function shareText(ms){
+    let t = `👻 유령의 복도 3단계 탈출!\n⏱ ${fmtKo(ms)} · ${heartStr()}\n`;
+    if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
+    return t.trim();
+  }
+  function copy(text, btn){
+    const done = () => { btn.textContent = '복사됐어요! 카톡에 붙여 넣기'; };
+    const fb = () => { const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); done(); }catch(e){ btn.textContent='복사 실패 — 화면을 캡처해 주세요'; } ta.remove(); };
+    try { navigator.clipboard.writeText(text).then(done, fb); } catch(e){ fb(); }
+  }
+  function begin(){ closeOv(); audioInit(); G.running = true; }
+
+  function intro(){
+    newRun();
+    const best = loadBest();
+    openOv(`<h2>유령의 복도</h2>
+      <p>밤 9시, 학교에 혼자 남았다.<br>복도 끝 비상구 앞에 누군가 서 있다.<br>"<b style="color:var(--ink)">무궁화 꽃이 피었습니다…</b>"</p>
+      <p style="font-size:13px">👆 화면이나 아래 버튼을 <b style="color:var(--ink)">꾹 누르면</b> 걸어요<br>🔴 귀신이 돌아보면 <b style="color:var(--ink)">손을 떼고 멈추기</b><br>❤️ 목숨 3개로 3단계 복도를 통과하세요</p>
+      ${best ? `<p>내 최고 기록: <b style="color:var(--ink)">${fmtKo(best.ms)}</b></p>` : ''}
+      <button class="big" id="b1">시작하기 🔊</button>`, () => $('b1').onclick = begin);
+  }
+
+  intro();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</html>
