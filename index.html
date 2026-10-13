@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>점오하게</title>
+<meta name="description" content="점심시간 5분, 딱 한 판. 설치 없이 바로 하는 미니 게임 모음.">
+<meta property="og:title" content="점오하게 — 점심시간 5분 게임">
+<meta property="og:description" content="오늘의 탑 · 오늘의 방탈출 · 유령의 복도 · 밤의 교실">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* Lunch-tray menu: header with a lunch clock, then two shelves of game "tickets". */
+:root{
+  --bg:#F6F1E7; --surface:#FFFDF8; --ink:#1F1B16; --muted:#7A6F62; --line:#E6DCCB;
+  --accent:#F2A93B; --accent-ink:#2A1C05; --good:#2F9E5B;
+  --c-tower:#4B6BFF; --c-escape:#E0715A; --c-hall:#2B2F3A; --c-night:#5B3FA0;
+  --f-display:"Black Han Sans","Gothic A1",system-ui,sans-serif;
+  --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
+  --accent:#F2A93B; --accent-ink:#2A1C05; --good:#5BD08A;
+  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
+  --accent:#F2A93B; --accent-ink:#2A1C05; --good:#5BD08A;
+  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
+.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:22px 32px;display:flex;flex-direction:column;gap:22px}
+header{display:flex;flex-direction:column;gap:10px}
+.brand{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:52px;line-height:.95;margin:0;letter-spacing:.01em}
+h1 .five{color:var(--accent)}
+.tag{margin:6px 0 0;color:var(--muted);font-size:15px}
+.clock{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.clock.lunch i{background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 25%,transparent)}
+section{display:flex;flex-direction:column;gap:10px}
+h2{font-size:12px;letter-spacing:.14em;color:var(--muted);margin:0;font-weight:800}
+.list{display:flex;flex-direction:column;gap:10px}
+a.card{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px 12px 12px;color:inherit;text-decoration:none;position:relative;overflow:hidden;transition:transform .12s ease}
+a.card:active{transform:scale(.98)}
+a.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+.thumb{width:64px;height:64px;border-radius:12px;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:30px}
+.txt{min-width:0;display:flex;flex-direction:column;gap:3px}
+.name{font-family:var(--f-display);font-weight:400;font-size:21px;line-height:1.1}
+.desc{font-size:13px;color:var(--muted);line-height:1.45}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.pill{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink)}
+.pill.done{background:color-mix(in srgb,var(--good) 18%,transparent)}
+.go{font-size:20px;color:var(--muted)}
+footer{color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div>
+        <h1>점<span class="five">오</span>하게</h1>
+        <p class="tag">점심시간 <b>5분</b>, 딱 한 판.</p>
+      </div>
+      <span class="clock" id="clock"><i></i><span id="clockTxt">--:--</span></span>
+    </div>
+  </header>
+
+  <section>
+    <h2>매일 바뀌는 도전</h2>
+    <div class="list">
+      <a class="card" style="--c:var(--c-tower)" href="https://jangwoo-kim.github.io/games/tower/" target="_top">
+        <div class="thumb">🏗️</div>
+        <div class="txt">
+          <div class="name">오늘의 탑</div>
+          <div class="desc">타이밍 맞춰 블록 쌓기. 하루 3번, 모두 같은 탑.</div>
+          <div class="meta"><span class="pill">⏱ 1분</span><span class="pill" id="st-tower">오늘 아직 안 함</span></div>
+        </div>
+        <span class="go">›</span>
+      </a>
+      <a class="card" style="--c:var(--c-escape)" href="https://jangwoo-kim.github.io/games/escape/" target="_top">
+        <div class="thumb">🚪</div>
+        <div class="txt">
+          <div class="name">오늘의 방탈출</div>
+          <div class="desc">잠긴 방에서 단서 찾기. 열쇠와 비밀번호가 매일 바뀌어요.</div>
+          <div class="meta"><span class="pill">⏱ 3~5분</span><span class="pill" id="st-escape">오늘 아직 안 함</span></div>
+        </div>
+        <span class="go">›</span>
+      </a>
+    </div>
+  </section>
+
+  <section>
+    <h2>공포 · 소리 켜고 하면 더 무서워요</h2>
+    <div class="list">
+      <a class="card" style="--c:var(--c-hall)" href="https://jangwoo-kim.github.io/games/hall/" target="_top">
+        <div class="thumb">👻</div>
+        <div class="txt">
+          <div class="name">유령의 복도</div>
+          <div class="desc">무궁화 꽃이 피었습니다… 돌아보면 멈춰!</div>
+          <div class="meta"><span class="pill">⏱ 2분</span><span class="pill" id="st-hall">3단계</span></div>
+        </div>
+        <span class="go">›</span>
+      </a>
+      <a class="card" style="--c:var(--c-night)" href="https://jangwoo-kim.github.io/games/night/" target="_top">
+        <div class="thumb">🔦</div>
+        <div class="txt">
+          <div class="name">밤의 교실</div>
+          <div class="desc">손전등 하나로 어두운 교실 탈출. 방탈출 2단계.</div>
+          <div class="meta"><span class="pill">⏱ 5분</span><span class="pill" id="st-night">도전 전</span></div>
+        </div>
+        <span class="go">›</span>
+      </a>
+    </div>
+  </section>
+
+  <footer>설치·가입 없이 바로 플레이 · 기록은 이 기기에만 저장돼요</footer>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const now = new Date();
+  const dkey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+  const fmtKo = ms => { const s = Math.floor(ms/1000), m = Math.floor(s/60); return m ? `${m}분 ${s%60}초` : `${s%60}초`; };
+  const mark = (id, text) => { const el = $(id); el.textContent = text; el.classList.add('done'); };
+
+  const t = get('tower:' + dkey); if (t && t.tries) mark('st-tower', `✅ 오늘 ${t.best || 0}층`);
+  const e = get('escape:' + dkey); if (e && e.ms) mark('st-escape', `✅ 오늘 ${fmtKo(e.ms)}`);
+  const h = get('hall1:best'); if (h && h.ms) mark('st-hall', `🏆 ${fmtKo(h.ms)}`);
+  const n = get('night1:best'); if (n && n.ms) mark('st-night', `🏆 ${fmtKo(n.ms)}`);
+
+  function tick(){
+    const d = new Date(), H = d.getHours(), M = d.getMinutes(), mins = H*60 + M;
+    const el = $('clock'); let txt;
+    if (mins >= 720 && mins < 780){ txt = `점심시간 ${60 - (mins - 720)}분 남음 🍱`; el.classList.add('lunch'); }
+    else {
+      el.classList.remove('lunch');
+      if (mins < 720){ const left = 720 - mins; txt = `점심까지 ${left >= 60 ? Math.floor(left/60) + '시간 ' : ''}${left % 60}분`; }
+      else if (H < 18) txt = '오후도 힘내요 ☕';
+      else txt = '오늘도 수고했어요 🌙';
+    }
+    $('clockTxt').textContent = txt;
+  }
+  tick(); setInterval(tick, 30000);
+})();
+</script>
+
+</html>

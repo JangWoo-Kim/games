@@ -65,7 +65,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 <div class="wrap">
   <div class="top">
     <div>
-      <h1>🚪 잠긴 방</h1>
+      <a href="https://jangwoo-kim.github.io/games/" target="_top" style="display:block;font-size:12px;font-weight:700;color:inherit;opacity:.6;text-decoration:none;margin-bottom:3px">← 점오하게</a><h1>🚪 잠긴 방</h1>
       <div class="sub">단서를 찾아 방을 탈출하자</div>
     </div>
     <div class="chips">
@@ -132,6 +132,7 @@ button{font:inherit;color:inherit;cursor:pointer}
         <rect x="112" y="212" width="108" height="8" rx="2" fill="#9B6A43"/>
         <rect x="116" y="220" width="8" height="50" fill="#8A5A3B"/>
         <rect x="208" y="220" width="8" height="50" fill="#8A5A3B"/>
+        <rect x="176" y="184" width="42" height="28" fill="transparent"/>
         <rect x="186" y="196" width="20" height="16" rx="2" fill="#6FA8DC"/>
         <rect x="190" y="200" width="12" height="2" fill="#fff"/>
       </g>
@@ -220,16 +221,42 @@ button{font:inherit;color:inherit;cursor:pointer}
     note:{icon:'📜', name:'쪽지', read:true},
     doorKey:{icon:'🗝️', name:'문 열쇠'}
   };
-  // bookshelf: R=red B=blue Y=yellow G=green — answer is count of R,B,Y = 3,5,2
+  // ---- today's puzzle: everything below is generated from the date, so everyone gets the same room each day
   const COLORS = {R:'#D9534F', B:'#3B6FD4', Y:'#F2C230', G:'#4CAF6A'};
-  const SHELF1 = ['R','B','G','B','Y','R'];
-  const SHELF2 = ['B','R','B','Y','G','B'];
-  const CODE = [3,5,2];
-  const BEST_KEY = 'escape1:best';
+  const INK = {R:'#D9534F', B:'#3B6FD4', Y:'#C99A1E', G:'#3E9A5A'};
+  const CNAME = {R:'빨강', B:'파랑', Y:'노랑', G:'초록'};
+  const NOW = new Date();
+  const DKEY = `${NOW.getFullYear()}-${String(NOW.getMonth()+1).padStart(2,'0')}-${String(NOW.getDate()).padStart(2,'0')}`;
+  const DLABEL = `${NOW.getMonth()+1}월 ${NOW.getDate()}일`;
+  function hash(s){ let h = 2166136261; for (const ch of s){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const rng = mulberry(hash('escape:' + DKEY));
+  const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  let counts;
+  do { counts = {R:1, B:1, Y:1, G:1}; for (let i = 0; i < 8; i++) counts['RBYG'[Math.floor(rng()*4)]]++; }
+  while (Math.max(...Object.values(counts)) > 6 || new Set(Object.values(counts)).size < 3);
+  const books = shuffle([...'RBYG'].flatMap(c => Array(counts[c]).fill(c)));
+  const SHELF1 = books.slice(0, 6), SHELF2 = books.slice(6);
+  const ORDER = shuffle(['R','B','Y','G']).slice(0, 3);          // colors on the note, in order
+  const CODE = ORDER.map(c => counts[c]);
+  const KEY_SPOT = ['rug','plant','bed','desk'][Math.floor(rng()*4)];
+  const FOUND = {
+    rug:'러그 귀퉁이를 들춰 보니… 작은 열쇠 발견! 🔑',
+    plant:'화분 흙을 살살 파 보니… 작은 열쇠가 묻혀 있다! 🔑',
+    bed:'베개를 들어 보니… 밑에 작은 열쇠가 있다! 🔑',
+    desk:'파란 공책을 펼치니… 사이에 작은 열쇠가 끼어 있다! 🔑'
+  };
+  const SPOT_HINT = {
+    rug:'바닥을 잘 살펴봐. 빨간 러그 밑에 뭔가 있을지도?',
+    plant:'초록 식물을 살펴봐. 화분 흙 속에 뭔가 있을지도?',
+    bed:'폭신한 침대를 살펴봐. 베개 밑에 뭔가 있을지도?',
+    desk:'책상 위 파란 공책을 살펴봐. 사이에 뭔가 끼어 있을지도?'
+  };
+  const BEST_KEY = 'escape:' + DKEY;
 
   let S;
   function reset(){
-    S = {inv:[], sel:null, rug:false, drawer:false, lit:false, safe:false, escaped:false,
+    S = {inv:[], sel:null, rug:false, found:false, drawer:false, lit:false, safe:false, escaped:false,
          hints:0, t0:0, running:false, dials:[0,0,0]};
   }
 
@@ -316,8 +343,9 @@ button{font:inherit;color:inherit;cursor:pointer}
     const sel = S.sel;
     switch(o){
       case 'rug':
-        if (!S.rug){ S.rug = true; give('smallKey'); say('러그 귀퉁이를 들춰 보니… 작은 열쇠 발견! 🔑'); }
-        else say('러그 밑엔 이제 아무것도 없어.');
+        S.rug = true;
+        if (KEY_SPOT === 'rug' && !S.found){ S.found = true; give('smallKey'); say(FOUND.rug); }
+        else say('러그 귀퉁이를 들춰 봤지만… 먼지뿐이야.');
         break;
       case 'drawer':
         if (S.drawer) say('서랍은 텅 비었어.');
@@ -341,6 +369,7 @@ button{font:inherit;color:inherit;cursor:pointer}
         else say('문이 꽉 잠겨 있어. 커다란 열쇠 구멍이 보여.');
         break;
       default: {
+        if (o === KEY_SPOT && !S.found && !sel){ S.found = true; give('smallKey'); say(FOUND[o]); break; }
         const list = FLAVOR[o]; if (!list) break;
         flavorIdx[o] = ((flavorIdx[o] ?? -1) + 1) % list.length;
         say(sel ? `${ITEMS[sel].name}을(를) 써 봤지만… 아무 일도 없어.` : list[flavorIdx[o]]);
@@ -363,7 +392,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   function openNote(){
     openOv(`<h2>📜 쪽지</h2>
       <div class="note">책장의 책을 세어 봐.<br>
-        <span style="color:${COLORS.R}">● 빨강</span> → <span style="color:${COLORS.B}">● 파랑</span> → <span style="color:#C99A1E">● 노랑</span><br>
+        ${ORDER.map(c => `<span style="color:${INK[c]}">● ${CNAME[c]}</span>`).join(' → ')}<br>
         이 순서가 비밀번호야!</div>
       <button class="big" id="okBtn">알겠어!</button>`, () => $('okBtn').onclick = closeOv);
   }
@@ -387,7 +416,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     const dial = (i, c) => `<div class="dial">${dot(c)}<button data-i="${i}" data-d="1">▲</button><div class="d" id="d${i}">${S.dials[i]}</div><button data-i="${i}" data-d="-1">▼</button></div>`;
     openOv(`<h2>🔒 금고</h2>
       <p>숫자 세 개를 맞춰야 열리는 금고야.</p>
-      <div class="dials" id="dials">${dial(0,'R')}${dial(1,'B')}${dial(2,'Y')}</div>
+      <div class="dials" id="dials">${ORDER.map((c, i) => dial(i, c)).join('')}</div>
       <button class="big" id="tryBtn">열어 보기</button>
       <button class="ghost" id="noBtn">닫기</button>`, () => {
         $('dials').querySelectorAll('button').forEach(b => b.onclick = () => {
@@ -410,10 +439,11 @@ button{font:inherit;color:inherit;cursor:pointer}
     if (!S.running) return;
     S.hints++;
     let t;
-    if (!S.rug) t = '바닥을 잘 살펴봐. 빨간 러그 밑에 뭔가 있을지도?';
+    const names = ORDER.map(c => CNAME[c]).join('·');
+    if (!S.found) t = SPOT_HINT[KEY_SPOT];
     else if (!S.drawer) t = '가방의 🔑 작은 열쇠를 누르고, 책상 서랍을 눌러 봐.';
     else if (!S.lit) t = '🔦 손전등을 고르고 어두운 곳을 비춰 봐. 침대 밑!';
-    else if (!S.safe) t = S.hints % 2 ? '책장을 눌러 크게 보고, 빨강·파랑·노랑 책이 각각 몇 권인지 세어 봐.' : '센 숫자를 금고 다이얼에 빨강·파랑·노랑 순서로 맞춰 봐.';
+    else if (!S.safe) t = S.hints % 2 ? `책장을 눌러 크게 보고, ${names} 책이 각각 몇 권인지 세어 봐.` : `센 숫자를 금고 다이얼에 ${names} 순서로 맞춰 봐.`;
     else t = '🗝️ 문 열쇠를 고르고 문을 눌러!';
     say('💡 ' + t);
   }
@@ -427,16 +457,17 @@ button{font:inherit;color:inherit;cursor:pointer}
     reset(); render(); $('timer').textContent = '⏱ 0:00';
     say('방 안의 물건을 눌러서 살펴보세요.');
     const best = loadBest();
-    openOv(`<h2>🚪 잠긴 방</h2>
+    openOv(`<p style="font-size:12px;letter-spacing:.15em;color:var(--accent)">오늘의 방 · ${DLABEL}</p><h2>🚪 잠긴 방</h2>
       <p>눈을 떠 보니 낯선 방…<br>문이 꽁꽁 잠겨 있다!<br>단서를 찾아 방을 탈출하자.</p>
-      ${best ? `<p>내 최고 기록: <b style="color:var(--ink)">${fmtKo(best.ms)}</b> · 힌트 ${best.hints}번</p>` : ''}
+      <p style="font-size:12px">🔄 열쇠 숨은 곳과 비밀번호가 <b style="color:var(--ink)">매일 바뀌어요</b>. 오늘은 모두 같은 문제!</p>
+      ${best ? `<p>오늘 내 기록: <b style="color:var(--ink)">${fmtKo(best.ms)}</b> · 힌트 ${best.hints}번</p>` : ''}
       <button class="big" id="goBtn">탈출 시작!</button>`, () => {
         $('goBtn').onclick = () => { closeOv(); S.running = true; S.t0 = Date.now(); };
       });
   }
 
   function shareText(ms){
-    let t = `🚪 방탈출 1단계 '잠긴 방' 탈출 성공!\n⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
+    let t = `🚪 오늘의 방탈출 ${DLABEL}\n탈출 성공! ⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
     if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
     return t.trim();
   }
@@ -461,7 +492,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     setTimeout(() => openOv(`<h2>🎉 탈출 성공!</h2>
       <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
       <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
-      ${/github\.io$/.test(location.hostname) ? `<a class="big" href="../night/" style="text-decoration:none;background:#1B1F2A;color:#C7F0FF">👻 2단계: 밤의 교실로</a>` : `<p>👻 다음은 2단계 '밤의 교실'이 기다리고 있어요.</p>`}
+      <a class="big" href="https://jangwoo-kim.github.io/games/night/" target="_top" style="text-decoration:none;background:#1B1F2A;color:#C7F0FF">👻 2단계: 밤의 교실로</a>
       <button class="big" id="shareBtn">결과 복사</button>
       <button class="ghost" id="againBtn">다시 하기</button>`, () => {
         $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
