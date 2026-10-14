@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>도시락 합치기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* Physics merge puzzle: drop lunch foods into a wooden lunchbox; two of the same merge into the next food.
+   Layout fits one phone screen: header, canvas (flex), evolution ladder. */
+:root{
+  --bg:#F6F1E7; --surface:#FFFDF8; --ink:#1F1B16; --muted:#7A6F62; --line:#E6DCCB;
+  --accent:#E8892B; --accent-ink:#2A1505; --danger:#E0565B;
+  --box:#C99A62; --box-in:#F3E3C6; --box-edge:#A87A45;
+  --f-display:"Black Han Sans","Gothic A1",system-ui,sans-serif;
+  --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
+  --accent:#F2A93B; --accent-ink:#2A1505; --danger:#FF7A7F;
+  --box:#6E5233; --box-in:#2A241C; --box-edge:#8A6A44; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
+  --accent:#F2A93B; --accent-ink:#2A1505; --danger:#FF7A7F;
+  --box:#6E5233; --box-in:#2A241C; --box-edge:#8A6A44; color-scheme:dark }
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;overflow-x:hidden}
+.wrap{max-width:480px;margin:0 auto;padding-inline:12px;padding-block:8px 10px;display:flex;flex-direction:column;gap:8px;height:100%;min-height:540px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;flex:none}
+.home{display:block;font-size:12px;font-weight:700;color:inherit;opacity:.6;text-decoration:none;margin-bottom:3px}
+h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-height:1}
+.date{font-size:12px;color:var(--muted);margin-top:3px}
+.scores{display:flex;gap:6px}
+.sc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:5px 10px;display:flex;flex-direction:column;align-items:flex-end;min-width:68px}
+.sc small{font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.04em;white-space:nowrap}
+.sc b{font-family:var(--f-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.1}
+.stage{flex:1 1 0;min-height:0;position:relative;touch-action:none}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+.ladder{flex:none;display:flex;align-items:center;justify-content:space-between;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 8px;font-size:19px;overflow:hidden}
+.ladder span{opacity:.28;transition:opacity .2s, transform .2s;line-height:1}
+.ladder span.got{opacity:1}
+.ladder span.pop{transform:scale(1.4)}
+.ladder i{font-style:normal;font-size:10px;color:var(--muted)}
+.ov{position:fixed;inset:0;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.card h2{font-family:var(--f-display);font-weight:400;font-size:32px;margin:0;line-height:1.1}
+.card p{margin:0;line-height:1.6;color:var(--muted)}
+.big{background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:12px;font:800 16px var(--f-body);cursor:pointer}
+.ghost{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px;font:700 15px var(--f-body);cursor:pointer}
+.stats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.evo{font-size:22px;letter-spacing:2px}
+</style>
+
+<div class="wrap">
+  <div class="top">
+    <div>
+      <a class="home" href="https://jangwoo-kim.github.io/games/" target="_top">← 점오하게</a>
+      <h1>도시락 합치기</h1>
+      <div class="date" id="date"></div>
+    </div>
+    <div class="scores">
+      <div class="sc"><small>점수</small><b id="score">0</b></div>
+      <div class="sc"><small>오늘 최고</small><b id="best">0</b></div>
+    </div>
+  </div>
+  <div class="stage" id="stage"><canvas id="cv"></canvas></div>
+  <div class="ladder" id="ladder"></div>
+</div>
+<div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  // food ladder: small → big. Two of the same merge into the next one.
+  const FOOD = [
+    {e:'🥚', n:'계란',    c:'#FFF4D6', s:.50},
+    {e:'🍙', n:'주먹밥',  c:'#F1F1EC', s:.64},
+    {e:'🥟', n:'만두',    c:'#F6E7C9', s:.80},
+    {e:'🍤', n:'새우튀김', c:'#FFD79A', s:.96},
+    {e:'🍢', n:'어묵',    c:'#F2C08A', s:1.14},
+    {e:'🍗', n:'치킨',    c:'#E8A766', s:1.34},
+    {e:'🍔', n:'버거',    c:'#F4C36B', s:1.56},
+    {e:'🍕', n:'피자',    c:'#FFB38A', s:1.80},
+    {e:'🍜', n:'라면',    c:'#FF9F7A', s:2.06},
+    {e:'🍱', n:'도시락',  c:'#9ED3A8', s:2.36}
+  ];
+  const PTS = FOOD.map((_, i) => (i+1)*(i+2)/2);
+  const MAXT = FOOD.length - 1;
+
+  // ---------- daily seed
+  const NOW = new Date();
+  const DKEY = `${NOW.getFullYear()}-${String(NOW.getMonth()+1).padStart(2,'0')}-${String(NOW.getDate()).padStart(2,'0')}`;
+  const DLABEL = `${NOW.getMonth()+1}월 ${NOW.getDate()}일`;
+  const BEST_KEY = 'lunch:' + DKEY, ALL_KEY = 'lunch:best';
+  function hash(s){ let h = 2166136261; for (const ch of s){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+  $('date').textContent = `${DLABEL} · 오늘은 모두 같은 순서`;
+
+  // ---------- audio
+  let AC = null;
+  function audio(){ if (AC){ AC.resume && AC.resume(); return; } try { AC = new (window.AudioContext||window.webkitAudioContext)(); } catch(e){} }
+  function pop(t){
+    if (!AC) return; const now = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'triangle'; const f = 330 * Math.pow(1.122, t); o.frequency.setValueAtTime(f, now); o.frequency.exponentialRampToValueAtTime(f*1.5, now+.08);
+    g.gain.setValueAtTime(.0001, now); g.gain.exponentialRampToValueAtTime(.18, now+.01); g.gain.exponentialRampToValueAtTime(.0001, now+.22);
+    o.connect(g); g.connect(AC.destination); o.start(now); o.stop(now+.25);
+  }
+  function thud(){
+    if (!AC) return; const now = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'sine'; o.frequency.setValueAtTime(140, now); o.frequency.exponentialRampToValueAtTime(60, now+.12);
+    g.gain.setValueAtTime(.16, now); g.gain.exponentialRampToValueAtTime(.0001, now+.15); o.connect(g); g.connect(AC.destination); o.start(now); o.stop(now+.16);
+  }
+
+  // ---------- layout
+  let W = 0, H = 0, DPR = 1, S = 1, box = {};
+  function resize(){
+    const r = $('stage').getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
+    const oldS = S, oldBox = box;
+    W = r.width; H = r.height; cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
+    const bw = Math.min(W, H * 0.78);                   // lunchbox keeps a fixed shape
+    S = bw / 360;
+    const bh = Math.min(H - 12*S, bw * 1.22);            // cap depth so a round stays ~5 minutes
+    const off = Math.max(0, (H - 12*S - bh) / 2);
+    box = {l:(W-bw)/2 + 10*S, r:(W+bw)/2 - 10*S, b:H - 8*S - off, t:H - 8*S - off - bh};
+    box.line = box.t + 66*S;                            // drop zone above the dashed line
+    if (G && oldBox.l !== undefined && oldS !== S){      // rescale existing food so a resize doesn't break the pile
+      const k = S/oldS;
+      G.balls.forEach(b => { b.x = box.l + (b.x - oldBox.l)*k; b.y = box.b - (oldBox.b - b.y)*k; b.r = rad(b.t); });
+    }
+  }
+  const rad = t => FOOD[t].s * 25 * S;
+
+  // ---------- game state
+  let G = null;
+  function newGame(){
+    G = {balls:[], score:0, rng:mulberry(hash('lunch:' + DKEY)), cur:0, next:0, aim:W/2, canDrop:true, cool:0,
+         over:false, overT:0, running:false, maxT:0, merges:0, fx:[], id:0};
+    G.cur = pick(); G.next = pick(); G.aim = (box.l + box.r)/2;
+    $('score').textContent = '0'; ladder();
+  }
+  function pick(){ // daily sequence: mostly small foods
+    const w = [30, 26, 20, 14, 10], r = G.rng() * 100; let a = 0;
+    for (let i = 0; i < w.length; i++){ a += w[i]; if (r < a) return i; }
+    return 0;
+  }
+  function ladder(pulse){
+    $('ladder').innerHTML = FOOD.map((f, i) => `<span class="${i <= G.maxT ? 'got' : ''}${pulse === i ? ' pop' : ''}" title="${f.n}">${f.e}</span>`).join('<i>›</i>');
+    if (pulse !== undefined) setTimeout(() => { const s = $('ladder').querySelectorAll('span')[pulse]; s && s.classList.remove('pop'); }, 220);
+  }
+
+  // ---------- input
+  const st = $('stage');
+  function aimAt(e){ const r = cv.getBoundingClientRect(); G.aim = e.clientX - r.left; }
+  st.addEventListener('pointermove', e => { if (G && G.running) aimAt(e); });
+  st.addEventListener('pointerdown', e => { if (!G || !G.running) return; e.preventDefault(); try { st.setPointerCapture(e.pointerId); } catch(_){} aimAt(e); });
+  st.addEventListener('pointerup', e => { if (!G || !G.running) return; aimAt(e); drop(); });
+  window.addEventListener('keydown', e => {
+    if (!G || !G.running) return;
+    if (e.code === 'ArrowLeft') G.aim -= 14*S; else if (e.code === 'ArrowRight') G.aim += 14*S;
+    else if (e.code === 'Space' || e.code === 'ArrowDown'){ e.preventDefault(); drop(); }
+  });
+
+  function clampAim(t){ const r = rad(t); return Math.max(box.l + r, Math.min(box.r - r, G.aim)); }
+  function drop(){
+    if (!G.canDrop || G.over) return;
+    const t = G.cur, r = rad(t);
+    G.balls.push({id:++G.id, t, x:clampAim(t), y:box.line - r - 6*S, vx:0, vy:0, r, a:0, age:0});
+    G.cur = G.next; G.next = pick(); G.canDrop = false; G.cool = .45; thud();
+  }
+
+  // ---------- physics
+  function step(dt){
+    const g = 2300*S, bs = G.balls;
+    for (const b of bs){
+      b.vy += g*dt; b.x += b.vx*dt; b.y += b.vy*dt; b.age += dt;
+      b.vx *= .996; b.vy *= .999; b.a += b.vx*dt / b.r;
+    }
+    for (let it = 0; it < 3; it++){
+      for (let i = 0; i < bs.length; i++){
+        const a = bs[i];
+        for (let j = i+1; j < bs.length; j++){
+          const b = bs[j], dx = b.x - a.x, dy = b.y - a.y, rr = a.r + b.r, d2 = dx*dx + dy*dy;
+          if (d2 >= rr*rr || d2 === 0) continue;
+          const d = Math.sqrt(d2), nx = dx/d, ny = dy/d, ov = rr - d;
+          if (a.t === b.t && a.t < MAXT && !a.dead && !b.dead){ merge(a, b); continue; }
+          const ia = 1/(a.r*a.r), ib = 1/(b.r*b.r), sum = ia + ib;
+          a.x -= nx*ov*ia/sum; a.y -= ny*ov*ia/sum; b.x += nx*ov*ib/sum; b.y += ny*ov*ib/sum;
+          const rvx = b.vx - a.vx, rvy = b.vy - a.vy, vn = rvx*nx + rvy*ny;
+          if (vn < 0){
+            const j2 = -(1.12)*vn/sum;
+            a.vx -= j2*ia*nx; a.vy -= j2*ia*ny; b.vx += j2*ib*nx; b.vy += j2*ib*ny;
+            const tx = -ny, ty = nx, vt = rvx*tx + rvy*ty, jt = -vt*.05/sum;
+            a.vx -= jt*ia*tx; a.vy -= jt*ia*ty; b.vx += jt*ib*tx; b.vy += jt*ib*ty;
+          }
+        }
+      }
+      for (const b of bs){
+        if (b.x - b.r < box.l){ b.x = box.l + b.r; if (b.vx < 0) b.vx *= -.2; }
+        if (b.x + b.r > box.r){ b.x = box.r - b.r; if (b.vx > 0) b.vx *= -.2; }
+        if (b.y + b.r > box.b){ b.y = box.b - b.r; if (b.vy > 0) b.vy *= -.15; b.vx *= .97; }
+      }
+    }
+    G.balls = bs.filter(b => !b.dead);
+  }
+  function merge(a, b){
+    a.dead = b.dead = true;
+    const t = a.t + 1, r = rad(t);
+    const nb = {id:++G.id, t, x:(a.x+b.x)/2, y:(a.y+b.y)/2, vx:(a.vx+b.vx)/2, vy:Math.min(a.vy, b.vy)/2 - 120*S, r, a:0, age:1, born:.18};
+    G.balls.push(nb);
+    G.score += PTS[t]; G.merges++;
+    $('score').textContent = G.score.toLocaleString();
+    G.fx.push({x:nb.x, y:nb.y, r, t:0, e:FOOD[t].e, pts:PTS[t]});
+    pop(t);
+    if (t > G.maxT){ G.maxT = t; ladder(t); }
+    if (t === MAXT){ G.score += 100; $('score').textContent = G.score.toLocaleString(); G.fx.push({x:nb.x, y:nb.y - r, r:0, t:0, txt:'도시락 완성! +100'}); }
+  }
+
+  // ---------- render
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function drawFood(b, ghost){
+    const f = FOOD[b.t], k = b.born ? 1 - b.born/.18*.4 : 1, r = b.r * k;
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.a || 0);
+    if (ghost) ctx.globalAlpha = .55;
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fillStyle = f.c; ctx.fill();
+    ctx.lineWidth = Math.max(1.5, 2*S); ctx.strokeStyle = 'rgba(80,50,20,.22)'; ctx.stroke();
+    ctx.font = `${r*1.25}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(f.e, 0, r*.06);
+    ctx.restore();
+  }
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    const C = {box:css('--box'), inn:css('--box-in'), edge:css('--box-edge'), danger:css('--danger'), muted:css('--muted'), ink:css('--ink')};
+    // lunchbox
+    const pad = 8*S;
+    ctx.fillStyle = C.box; roundRect(box.l - pad, box.t, box.r - box.l + pad*2, box.b - box.t + pad, 18*S); ctx.fill();
+    ctx.fillStyle = C.inn; roundRect(box.l, box.t + pad, box.r - box.l, box.b - box.t - pad, 12*S); ctx.fill();
+    ctx.strokeStyle = C.edge; ctx.lineWidth = 2*S; ctx.globalAlpha = .35;
+    for (let x = box.l + 40*S; x < box.r; x += 40*S){ ctx.beginPath(); ctx.moveTo(x, box.t + pad); ctx.lineTo(x, box.t + pad + 6*S); ctx.stroke(); }
+    ctx.globalAlpha = 1;
+    // danger line
+    const danger = G.overT > 0;
+    ctx.setLineDash([8*S, 6*S]); ctx.lineWidth = 2*S;
+    ctx.strokeStyle = danger ? C.danger : C.muted; ctx.globalAlpha = danger ? (.5 + .5*Math.sin(performance.now()/90)) : .45;
+    ctx.beginPath(); ctx.moveTo(box.l, box.line); ctx.lineTo(box.r, box.line); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+    // aim guide + current food
+    if (G.running && !G.over){
+      const x = clampAim(G.cur), r = rad(G.cur), y = box.line - r - 6*S;
+      ctx.strokeStyle = C.muted; ctx.globalAlpha = .35; ctx.lineWidth = 1.5*S; ctx.setLineDash([3*S, 5*S]);
+      ctx.beginPath(); ctx.moveTo(x, y + r); ctx.lineTo(x, box.b); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
+      if (G.canDrop) drawFood({t:G.cur, x, y, r, a:0});
+      // next preview
+      const nr = 14*S, nx = box.r - nr - 6*S, ny = box.t + pad + nr + 8*S;
+      ctx.fillStyle = C.muted; ctx.font = `700 ${10*S+2}px Gothic A1, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.fillText('다음', nx - nr - 6*S, ny);
+      drawFood({t:G.next, x:nx, y:ny, r:nr, a:0});
+    }
+    for (const b of G.balls) drawFood(b);
+    // effects
+    for (const f of G.fx){
+      const k = f.t / .6;
+      if (f.txt){ ctx.globalAlpha = 1 - k; ctx.fillStyle = C.ink; ctx.font = `800 ${18*S+4}px Gothic A1, sans-serif`; ctx.textAlign = 'center'; ctx.fillText(f.txt, f.x, f.y - k*40*S); ctx.globalAlpha = 1; continue; }
+      ctx.globalAlpha = Math.max(0, 1 - k); ctx.strokeStyle = '#fff'; ctx.lineWidth = 3*S;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 + k*.6), 0, Math.PI*2); ctx.stroke();
+      ctx.fillStyle = C.ink; ctx.font = `800 ${12*S+4}px Gothic A1, sans-serif`; ctx.textAlign = 'center'; ctx.fillText('+' + f.pts, f.x, f.y - f.r - k*26*S);
+      ctx.globalAlpha = 1;
+    }
+  }
+  function roundRect(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r); ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); }
+
+  // ---------- loop
+  let last = 0;
+  function frame(ts){
+    const dt = Math.min(1/30, (ts - (last || ts))/1000); last = ts;
+    if (G.running && !G.over){
+      const n = 6; for (let i = 0; i < n; i++) step(dt/n);
+      for (const b of G.balls) if (b.born){ b.born -= dt; if (b.born <= 0) b.born = 0; }
+      if (!G.canDrop){ G.cool -= dt; if (G.cool <= 0) G.canDrop = true; }
+      // overflow check: settled food above the line
+      const above = G.balls.some(b => b.age > 1.1 && b.y - b.r < box.line && Math.abs(b.vy) < 120*S);
+      G.overT = above ? G.overT + dt : 0;
+      if (G.overT > 2) gameOver();
+    }
+    G.fx.forEach(f => f.t += dt); G.fx = G.fx.filter(f => f.t < .6);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- flow
+  function openOv(html, bind){ $('card').innerHTML = html; $('ov').hidden = false; bind && bind(); }
+  function closeOv(){ $('ov').hidden = true; }
+  function refreshBest(){ const b = load(BEST_KEY); $('best').textContent = b ? b.score.toLocaleString() : '0'; }
+  function evo(maxT){ return FOOD.slice(0, maxT+1).map(f => f.e).join(''); }
+
+  function intro(){
+    newGame(); refreshBest();
+    const b = load(BEST_KEY);
+    openOv(`<h2>🍱 도시락 합치기</h2>
+      <p>같은 음식 두 개가 닿으면<br><b style="color:var(--ink)">한 단계 큰 음식</b>으로 합쳐져요.</p>
+      <div class="evo">${FOOD.map(f => f.e).join('')}</div>
+      <p style="font-size:13px">👆 좌우로 끌어서 위치를 정하고 손을 떼면 떨어져요<br>음식이 점선 위로 넘치면 끝 · 오늘은 모두 <b style="color:var(--ink)">같은 순서</b></p>
+      ${b ? `<p>오늘 내 최고: <b style="color:var(--ink)">${b.score.toLocaleString()}점</b> · ${FOOD[b.maxT].e} ${FOOD[b.maxT].n}까지</p>` : ''}
+      <button class="big" id="go">시작하기</button>`, () => $('go').onclick = () => { audio(); closeOv(); G.running = true; });
+  }
+  function gameOver(){
+    G.over = true; G.running = false;
+    const b = load(BEST_KEY), isBest = !b || G.score > b.score;
+    if (isBest) save(BEST_KEY, {score:G.score, maxT:G.maxT});
+    const all = load(ALL_KEY); if (!all || G.score > all.score) save(ALL_KEY, {score:G.score, maxT:G.maxT, d:DKEY});
+    refreshBest();
+    setTimeout(() => openOv(`<h2>도시락이 넘쳤어요!</h2>
+      <div class="stats"><span class="chip">${G.score.toLocaleString()}점</span><span class="chip">${FOOD[G.maxT].e} ${FOOD[G.maxT].n}까지</span></div>
+      <div class="evo">${evo(G.maxT)}</div>
+      <p>${isBest ? '오늘 최고 기록이에요! 🎉' : `오늘 최고는 ${b.score.toLocaleString()}점이에요.`}</p>
+      <button class="big" id="sh">결과 복사</button>
+      <button class="ghost" id="again">다시 하기</button>`, () => {
+        $('sh').onclick = () => copy(shareText(), $('sh'));
+        $('again').onclick = () => { newGame(); closeOv(); G.running = true; };
+      }), 500);
+  }
+  function shareText(){
+    let t = `🍱 도시락 합치기 ${DLABEL}\n${G.score.toLocaleString()}점 · ${FOOD[G.maxT].e} ${FOOD[G.maxT].n}까지\n${evo(G.maxT)}\n`;
+    if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
+    return t.trim();
+  }
+  function copy(text, btn){
+    const done = () => { btn.textContent = '복사됐어요! 카톡에 붙여 넣기'; };
+    const fb = () => { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch(e){ btn.textContent = '복사 실패 — 화면을 캡처해 주세요'; } ta.remove(); };
+    try { navigator.clipboard.writeText(text).then(done, fb); } catch(e){ fb(); }
+  }
+
+  if ('ResizeObserver' in window) new ResizeObserver(resize).observe($('stage'));
+  window.addEventListener('resize', resize);
+  resize(); intro(); requestAnimationFrame(frame);
+})();
+</script>
+
+</html>

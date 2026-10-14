@@ -91,10 +91,21 @@ button{font:inherit;color:inherit;cursor:pointer}
   const STAGES = [
     {chant:[2.6,3.6], look:[1.4,1.8], turn:.42, grace:.22, feint:0,   walk:9.5, uneven:false, flicker:false},
     {chant:[1.5,3.2], look:[1.2,2.2], turn:.32, grace:.18, feint:.25, walk:9.0, uneven:false, flicker:false},
-    {chant:[0.9,3.0], look:[1.0,2.6], turn:.24, grace:.15, feint:.35, walk:8.5, uneven:true,  flicker:true}
+    {chant:[0.9,3.0], look:[1.0,2.6], turn:.24, grace:.15, feint:.35, walk:8.5, uneven:true,  flicker:true},
+    // 4: stops mid-chant and sometimes turns twice in a row
+    {chant:[0.9,2.8], look:[1.0,2.6], turn:.22, grace:.14, feint:.4,  walk:8.5, uneven:true,  flicker:true, pause:.45, double:.4, cut:.2, dark:.93},
+    // 5: blackout — everything at once, faster turns, long power cuts
+    {chant:[0.7,2.6], look:[0.9,2.8], turn:.16, grace:.1, feint:.45, walk:8.2, uneven:true,  flicker:true, pause:.5,  double:.55, cut:.35, dark:.95, blackout:true}
+  ];
+  const STAGE_INTRO = [
+    '',
+    '귀신이 더 빨라지고, 가끔 <b style="color:var(--ink)">돌아보는 척</b>을 해요.',
+    '박자가 <b style="color:var(--ink)">빨랐다 느렸다</b> 해요. 불도 깜빡여요.',
+    '노래를 <b style="color:var(--ink)">중간에 멈추거나 끊고</b>, 한 번 돌아본 뒤 <b style="color:var(--ink)">또 돌아봐요</b>. 다시 걷기 전에 조심!',
+    '<b style="color:var(--red)">정전.</b> 불이 자주 나가고, 모든 속임수가 한꺼번에 나와요.'
   ];
   const L = 15;           // corridor length (world units)
-  const BEST_KEY = 'hall1:best';
+  const BEST_KEY = 'hall5:best';
 
   let G;                  // game state
   function newRun(){ G = {stage:0, lives:3, t0:0, elapsed:0, running:false}; resetStage(); }
@@ -141,6 +152,14 @@ button{font:inherit;color:inherit;cursor:pointer}
     let acc=0; gh.sylT = w.map(x => { const s=acc; acc += x/sum*gh.dur; return s; });
     gh.played = -1;
     gh.feint = Math.random() < P.feint ? rand(.25,.7)*gh.dur : -1; gh.feintT = 0;
+    gh.doubled = false;
+    if (P.pause && Math.random() < P.pause){             // silent stop in the middle of the chant
+      const k = 3 + Math.floor(Math.random()*5), pd = rand(.6, 1.4);
+      gh.sylT = gh.sylT.map((s, i) => i >= k ? s + pd : s); gh.dur += pd;
+    }
+    if (P.cut && Math.random() < P.cut){                 // turns before finishing: "무궁화 꽃이 피었습—"
+      const k = 6 + Math.floor(Math.random()*3); gh.dur = gh.sylT[k] + .12;
+    }
   }
   function updateGhost(dt){
     const P = STAGES[G.stage], gh = G.ghost; gh.t += dt;
@@ -159,7 +178,13 @@ button{font:inherit;color:inherit;cursor:pointer}
       if (gh.t >= gh.dur){ gh.st='back'; gh.t=0; }
     } else if (gh.st==='back'){
       gh.face = Math.max(0, 1 - gh.t/.25);
-      if (gh.t >= .25) startChant();
+      if (gh.t >= .25){
+        if (P.double && !gh.doubled && Math.random() < P.double){ gh.doubled = true; gh.st='wait'; gh.t=0; gh.dur=rand(.3,.65); }
+        else startChant();
+      }
+    } else if (gh.st==='wait'){                            // turned back… then turns again
+      gh.face = 0;
+      if (gh.t >= gh.dur){ gh.st='turn'; gh.t=0; thump(); }
     }
   }
 
@@ -238,7 +263,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     // flashlight / darkness
     const rad = Math.max(W,H) * .62;
     const gr = ctx.createRadialGradient(cx, cy, Math.min(W,H)*.12, cx, cy, rad);
-    let dark = .9; if (G.flick > 0) dark = .985;
+    let dark = STAGES[G.stage].dark || .9; if (G.flick > 0) dark = .985;
     gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(.55,`rgba(0,0,0,${dark*.55})`); gr.addColorStop(1,`rgba(0,0,0,${dark})`);
     ctx.fillStyle = gr; ctx.fillRect(0,0,W,H);
     if (G.ghost.st === 'look' || G.ghost.st === 'turn'){
@@ -289,12 +314,15 @@ button{font:inherit;color:inherit;cursor:pointer}
     $('prog').style.width = (100 - G.d) + '%';
     $('timer').textContent = fmt(G.elapsed*1000);
     const gh = G.ghost, ch = $('chant'), st = $('state');
+    ch.style.opacity = (STAGES[G.stage].blackout && G.flick > .3) ? '0' : '1';   // power cut: only sound
     if (gh.st === 'look'){ ch.className = 'chant look'; ch.textContent = '움직이지 마…'; st.textContent = G.hold ? '' : '숨 참기…'; st.style.color = 'var(--red)'; }
     else {
       ch.className = 'chant';
       const n = gh.st === 'chant' ? gh.played + 1 : SYL.length;
       ch.innerHTML = SYL.map((c,i) => `<span class="${i < n ? 'on' : ''}">${c}</span>`).join('');
-      st.textContent = gh.st === 'turn' ? '돌아본다! 멈춰!' : (G.hold ? '' : '지금 걸어!'); st.style.color = gh.st === 'turn' ? 'var(--red)' : 'var(--green)';
+      if (gh.st === 'turn'){ st.textContent = '돌아본다! 멈춰!'; st.style.color = 'var(--red)'; }
+      else if ((gh.st === 'back' || gh.st === 'wait') && !STAGES[G.stage].blackout){ st.textContent = '……'; st.style.color = 'var(--muted)'; }
+      else { st.textContent = G.hold ? '' : '지금 걸어!'; st.style.color = 'var(--green)'; }
     }
   }
 
@@ -311,7 +339,14 @@ button{font:inherit;color:inherit;cursor:pointer}
         if (Math.floor(G.step) !== prevStep) step();
         if (G.d <= 0) stageClear();
       }
-      if (STAGES[G.stage].flicker){ if (G.flick > 0) G.flick -= dt; else if (Math.random() < dt*.25) G.flick = rand(.08,.3); }
+      const SP = STAGES[G.stage];
+      if (SP.flicker){
+        if (G.flick > 0) G.flick -= dt;
+        else if (SP.blackout ? Math.random() < dt*.45 : Math.random() < dt*.25){
+          G.flick = SP.blackout && Math.random() < .5 ? rand(.5,1.1) : rand(.08,.3);
+          if (G.flick > .45) noise(.25, 120, 1, .4);   // power-cut buzz
+        }
+      }
     }
     draw(); hud();
     requestAnimationFrame(frame);
@@ -341,9 +376,12 @@ button{font:inherit;color:inherit;cursor:pointer}
   function stageClear(){
     G.running = false; setHold(false); tone(880,.3,'sine',.15);
     if (G.stage < STAGES.length - 1){
-      const msgs = ['귀신이 사라졌다… 문 너머에 또 복도가 있다.', '숨이 가쁘다. 마지막 복도… 불이 깜빡거린다.'];
-      openOv(`<h2>${G.stage+1}단계 통과!</h2><p>${msgs[G.stage]}</p>
-        <p>다음 단계는 귀신이 더 빨라지고, 가끔 <b style="color:var(--ink)">속임 동작</b>도 해요.</p>
+      const msgs = ['귀신이 사라졌다… 문 너머에 또 복도가 있다.', '숨이 가쁘다. 복도가 끝나지 않는다… 불이 깜빡거린다.',
+        '3층 복도다. 노랫소리가 뚝뚝 끊긴다…', '마지막 복도. 그때, 학교 전체의 불이 나갔다.'];
+      let bonus = '';
+      if (G.stage === 3 && G.lives < 3){ G.lives++; bonus = `<p style="color:var(--green);font-weight:800">❤️ 목숨 하나 회복! ${heartStr()}</p>`; }
+      openOv(`<h2>${G.stage+1}단계 통과!</h2><p>${msgs[G.stage]}</p>${bonus}
+        <p>${G.stage+2}단계: ${STAGE_INTRO[G.stage+1]}</p>
         <button class="big" id="b1">${G.stage+2}단계로</button>`, () => $('b1').onclick = () => { G.stage++; resetStage(); begin(); });
     } else win();
   }
@@ -361,7 +399,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       });
   }
   function shareText(ms){
-    let t = `👻 유령의 복도 3단계 탈출!\n⏱ ${fmtKo(ms)} · ${heartStr()}\n`;
+    let t = `👻 유령의 복도 ${STAGES.length}단계 탈출!\n⏱ ${fmtKo(ms)} · ${heartStr()}\n`;
     if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
     return t.trim();
   }
@@ -378,7 +416,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     const best = loadBest();
     openOv(`<h2>유령의 복도</h2>
       <p>밤 9시, 학교에 혼자 남았다.<br>복도 끝 비상구 앞에 누군가 서 있다.<br>"<b style="color:var(--ink)">무궁화 꽃이 피었습니다…</b>"</p>
-      <p style="font-size:13px">👆 화면이나 아래 버튼을 <b style="color:var(--ink)">꾹 누르면</b> 걸어요<br>🔴 귀신이 돌아보면 <b style="color:var(--ink)">손을 떼고 멈추기</b><br>❤️ 목숨 3개로 3단계 복도를 통과하세요</p>
+      <p style="font-size:13px">👆 화면이나 아래 버튼을 <b style="color:var(--ink)">꾹 누르면</b> 걸어요<br>🔴 귀신이 돌아보면 <b style="color:var(--ink)">손을 떼고 멈추기</b><br>❤️ 목숨 3개로 5단계 복도를 통과하세요</p>
       ${best ? `<p>내 최고 기록: <b style="color:var(--ink)">${fmtKo(best.ms)}</b></p>` : ''}
       <button class="big" id="b1">시작하기 🔊</button>`, () => $('b1').onclick = begin);
   }
