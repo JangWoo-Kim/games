@@ -33,7 +33,7 @@ h1 b{color:var(--accent);font-weight:400}
 .sc b{font-family:var(--f-display);font-weight:400;font-size:19px;font-variant-numeric:tabular-nums;line-height:1.1}
 .stage{flex:1 1 0;min-height:0;position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);touch-action:none;background:#000}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.toast{position:absolute;left:50%;transform:translateX(-50%);top:12px;max-width:92%;width:max-content;text-align:center;font:800 16px var(--f-body);pointer-events:none;background:rgba(20,16,26,.78);padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s}
+.toast{position:absolute;left:50%;transform:translateX(-50%);top:40px;max-width:92%;width:max-content;text-align:center;font:800 16px var(--f-body);pointer-events:none;background:rgba(20,16,26,.78);padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s}
 .pad{flex:none;display:grid;grid-template-columns:1fr 1.15fr 1.15fr 1fr;gap:8px}
 .pad button{height:62px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:800 13px var(--f-body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;touch-action:none;cursor:pointer}
 .pad button span{font-size:20px;line-height:1}
@@ -247,13 +247,15 @@ h1 b{color:var(--accent);font-weight:400}
     const ns = stageAt(G.dist);
     if (ns !== G.stage){
       G.stage = ns; hudStage();
-      toast(ns === 1 ? '2단계 — 복사기가 나타난다!' : '3단계 — 진짜 야근의 시작…', 'var(--danger)'); sfx.whisper();
+      G.banner = {t:0, title: STAGES[ns].name, sub: ns === 1 ? '복사기가 나타난다!' : '진짜 야근의 시작…', col: ns === 1 ? '#FFB347' : '#FF4D57'};
+      sfx.whisper(); tone(330, .25, 'triangle', .12, 660); setTimeout(() => tone(440, .35, 'triangle', .12, 880), 180);
     }
     const step = G.speed*dt;
     G.p += step; G.dist += step; G.run += dt*G.speed*.55;
     G.px += (LANES[G.lane] - G.px)*Math.min(1, dt*14);
     if (G.jumpT >= 0){ G.jumpT += dt; if (G.jumpT >= JUMP_T) G.jumpT = -1; }
     if (G.slideT >= 0){ G.slideT += dt; if (G.slideT >= SLIDE_T) G.slideT = -1; }
+    if (G.banner){ G.banner.t += dt; if (G.banner.t > 2.4) G.banner = null; }
     G.bat = Math.max(0, G.bat - dt*3.2);
     if (G.flick > 0) G.flick -= dt;
     if (G.ghostFar){ G.ghostFar.t -= dt; if (G.ghostFar.t <= 0) G.ghostFar = null; }
@@ -493,6 +495,45 @@ h1 b{color:var(--accent);font-weight:400}
     ctx.fillText(G.caughtNow ? '같이… 야근하자…' : '김대리… 어디 가…', bx, by); ctx.textBaseline = 'alphabetic';
   }
 
+  function drawGate(){
+    // glowing line painted across the floor where the next stage begins
+    const next = STAGES[G.stage + 1]; if (!next) return;
+    const rem = next.from - G.dist, z = PZ + rem;
+    if (rem <= 0 || rem > 45 || rem > toEnd() + .5) return;
+    const col = G.stage === 0 ? [255,179,71] : [255,77,87];
+    const a = pr(-HALF, YF, z), b = pr(HALF, YF, z + .5);
+    ctx.save(); ctx.shadowColor = `rgb(${col})`; ctx.shadowBlur = 16;
+    quad([pr(-HALF,YF,z), pr(HALF,YF,z), pr(HALF,YF,z + .5), pr(-HALF,YF,z + .5)], `rgba(${col},.9)`);
+    ctx.restore();
+    const t = pr(0, YF - .02, z + .9), s = fy/(z + .9);
+    ctx.fillStyle = `rgba(${col},.95)`; ctx.font = `900 ${Math.max(9, .42*s)}px Gothic A1, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(next.name, t[0], t[1] - .15*s); ctx.textBaseline = 'alphabetic';
+  }
+  function drawProgress(){
+    // thin bar at the top of the play area: how far to the next stage
+    const x = 12, y = 10, w = W - 24, h = 6, cur = STAGES[G.stage], next = STAGES[G.stage + 1];
+    ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fillRect(x, y, w, h);
+    const k = next ? Math.min(1, (G.dist - cur.from)/(next.from - cur.from)) : 1;
+    ctx.fillStyle = G.stage === 0 ? '#5BF08F' : G.stage === 1 ? '#FFB347' : '#FF4D57'; ctx.fillRect(x, y, w*k, h);
+    ctx.font = '800 12px Gothic A1, sans-serif'; ctx.textBaseline = 'top';
+    ctx.fillStyle = '#E8ECF2'; ctx.textAlign = 'left'; ctx.fillText(cur.name, x, y + 10);
+    ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(232,236,242,.75)';
+    ctx.fillText(next ? `${next.name}까지 ${Math.max(0, Math.ceil(next.from - G.dist))}m` : '최종 단계 · 끝까지 버텨라', x + w, y + 10);
+    ctx.textBaseline = 'alphabetic';
+  }
+  function drawBanner(){
+    const B = G.banner; if (!B) return;
+    const t = B.t, a = t < .2 ? t/.2 : t > 1.9 ? Math.max(0, 1 - (t - 1.9)/.5) : 1, sc = t < .25 ? .6 + 1.6*t : 1;
+    ctx.save(); ctx.globalAlpha = a;
+    ctx.strokeStyle = B.col; ctx.lineWidth = 10; ctx.globalAlpha = a*.6; ctx.strokeRect(5, 5, W - 10, H - 10); ctx.globalAlpha = a;
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, H*.3 - 52, W, 104);
+    ctx.translate(W/2, H*.3); ctx.scale(sc, sc);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = B.col; ctx.shadowBlur = 20; ctx.fillStyle = B.col;
+    ctx.font = `400 ${Math.min(64, W*.17)}px "Black Han Sans", Gothic A1, sans-serif`; ctx.fillText(B.title + ' 진입!', 0, -12);
+    ctx.shadowBlur = 0; ctx.fillStyle = '#F2F4F8'; ctx.font = '800 17px Gothic A1, sans-serif'; ctx.fillText(B.sub, 0, 32);
+    ctx.restore(); ctx.textBaseline = 'alphabetic';
+  }
   function drawDark(){
     // flashlight: visible radius shrinks as the battery drains
     const r0 = Math.max(W, H)*(.22 + .5*G.bat/100)*(G.flick > 0 ? .35 : 1);
@@ -505,7 +546,7 @@ h1 b{color:var(--accent);font-weight:400}
 
   function draw(){
     cx = W/2; fx = fy = Math.min(W*.8, H*.52); cy = H*.16; camX = G.px*.55; offX = G.turnFx*W*.7;
-    drawWorld(); drawObstacles(); drawDark(); drawChaser();
+    drawWorld(); drawGate(); drawObstacles(); drawDark(); drawChaser(); drawProgress(); drawBanner();
     const te = toEnd();
     if (G.running && te < G.seg.win && te > -0.5){
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, H*.62, W, 44);
