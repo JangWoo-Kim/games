@@ -154,19 +154,31 @@ h1 b{color:var(--accent);font-weight:400}
     } catch(e){}
   }
 
+  // ---------- stages: 1 = warm-up, 2 = printers appear, 3 = the original full difficulty
+  const STAGES = [
+    {from:0,   name:'1단계', gap:[14, 20], mix:{box:40, banner:24, row:14, printer:0,  combo:0},  turnWin:14},
+    {from:300, name:'2단계', gap:[11, 16], mix:{box:32, banner:20, row:12, printer:16, combo:0},  turnWin:12},
+    {from:750, name:'3단계', gap:null,     mix:{box:28, banner:15, row:11, printer:20, combo:10}, turnWin:11}
+  ];
+  const stageAt = d => d >= STAGES[2].from ? 2 : d >= STAGES[1].from ? 1 : 0;
+  function speedAt(d){ return d < 300 ? 7.5 + d/150 : d < 750 ? 9.5 + (d - 300)/300 : 11 + Math.min(14, (d - 750)/110); }
+
   // ---------- course generation (sequential, seeded → identical for everyone today)
   let G = null;
   function genSeg(i){
     const r = G.rng, len = i === 0 ? 95 : 70 + r()*55, obs = [];
-    const gapMin = Math.max(7.5, 12 - i*.6), gapMax = Math.max(11, 17 - i*.6);
+    const st = STAGES[stageAt(G.cum)], m = st.mix, i3 = Math.max(0, G.seg3 || 0);
+    const gapMin = st.gap ? st.gap[0] : Math.max(7.5, 12 - i3*.6), gapMax = st.gap ? st.gap[1] : Math.max(11, 17 - i3*.6);
+    if (!st.gap) G.seg3 = i3 + 1;
     let z = i === 0 ? 28 : 16;
     while (z < len - 15){
       const k = r()*100, lane = Math.floor(r()*3);
-      if (k < 28) obs.push({z, type:'box', lane});
-      else if (k < 48) obs.push({z, type:'printer', lane});
-      else if (k < 63) obs.push({z, type:'banner'});
-      else if (k < 74) obs.push({z, type:'row'});
-      else if (k < 84){ obs.push({z, type:'printer', lane}); obs.push({z, type:'box', lane:(lane + 1 + Math.floor(r()*2)) % 3}); }
+      const c1 = m.box, c2 = c1 + m.printer, c3 = c2 + m.banner, c4 = c3 + m.row, c5 = c4 + m.combo;
+      if (k < c1) obs.push({z, type:'box', lane});
+      else if (k < c2) obs.push({z, type:'printer', lane});
+      else if (k < c3) obs.push({z, type:'banner'});
+      else if (k < c4) obs.push({z, type:'row'});
+      else if (k < c5){ obs.push({z, type:'printer', lane}); obs.push({z, type:'box', lane:(lane + 1 + Math.floor(r()*2)) % 3}); }
       else { const n = 4 + Math.floor(r()*3); for (let j = 0; j < n; j++) obs.push({z: z + j*1.5, type:'coffee', lane}); z += n*1.5 - 6; }
       if (r() < .45 && obs.length && obs[obs.length-1].type !== 'coffee'){ // coffee trail in a free lane leading into it
         const last = obs[obs.length-1], fl = last.lane === undefined ? 1 : (last.lane + 1) % 3;
@@ -175,14 +187,16 @@ h1 b{color:var(--accent);font-weight:400}
       z += gapMin + r()*(gapMax - gapMin);
     }
     obs.sort((a, b) => a.z - b.z);
-    return {len, turn: r() < .5 ? -1 : 1, obs};
+    const seg = {len, turn: r() < .5 ? -1 : 1, obs, win: st.turnWin};
+    G.cum += len;
+    return seg;
   }
 
   function newGame(){
-    G = {rng: mulberry(hash('run:' + DKEY)), rng2: mulberry(hash('spook:' + DKEY)), segI:0, seg:null, p:0, lane:1, px:0, jumpT:-1, slideT:-1, speed:11,
+    G = {cum:0, seg3:0, stage:0, rng: mulberry(hash('run:' + DKEY)), rng2: mulberry(hash('spook:' + DKEY)), segI:0, seg:null, p:0, lane:1, px:0, jumpT:-1, slideT:-1, speed:11,
          dist:0, coffee:0, bat:100, stumbleT:99, running:false, over:false, t:0, turnFx:0, run:0, shake:0, flick:0, nextSpook:9, ghostFar:null};
     G.seg = genSeg(0);
-    hud();
+    hud(); hudStage();
   }
   window.__run = () => G;   // used only by automated tests
 
@@ -211,7 +225,7 @@ h1 b{color:var(--accent);font-weight:400}
     if (!G || !G.running) return;
     if (m === 'L' || m === 'R'){
       const d = m === 'L' ? -1 : 1, te = toEnd();
-      if (te < 11 && te > -0.6 && d === G.seg.turn){ doTurn(); return; }
+      if (te < G.seg.win && te > -0.6 && d === G.seg.turn){ doTurn(); return; }
       G.lane = Math.max(0, Math.min(2, G.lane + d));
     } else if (m === 'U'){
       if (G.jumpT < 0){ G.jumpT = 0; G.slideT = -1; sfx.jump(); }
@@ -229,7 +243,12 @@ h1 b{color:var(--accent);font-weight:400}
   const jumpH = () => G.jumpT < 0 ? 0 : 4*JUMP_H*(G.jumpT/JUMP_T)*(1 - G.jumpT/JUMP_T);
   function update(dt){
     G.t += dt;
-    G.speed = 11 + Math.min(14, G.dist/110);
+    G.speed = speedAt(G.dist);
+    const ns = stageAt(G.dist);
+    if (ns !== G.stage){
+      G.stage = ns; hudStage();
+      toast(ns === 1 ? '2단계 — 복사기가 나타난다!' : '3단계 — 진짜 야근의 시작…', 'var(--danger)'); sfx.whisper();
+    }
     const step = G.speed*dt;
     G.p += step; G.dist += step; G.run += dt*G.speed*.55;
     G.px += (LANES[G.lane] - G.px)*Math.min(1, dt*14);
@@ -488,7 +507,7 @@ h1 b{color:var(--accent);font-weight:400}
     cx = W/2; fx = fy = Math.min(W*.8, H*.52); cy = H*.16; camX = G.px*.55; offX = G.turnFx*W*.7;
     drawWorld(); drawObstacles(); drawDark(); drawChaser();
     const te = toEnd();
-    if (G.running && te < 11 && te > -0.5){
+    if (G.running && te < G.seg.win && te > -0.5){
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, H*.62, W, 44);
       ctx.fillStyle = '#5BF08F'; ctx.font = `800 20px Gothic A1, sans-serif`; ctx.textAlign = 'center';
       ctx.fillText(G.seg.turn < 0 ? '◀◀ 비상구는 왼쪽! 꺾어!' : '꺾어! 비상구는 오른쪽 ▶▶', W/2, H*.62 + 29);
@@ -499,6 +518,7 @@ h1 b{color:var(--accent);font-weight:400}
   let toastT = null;
   function toast(t, color){ const el = $('toast'); el.textContent = t; el.style.color = color || 'var(--ink)'; el.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => el.style.opacity = 0, 1100); }
   function hud(){ $('dist').textContent = Math.floor(G.dist) + 'm'; const c = $('cof'); c.textContent = Math.ceil(G.bat) + '%'; c.style.color = G.bat < 25 ? 'var(--danger)' : ''; }
+  function hudStage(){ $('date').textContent = `${DLABEL} · ${STAGES[G.stage].name}`; }
   function refreshBest(){ const b = load(BEST_KEY); $('best').textContent = (b ? b.dist : 0) + 'm'; }
 
   // ---------- loop
@@ -525,6 +545,7 @@ h1 b{color:var(--accent);font-weight:400}
         <div><i>🟩</i><span><b>막다른 길</b> · 초록 비상구 쪽</span><em>◀ ▶ 꺾기</em></div>
         <div><i>🔋</i><span><b>배터리</b> · 줍지 않으면 손전등이 꺼져가요</span><em>줍기</em></div>
       </div>
+      <p style="font-size:13px"><b style="color:var(--ink)">1단계</b> 몸풀기 → <b style="color:var(--ink)">2단계</b>(300m) 복사기 등장 → <b style="color:var(--danger)">3단계</b>(750m) 진짜 야근</p>
       <p style="font-size:13px">넘어지면 <b style="color:var(--danger)">야근 귀신</b>이 바짝 쫓아와요.<br>7초 안에 또 넘어지면 잡혀요. 🔊 소리를 켜면 더 무서워요.</p>
       ${b ? `<p>오늘 내 최고: <b style="color:var(--ink)">${b.dist}m</b></p>` : ''}
       <button class="big" id="go">손전등 켜고 출발</button>`, () => $('go').onclick = () => { audio(); startDrone(); closeOv(); G.running = true; toast('…달려!', 'var(--accent)'); });
@@ -535,7 +556,7 @@ h1 b{color:var(--accent);font-weight:400}
     if (isBest) save(BEST_KEY, {dist, coffee:G.coffee});
     refreshBest();
     setTimeout(() => openOv(`<h2>${title}</h2><p>${msg}</p>
-      <div class="stats"><span class="chip">🏁 ${dist.toLocaleString()}m</span><span class="chip">🔋 ${G.coffee}개</span></div>
+      <div class="stats"><span class="chip">${STAGES[G.stage].name}</span><span class="chip">🏁 ${dist.toLocaleString()}m</span><span class="chip">🔋 ${G.coffee}개</span></div>
       <p>${isBest ? '오늘 최고 기록이에요! 🎉' : `오늘 최고는 ${b.dist.toLocaleString()}m예요.`}</p>
       <button class="big" id="sh">결과 복사</button>
       <button class="ghost" id="again">다시 달리기</button>`, () => {
@@ -547,7 +568,7 @@ h1 b{color:var(--accent);font-weight:400}
   function caught(){ G.running = false; G.caughtNow = true; $('scare').hidden = false; sfx.stinger(); sfx.crash();
     setTimeout(() => { $('scare').hidden = true; end('잡혔다…', '"같이… 야근하자…"<br>오늘 밤은 영원히 끝나지 않는다 👻'); }, 1000); }
   function shareText(dist){
-    let t = `🔦 야근 런 ${DLABEL}\n🏁 ${dist.toLocaleString()}m 탈출 · 🔋 ${G.coffee}개\n`;
+    let t = `🔦 야근 런 ${DLABEL}\n${STAGES[G.stage].name} · 🏁 ${dist.toLocaleString()}m · 🔋 ${G.coffee}개\n`;
     if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
     return t.trim();
   }
