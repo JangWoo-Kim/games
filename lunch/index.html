@@ -40,8 +40,9 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
 .sc b{font-family:var(--f-display);font-weight:400;font-size:20px;font-variant-numeric:tabular-nums;line-height:1.1}
 .stage{flex:1 1 0;min-height:0;position:relative;touch-action:none}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.ladder{flex:none;display:flex;align-items:center;justify-content:space-between;gap:2px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px 8px;font-size:19px;overflow:hidden}
-.ladder span{opacity:.28;transition:opacity .2s, transform .2s;line-height:1}
+.ladder{flex:none;display:flex;align-items:center;justify-content:space-between;gap:1px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:5px 6px;overflow:hidden}
+.ladder img{width:min(26px,6.4vw);height:auto}
+.ladder span{display:flex;opacity:.28;transition:opacity .2s, transform .2s;line-height:1}
 .ladder span.got{opacity:1}
 .ladder span.pop{transform:scale(1.4)}
 .ladder i{font-style:normal;font-size:10px;color:var(--muted)}
@@ -53,7 +54,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
 .ghost{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:10px;font:700 15px var(--f-body);cursor:pointer}
 .stats{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
 .chip{background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
-.evo{font-size:22px;letter-spacing:2px}
+.evo{display:flex;flex-wrap:wrap;justify-content:center;gap:2px}
 </style>
 
 <div class="wrap">
@@ -91,6 +92,154 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
     {e:'🍱', n:'도시락',  c:'#9ED3A8', s:2.36}
   ];
   const PTS = FOOD.map((_, i) => (i+1)*(i+2)/2);
+
+  // ---------- hand-drawn food characters (pre-rendered once, then stamped every frame)
+  const U = 96, SPR_SIZE = U * 2.7;
+  const INK = '#4A2E1A';
+  function face(c, x, y, s, mood){
+    // blush
+    c.fillStyle = 'rgba(255,120,130,.55)';
+    c.beginPath(); c.ellipse(x - s*.46, y + s*.16, s*.13, s*.08, 0, 0, Math.PI*2); c.ellipse(x + s*.46, y + s*.16, s*.13, s*.08, 0, 0, Math.PI*2); c.fill();
+    c.strokeStyle = INK; c.fillStyle = INK; c.lineCap = 'round'; c.lineWidth = s*.07;
+    if (mood === 'happy'){ // ^ ^
+      [-1, 1].forEach(d => { c.beginPath(); c.arc(x + d*s*.27, y + s*.03, s*.1, Math.PI*1.1, Math.PI*1.9); c.stroke(); });
+    } else if (mood === 'wink'){
+      c.beginPath(); c.ellipse(x - s*.27, y, s*.075, s*.1, 0, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(x + s*.27, y + s*.03, s*.1, Math.PI*1.1, Math.PI*1.9); c.stroke();
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(x - s*.25, y - s*.035, s*.03, 0, Math.PI*2); c.fill();
+    } else {
+      [-1, 1].forEach(d => { c.beginPath(); c.ellipse(x + d*s*.27, y, s*.075, s*.1, 0, 0, Math.PI*2); c.fill(); });
+      c.fillStyle = '#fff'; [-1, 1].forEach(d => { c.beginPath(); c.arc(x + d*s*.27 + s*.02, y - s*.035, s*.03, 0, Math.PI*2); c.fill(); });
+    }
+    c.fillStyle = INK; c.strokeStyle = INK; c.lineWidth = s*.06;
+    if (mood === 'o'){ c.beginPath(); c.ellipse(x, y + s*.2, s*.06, s*.08, 0, 0, Math.PI*2); c.fill(); }
+    else { // ω-style smile
+      c.beginPath(); c.arc(x - s*.06, y + s*.13, s*.06, .2, Math.PI - .2); c.arc(x + s*.06, y + s*.13, s*.06, .2, Math.PI - .2); c.stroke();
+    }
+  }
+  function outline(c, path){ path(); c.lineWidth = U*.07; c.strokeStyle = INK; c.lineJoin = 'round'; c.stroke(); }
+  function circ(c, r = U*.97){ c.beginPath(); c.arc(0, 0, r, 0, Math.PI*2); }
+  const DRAW = [
+    c => { // 0 계란: fried egg, yolk is the face
+      const blob = () => { c.beginPath(); for (let i = 0; i <= 60; i++){ const a = i/60*Math.PI*2, rr = U*(.9 + .06*Math.sin(a*5) + .03*Math.sin(a*3)); c.lineTo(Math.cos(a)*rr, Math.sin(a)*rr); } c.closePath(); };
+      blob(); c.fillStyle = '#FFFFFF'; c.fill(); outline(c, blob);
+      c.beginPath(); c.arc(0, U*.05, U*.55, 0, Math.PI*2); c.fillStyle = '#FFC531'; c.fill(); c.lineWidth = U*.05; c.strokeStyle = '#E79A12'; c.stroke();
+      c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.ellipse(-U*.22, -U*.18, U*.13, U*.07, -.5, 0, Math.PI*2); c.fill();
+      face(c, 0, U*.07, U*.62, 'normal');
+    },
+    c => { // 1 주먹밥: rice ball with nori
+      const tri = () => { c.beginPath(); c.moveTo(0, -U*.95); c.bezierCurveTo(U*.5, -U*.9, U*1.0, U*.35, U*.85, U*.7); c.bezierCurveTo(U*.6, U*1.0, -U*.6, U*1.0, -U*.85, U*.7); c.bezierCurveTo(-U*1.0, U*.35, -U*.5, -U*.9, 0, -U*.95); c.closePath(); };
+      tri(); c.fillStyle = '#FCFBF5'; c.fill();
+      c.save(); tri(); c.clip();
+      c.fillStyle = '#ECE8DA'; for (let i = 0; i < 18; i++){ const a = i*2.4, rr = U*(.15 + (i%5)*.15); c.beginPath(); c.ellipse(Math.cos(a)*rr, Math.sin(a)*rr - U*.2, U*.06, U*.035, a, 0, Math.PI*2); c.fill(); }
+      c.fillStyle = '#1E2A24'; c.fillRect(-U*.45, U*.38, U*.9, U*.7);
+      c.fillStyle = '#2E4036'; c.fillRect(-U*.45, U*.38, U*.9, U*.06);
+      c.restore(); outline(c, tri);
+      face(c, 0, -U*.05, U*.8, 'happy');
+    },
+    c => { // 2 만두: dumpling with pleats
+      const sh = () => { c.beginPath(); c.moveTo(-U*.95, U*.25); c.bezierCurveTo(-U*.95, -U*.75, U*.95, -U*.75, U*.95, U*.25); c.bezierCurveTo(U*.95, U*.85, -U*.95, U*.85, -U*.95, U*.25); c.closePath(); };
+      sh(); c.fillStyle = '#F8E6C4'; c.fill(); outline(c, sh);
+      c.strokeStyle = '#C9A46E'; c.lineWidth = U*.05; c.lineCap = 'round';
+      for (let i = -2; i <= 2; i++){ c.beginPath(); c.moveTo(i*U*.22, -U*.5 + Math.abs(i)*U*.06); c.quadraticCurveTo(i*U*.22 + U*.08, -U*.3, i*U*.2, -U*.12 + Math.abs(i)*U*.04); c.stroke(); }
+      face(c, 0, U*.22, U*.75, 'normal');
+    },
+    c => { // 3 새우튀김: golden batter + red tail
+      c.save(); c.translate(U*.5, -U*.62); c.rotate(.55);
+      c.beginPath(); c.moveTo(0, U*.25); c.lineTo(-U*.42, -U*.55); c.lineTo(0, -U*.32); c.lineTo(U*.42, -U*.55); c.closePath();
+      c.fillStyle = '#F2553D'; c.fill(); c.lineWidth = U*.06; c.strokeStyle = INK; c.lineJoin = 'round'; c.stroke(); c.restore();
+      const sh = () => circ(c, U*.86);
+      sh(); c.fillStyle = '#F2B046'; c.fill();
+      c.save(); sh(); c.clip(); c.fillStyle = '#E09530';
+      for (let i = 0; i < 26; i++){ const a = i*2.39, rr = U*(.2 + (i%6)*.12); c.beginPath(); c.arc(Math.cos(a)*rr, Math.sin(a)*rr, U*(.05 + (i%3)*.02), 0, Math.PI*2); c.fill(); }
+      c.restore(); outline(c, sh);
+      face(c, 0, U*.08, U*.8, 'wink');
+    },
+    c => { // 4 어묵: fishcake skewer
+      c.fillStyle = '#E2B97E'; c.fillRect(-U*.1, -U*1.18, U*.2, U*.7); c.lineWidth = U*.06; c.strokeStyle = INK; c.strokeRect(-U*.1, -U*1.18, U*.2, U*.7);
+      const sh = () => circ(c, U*.84);
+      sh(); c.fillStyle = '#EFC890'; c.fill();
+      c.save(); sh(); c.clip(); c.strokeStyle = '#D4A464'; c.lineWidth = U*.09;
+      for (let k = -2; k <= 2; k++){ c.beginPath(); for (let x = -U; x <= U; x += U*.1) c.lineTo(x, k*U*.36 + Math.sin(x/U*7)*U*.06); c.stroke(); }
+      c.restore(); outline(c, sh);
+      face(c, 0, U*.05, U*.78, 'normal');
+    },
+    c => { // 5 치킨: drumstick with bone
+      c.save(); c.translate(U*.58, -U*.66); c.rotate(.75);
+      c.fillStyle = '#FFF8EC'; c.strokeStyle = INK; c.lineWidth = U*.06;
+      [-1, 1].forEach(d => { c.beginPath(); c.arc(d*U*.15, -U*.5, U*.16, 0, Math.PI*2); c.fill(); c.stroke(); });
+      c.beginPath(); c.rect(-U*.11, -U*.5, U*.22, U*.6); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(-U*.11, -U*.42); c.lineTo(U*.11, -U*.42); c.strokeStyle = '#FFF8EC'; c.stroke();
+      c.restore();
+      const sh = () => circ(c, U*.88);
+      sh(); c.fillStyle = '#C9733A'; c.fill();
+      c.save(); sh(); c.clip(); c.fillStyle = '#B05F2B';
+      for (let i = 0; i < 22; i++){ const a = i*2.39, rr = U*(.25 + (i%5)*.14); c.beginPath(); c.ellipse(Math.cos(a)*rr, Math.sin(a)*rr, U*.1, U*.05, a, 0, Math.PI*2); c.fill(); }
+      c.fillStyle = 'rgba(255,220,160,.35)'; c.beginPath(); c.ellipse(-U*.3, -U*.35, U*.25, U*.12, -.6, 0, Math.PI*2); c.fill();
+      c.restore(); outline(c, sh);
+      face(c, 0, U*.1, U*.8, 'happy');
+    },
+    c => { // 6 버거: layered
+      const sh = () => circ(c);
+      c.save(); sh(); c.clip();
+      c.fillStyle = '#E8A13E'; c.fillRect(-U, -U, U*2, U*1.05);
+      c.fillStyle = '#FFF3D6'; for (let i = 0; i < 9; i++){ c.beginPath(); c.ellipse(-U*.55 + (i%5)*U*.27, -U*.68 + Math.floor(i/5)*U*.2, U*.05, U*.025, .4, 0, Math.PI*2); c.fill(); }
+      c.fillStyle = '#7CC35A'; c.beginPath(); c.moveTo(-U, U*.05); for (let x = -U; x <= U; x += U*.2) c.lineTo(x, U*.05 + (Math.round(x/U*5)%2 ? U*.1 : 0)); c.lineTo(U, U*.22); c.lineTo(-U, U*.22); c.fill();
+      c.fillStyle = '#FFD23F'; c.fillRect(-U, U*.18, U*2, U*.1);
+      c.fillStyle = '#6B3B22'; c.fillRect(-U, U*.28, U*2, U*.26);
+      c.fillStyle = '#E8A13E'; c.fillRect(-U, U*.54, U*2, U*.5);
+      c.restore(); outline(c, sh);
+      face(c, 0, -U*.3, U*.75, 'normal');
+    },
+    c => { // 7 피자
+      const sh = () => circ(c);
+      sh(); c.fillStyle = '#E3A35A'; c.fill();
+      c.beginPath(); c.arc(0, 0, U*.8, 0, Math.PI*2); c.fillStyle = '#E4572E'; c.fill();
+      c.beginPath(); for (let i = 0; i <= 40; i++){ const a = i/40*Math.PI*2, rr = U*(.7 + .05*Math.sin(a*7)); c.lineTo(Math.cos(a)*rr, Math.sin(a)*rr); } c.closePath(); c.fillStyle = '#FFD45C'; c.fill();
+      c.fillStyle = '#C7372F'; [[-.45,-.4],[.42,-.42],[-.5,.38],[.48,.4],[0,-.62],[0,.6]].forEach(([x,y]) => { c.beginPath(); c.arc(x*U, y*U, U*.13, 0, Math.PI*2); c.fill(); });
+      c.fillStyle = '#3F8E3A'; [[-.2,-.3],[.25,.55],[-.62,0]].forEach(([x,y]) => { c.beginPath(); c.ellipse(x*U, y*U, U*.07, U*.035, x*3, 0, Math.PI*2); c.fill(); });
+      outline(c, sh);
+      face(c, 0, U*.05, U*.62, 'wink');
+    },
+    c => { // 8 라면: bowl with noodles and egg
+      const sh = () => circ(c);
+      c.save(); sh(); c.clip();
+      c.fillStyle = '#F4C06B'; c.fillRect(-U, -U, U*2, U*1.0);
+      c.strokeStyle = '#FFE7A8'; c.lineWidth = U*.06;
+      for (let k = 0; k < 4; k++){ c.beginPath(); for (let x = -U; x <= U; x += U*.08) c.lineTo(x, -U*.65 + k*U*.15 + Math.sin(x/U*9 + k)*U*.05); c.stroke(); }
+      c.fillStyle = '#fff'; c.beginPath(); c.ellipse(U*.42, -U*.48, U*.2, U*.15, 0, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#FFB520'; c.beginPath(); c.arc(U*.42, -U*.48, U*.09, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#4CAF50'; [[-.5,-.55],[-.3,-.42],[-.6,-.35],[.05,-.6]].forEach(([x,y]) => { c.beginPath(); c.arc(x*U, y*U, U*.045, 0, Math.PI*2); c.fill(); });
+      c.fillStyle = '#D9443A'; c.fillRect(-U, -U*.12, U*2, U*1.2);
+      c.fillStyle = '#FFFFFF'; c.fillRect(-U, -U*.12, U*2, U*.08);
+      c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = U*.04;
+      for (let x = -U*.8; x < U; x += U*.32){ c.beginPath(); c.moveTo(x, U*.72); c.lineTo(x + U*.12, U*.6); c.lineTo(x + U*.24, U*.72); c.stroke(); }
+      c.restore(); outline(c, sh);
+      c.fillStyle = INK; c.fillRect(-U*.1, -U*1.05, U*.06, U*.6); c.fillRect(U*.02, -U*1.05, U*.06, U*.6);
+      face(c, 0, U*.28, U*.7, 'happy');
+    },
+    c => { // 9 도시락: the goal — golden lunchbox with compartments
+      const sh = () => circ(c);
+      sh(); c.fillStyle = '#2F6E4E'; c.fill();
+      c.save(); sh(); c.clip();
+      c.fillStyle = '#FFFFFF'; c.fillRect(-U*.72, -U*.6, U*.7, U*.62);
+      c.fillStyle = '#E4572E'; c.fillRect(U*.06, -U*.6, U*.66, U*.3);
+      c.fillStyle = '#FFD23F'; c.fillRect(U*.06, -U*.24, U*.66, U*.26);
+      c.fillStyle = '#7CC35A'; c.fillRect(-U*.72, U*.08, U*1.44, U*.6);
+      c.strokeStyle = '#1F4A35'; c.lineWidth = U*.06; c.strokeRect(-U*.72, -U*.6, U*1.44, U*1.28);
+      c.beginPath(); c.moveTo(0, -U*.6); c.lineTo(0, U*.05); c.moveTo(-U*.72, U*.05); c.lineTo(U*.72, U*.05); c.stroke();
+      c.restore(); outline(c, sh);
+      c.fillStyle = '#FFD23F'; c.strokeStyle = INK; c.lineWidth = U*.04;
+      c.beginPath(); c.moveTo(-U*.3, -U*.82); c.lineTo(-U*.3, -U*1.08); c.lineTo(-U*.15, -U*.95); c.lineTo(0, -U*1.12); c.lineTo(U*.15, -U*.95); c.lineTo(U*.3, -U*1.08); c.lineTo(U*.3, -U*.82); c.closePath(); c.fill(); c.stroke();
+      face(c, 0, U*.38, U*.6, 'happy');
+    }
+  ];
+  const SPR = DRAW.map(fn => {
+    const cvs = document.createElement('canvas'); cvs.width = cvs.height = SPR_SIZE;
+    const c = cvs.getContext('2d'); c.translate(SPR_SIZE/2, SPR_SIZE/2); fn(c); return cvs;
+  });
+  const SPR_URL = SPR.map(cv => { try { return cv.toDataURL(); } catch(e){ return ''; } });
+  const img = (i, px) => `<img src="${SPR_URL[i]}" alt="${FOOD[i].n}" width="${px}" height="${px}" style="vertical-align:middle">`;
   const MAXT = FOOD.length - 1;
 
   // ---------- daily seed
@@ -136,7 +285,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
       G.balls.forEach(b => { b.x = box.l + (b.x - oldBox.l)*k; b.y = box.b - (oldBox.b - b.y)*k; b.r = rad(b.t); });
     }
   }
-  const rad = t => FOOD[t].s * 25 * S;
+  const rad = t => FOOD[t].s * 31 * S;
 
   // ---------- game state
   let G = null;
@@ -152,7 +301,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
     return 0;
   }
   function ladder(pulse){
-    $('ladder').innerHTML = FOOD.map((f, i) => `<span class="${i <= G.maxT ? 'got' : ''}${pulse === i ? ' pop' : ''}" title="${f.n}">${f.e}</span>`).join('<i>›</i>');
+    $('ladder').innerHTML = FOOD.map((f, i) => `<span class="${i <= G.maxT ? 'got' : ''}${pulse === i ? ' pop' : ''}" title="${f.n}">${img(i, 26)}</span>`).join('<i>›</i>');
     if (pulse !== undefined) setTimeout(() => { const s = $('ladder').querySelectorAll('span')[pulse]; s && s.classList.remove('pop'); }, 220);
   }
 
@@ -226,13 +375,10 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
   // ---------- render
   function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
   function drawFood(b, ghost){
-    const f = FOOD[b.t], k = b.born ? 1 - b.born/.18*.4 : 1, r = b.r * k;
-    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.a || 0);
+    const k = b.born ? 1 - b.born/.18*.4 : 1, r = b.r * k, sz = r * SPR_SIZE / U;
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate((b.a || 0) * .5);
     if (ghost) ctx.globalAlpha = .55;
-    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fillStyle = f.c; ctx.fill();
-    ctx.lineWidth = Math.max(1.5, 2*S); ctx.strokeStyle = 'rgba(80,50,20,.22)'; ctx.stroke();
-    ctx.font = `${r*1.25}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(f.e, 0, r*.06);
+    ctx.drawImage(SPR[b.t], -sz/2, -sz/2, sz, sz);
     ctx.restore();
   }
   function draw(){
@@ -298,15 +444,16 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
   function closeOv(){ $('ov').hidden = true; }
   function refreshBest(){ const b = load(BEST_KEY); $('best').textContent = b ? b.score.toLocaleString() : '0'; }
   function evo(maxT){ return FOOD.slice(0, maxT+1).map(f => f.e).join(''); }
+  function evoImg(maxT, px = 30){ return FOOD.slice(0, maxT+1).map((_, i) => img(i, px)).join(''); }
 
   function intro(){
     newGame(); refreshBest();
     const b = load(BEST_KEY);
     openOv(`<h2>🍱 도시락 합치기</h2>
       <p>같은 음식 두 개가 닿으면<br><b style="color:var(--ink)">한 단계 큰 음식</b>으로 합쳐져요.</p>
-      <div class="evo">${FOOD.map(f => f.e).join('')}</div>
+      <div class="evo">${evoImg(MAXT, 30)}</div>
       <p style="font-size:13px">👆 좌우로 끌어서 위치를 정하고 손을 떼면 떨어져요<br>음식이 점선 위로 넘치면 끝 · 오늘은 모두 <b style="color:var(--ink)">같은 순서</b></p>
-      ${b ? `<p>오늘 내 최고: <b style="color:var(--ink)">${b.score.toLocaleString()}점</b> · ${FOOD[b.maxT].e} ${FOOD[b.maxT].n}까지</p>` : ''}
+      ${b ? `<p>오늘 내 최고: <b style="color:var(--ink)">${b.score.toLocaleString()}점</b> · ${img(b.maxT,18)} ${FOOD[b.maxT].n}까지</p>` : ''}
       <button class="big" id="go">시작하기</button>`, () => $('go').onclick = () => { audio(); closeOv(); G.running = true; });
   }
   function gameOver(){
@@ -316,8 +463,8 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
     const all = load(ALL_KEY); if (!all || G.score > all.score) save(ALL_KEY, {score:G.score, maxT:G.maxT, d:DKEY});
     refreshBest();
     setTimeout(() => openOv(`<h2>도시락이 넘쳤어요!</h2>
-      <div class="stats"><span class="chip">${G.score.toLocaleString()}점</span><span class="chip">${FOOD[G.maxT].e} ${FOOD[G.maxT].n}까지</span></div>
-      <div class="evo">${evo(G.maxT)}</div>
+      <div class="stats"><span class="chip">${G.score.toLocaleString()}점</span><span class="chip">${img(G.maxT,20)} ${FOOD[G.maxT].n}까지</span></div>
+      <div class="evo">${evoImg(G.maxT, 30)}</div>
       <p>${isBest ? '오늘 최고 기록이에요! 🎉' : `오늘 최고는 ${b.score.toLocaleString()}점이에요.`}</p>
       <button class="big" id="sh">결과 복사</button>
       <button class="ghost" id="again">다시 하기</button>`, () => {

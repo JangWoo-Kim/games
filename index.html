@@ -6,7 +6,7 @@
 <title>점오하게</title>
 <meta name="description" content="점심시간 5분, 딱 한 판. 설치 없이 바로 하는 미니 게임 모음.">
 <meta property="og:title" content="점오하게 — 점심시간 5분 게임">
-<meta property="og:description" content="오늘의 탑 · 도시락 합치기 · 오늘의 방탈출 · 유령의 복도 · 밤의 교실">
+<meta property="og:description" content="오늘의 탑 · 도시락 합치기 · 오늘의 방탈출 · 유령의 복도 · 야근 런 · 밤의 교실">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
 <style>
@@ -14,18 +14,18 @@
 :root{
   --bg:#F6F1E7; --surface:#FFFDF8; --ink:#1F1B16; --muted:#7A6F62; --line:#E6DCCB;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#2F9E5B;
-  --c-tower:#4B6BFF; --c-escape:#E0715A; --c-hall:#2B2F3A; --c-night:#5B3FA0; --c-lunch:#E8892B;
+  --c-tower:#4B6BFF; --c-escape:#E0715A; --c-hall:#2B2F3A; --c-night:#5B3FA0; --c-lunch:#E8892B; --c-run:#1F7A46;
   --f-display:"Black Han Sans","Gothic A1",system-ui,sans-serif;
   --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#5BD08A;
-  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; --c-lunch:#F2A93B; color-scheme:dark }}
+  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; --c-lunch:#F2A93B; --c-run:#3FBF74; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#5BD08A;
-  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; --c-lunch:#F2A93B; color-scheme:dark }
+  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; --c-lunch:#F2A93B; --c-run:#3FBF74; color-scheme:dark }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
@@ -111,6 +111,15 @@ footer{color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
         </div>
         <span class="go">›</span>
       </a>
+      <a class="card" style="--c:var(--c-run)" href="https://jangwoo-kim.github.io/games/run/" target="_top">
+        <div class="thumb">🏃</div>
+        <div class="txt">
+          <div class="name">야근 런</div>
+          <div class="desc">밤 11시, 혼자 남은 사무실. 뒤에서 누가 부른다… 비상구까지 달려!</div>
+          <div class="meta"><span class="pill">⏱ 1~3분</span><span class="pill" id="st-run">오늘 아직 안 함</span></div>
+        </div>
+        <span class="go">›</span>
+      </a>
       <a class="card" style="--c:var(--c-night)" href="https://jangwoo-kim.github.io/games/night/" target="_top">
         <div class="thumb">🔦</div>
         <div class="txt">
@@ -137,6 +146,7 @@ footer{color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
 
   const t = get('tower:' + dkey); if (t && t.tries) mark('st-tower', `✅ 오늘 ${t.best || 0}층`);
   const e = get('escape:' + dkey); if (e && e.ms) mark('st-escape', `✅ 오늘 ${fmtKo(e.ms)}`);
+  const r = get('run:' + dkey); if (r && r.dist) mark('st-run', `✅ 오늘 ${r.dist.toLocaleString()}m`);
   const l = get('lunch:' + dkey); if (l && l.score) mark('st-lunch', `✅ 오늘 ${l.score.toLocaleString()}점`);
   const h = get('hall5:best'); if (h && h.ms) mark('st-hall', `🏆 ${fmtKo(h.ms)}`);
   const n = get('night1:best'); if (n && n.ms) mark('st-night', `🏆 ${fmtKo(n.ms)}`);
