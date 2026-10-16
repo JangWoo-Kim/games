@@ -61,6 +61,16 @@ button{font:inherit;color:inherit;cursor:pointer}
 #scare{position:fixed;inset:0;z-index:20;background:#000;display:flex;align-items:center;justify-content:center}
 #scare svg{width:min(80vw,380px);height:auto;animation:lunge .9s ease-out forwards}
 @keyframes lunge{0%{transform:scale(.3);opacity:0}15%{transform:scale(1.05);opacity:1}70%{transform:scale(1.15)}100%{transform:scale(1.4);opacity:0}}
+.stages{display:grid;gap:8px}
+.stg{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:10px;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--ink);font:inherit;cursor:pointer}
+.stg i{font-style:normal;font-size:24px;text-align:center}
+.stg b{display:block;font-size:15px}
+.stg small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.stg em{font-style:normal;font-size:12px;font-weight:800;color:var(--accent);white-space:nowrap}
+.stg[disabled]{opacity:.4;cursor:not-allowed}
+h1{white-space:nowrap;font-size:26px!important}
+.hintBtn,.chip,.iconBtn{white-space:nowrap}
+.top > div:first-child{min-width:0}
 </style>
 
 <div class="wrap">
@@ -118,15 +128,15 @@ button{font:inherit;color:inherit;cursor:pointer}
         <text x="200" y="100" font-size="20" fill="#AFC2B5" opacity=".35" font-family="Nanum Brush Script,sans-serif">나 가 지 마</text>
         <rect x="120" y="136" width="50" height="5" fill="#5A4632"/>
         <g id="uvBoard" display="none" filter="url(#glow)">
-          <text x="193" y="124" text-anchor="middle" font-size="18" fill="#C9A2FF" font-family="Nanum Brush Script,sans-serif">문 비밀번호 앞자리 → 0 7</text>
+          <text id="uvBoardText" x="193" y="124" text-anchor="middle" font-size="18" fill="#C9A2FF" font-family="Nanum Brush Script,sans-serif"></text>
         </g>
       </g>
 
-      <!-- clock stopped at 4:44 -->
+      <!-- clock: stopped at today's secret time -->
       <g data-obj="clock">
         <circle cx="322" cy="44" r="17" fill="#D9D6CC" stroke="#4A4A50" stroke-width="3"/>
-        <line x1="322" y1="44" x2="322" y2="35" stroke="#222" stroke-width="3" stroke-linecap="round" transform="rotate(142 322 44)"/>
-        <line x1="322" y1="44" x2="322" y2="31" stroke="#222" stroke-width="2" stroke-linecap="round" transform="rotate(264 322 44)"/>
+        <line id="cH" x1="322" y1="44" x2="322" y2="35" stroke="#222" stroke-width="3" stroke-linecap="round"/>
+        <line id="cM" x1="322" y1="44" x2="322" y2="31" stroke="#222" stroke-width="2" stroke-linecap="round"/>
         <circle cx="322" cy="44" r="2" fill="#A33"/>
       </g>
 
@@ -181,8 +191,8 @@ button{font:inherit;color:inherit;cursor:pointer}
         <ellipse cx="276" cy="148" rx="3" ry="4" fill="#111"/><ellipse cx="284" cy="148" rx="3" ry="4" fill="#111"/>
         <path d="M274,156 h12" stroke="#111" stroke-width="1.5"/>
         <g id="uvSkel" display="none" filter="url(#glow)">
-          <text x="280" y="208" text-anchor="middle" font-size="11" font-weight="800" fill="#C9A2FF" font-family="Gothic A1,sans-serif">3 1</text>
-          <text x="280" y="236" text-anchor="middle" font-size="8" fill="#C9A2FF" font-family="Gothic A1,sans-serif">뒷자리</text>
+          <text id="uvSkelNum" x="280" y="208" text-anchor="middle" font-size="11" font-weight="800" fill="#C9A2FF" font-family="Gothic A1,sans-serif"></text>
+          <text id="uvSkelLbl" x="280" y="236" text-anchor="middle" font-size="8" fill="#C9A2FF" font-family="Gothic A1,sans-serif"></text>
         </g>
       </g>
 
@@ -204,6 +214,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
       <!-- student desks -->
       <g data-obj="desks">
+        <rect x="20" y="294" width="324" height="62" fill="transparent"/>
         <g fill="#5A4A3A"><rect x="26" y="300" width="84" height="10"/><rect x="140" y="300" width="84" height="10"/><rect x="254" y="300" width="84" height="10"/></g>
         <g fill="#3E3328"><rect x="30" y="310" width="6" height="44"/><rect x="100" y="310" width="6" height="44"/><rect x="144" y="310" width="6" height="44"/><rect x="214" y="310" width="6" height="44"/><rect x="258" y="310" width="6" height="44"/><rect x="328" y="310" width="6" height="44"/></g>
         <g fill="#2E3542"><rect x="50" y="340" width="40" height="8"/><rect x="164" y="340" width="40" height="8"/><rect x="278" y="340" width="40" height="8"/></g>
@@ -238,18 +249,40 @@ button{font:inherit;color:inherit;cursor:pointer}
 (() => {
   const $ = id => document.getElementById(id);
   const svg = $('scene');
-  const R = 74;
   const ITEMS = {
     note:{icon:'📄', name:'구겨진 쪽지', read:true},
     deskKey:{icon:'🔑', name:'교탁 열쇠'},
-    uv:{icon:'🔦', name:'보라색 손전등'}
+    uv:{icon:'🔦', name:'보라색 손전등'},
+    battery:{icon:'🔋', name:'건전지'}
   };
-  const LOCKER_CODE = [4,4,4], DOOR_CODE = [0,7,3,1];
-  const BEST_KEY = 'night1:best';
+  // stage rules: light radius shrinks, scares come faster, extra steps get added
+  const STG = [
+    {name:'1단계', sub:'처음 갇힌 밤',      R:80, spook:[28,48], limit:0,   battery:false, swap:false, reverse:false},
+    {name:'2단계', sub:'건전지를 찾아라',    R:66, spook:[16,30], limit:0,   battery:true,  swap:true,  reverse:false},
+    {name:'3단계', sub:'4분 안에 탈출하라',  R:56, spook:[10,20], limit:240, battery:true,  swap:true,  reverse:true}
+  ];
+  const NOW = new Date();
+  const DKEY = `${NOW.getFullYear()}-${String(NOW.getMonth()+1).padStart(2,'0')}-${String(NOW.getDate()).padStart(2,'0')}`;
+  const DLABEL = `${NOW.getMonth()+1}월 ${NOW.getDate()}일`;
+  function hash(s){ let h = 2166136261; for (const ch of s){ h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; }
+  function mulberry(a){ return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const load = k => { try { return JSON.parse(localStorage.getItem(k)); } catch(e){ return null; } };
+  const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} };
+
+  let P, R = 80;
+  function buildPuzzle(n){
+    const rng = mulberry(hash(`night:${DKEY}:s${n}`)), C = STG[n-1];
+    const h = 1 + Math.floor(rng()*9), m = 10 + Math.floor(rng()*50);
+    const read = [h, Math.floor(m/10), m%10];
+    const front = [Math.floor(rng()*10), Math.floor(rng()*10)], back = [Math.floor(rng()*10), Math.floor(rng()*10)];
+    const boardFront = C.swap ? rng() < .5 : true;
+    return {n, C, h, m, lockerCode: C.reverse ? [...read].reverse() : read, front, back, boardFront,
+            doorCode:[...front, ...back], batterySpot: ['desks','window'][Math.floor(rng()*2)]};
+  }
   let S;
   function reset(){
-    S = {inv:[], sel:null, note:false, locker:false, desk:false, uvBoard:false, uvSkel:false, escaped:false,
-         hints:0, t0:0, running:false, light:{x:180,y:220}, windowSeen:0};
+    S = {inv:[], sel:null, note:false, locker:false, desk:false, uvBoard:false, uvSkel:false, escaped:false, battery:false, uvOn:false,
+         hints:0, t0:0, running:false, light:{x:180,y:220}, windowSeen:0, warned:false};
   }
 
   // ---------- sound (Web Audio, starts on first button press)
@@ -321,10 +354,24 @@ button{font:inherit;color:inherit;cursor:pointer}
     $('beamHole').setAttribute('cx', x); $('beamHole').setAttribute('cy', y);
     $('beamTint').setAttribute('cx', x); $('beamTint').setAttribute('cy', y);
   }
-  function beamColor(){ $('beamTint').setAttribute('opacity', S.sel === 'uv' ? '.22' : '0'); }
+  function beamColor(){ $('beamTint').setAttribute('opacity', S.sel === 'uv' && (S.uvOn || !P.C.battery) ? '.22' : '0'); }
   svg.addEventListener('pointermove', e => { if (!S || !S.running) return; const p = toSvg(e); setLight(p.x, p.y); });
-  svg.addEventListener('pointerdown', e => { if (!S || !S.running) return; if (e.pointerType !== 'mouse') { const p = toSvg(e); S.pendingDown = p; } });
   svg.addEventListener('click', e => { if (!S || !S.running) return; const p = toSvg(e); setLight(p.x, p.y); });
+
+  // ---------- today's puzzle → scene
+  function applyStage(){
+    R = P.C.R; $('beamHole').setAttribute('r', R); $('beamTint').setAttribute('r', R*.8);
+    $('cH').setAttribute('transform', `rotate(${(P.h % 12 + P.m/60)*30} 322 44)`);
+    $('cM').setAttribute('transform', `rotate(${P.m*6} 322 44)`);
+    const fTxt = `앞자리 → ${P.front.join(' ')}`, bTxt = `뒷자리 → ${P.back.join(' ')}`;
+    $('uvBoardText').textContent = '문 비밀번호 ' + (P.boardFront ? fTxt : bTxt);
+    $('uvSkelNum').textContent = (P.boardFront ? P.back : P.front).join(' ');
+    $('uvSkelLbl').textContent = P.boardFront ? '뒷자리' : '앞자리';
+    document.querySelector('h1').innerHTML = `밤의 교실 <small style="font:800 13px 'Gothic A1',sans-serif;color:#B07CFF;vertical-align:middle">${P.C.name}</small>`;
+  }
+  const boardInfo = () => P.boardFront ? `앞자리 → ${P.front.join(' ')}` : `뒷자리 → ${P.back.join(' ')}`;
+  const skelInfo = () => P.boardFront ? `뒷자리 ${P.back.join(' ')}` : `앞자리 ${P.front.join(' ')}`;
+  const clockStr = () => `${P.h}시 ${P.m}분`;
 
   // ---------- render helpers
   function show(id, on){ $(id).setAttribute('display', on ? 'inline' : 'none'); }
@@ -336,7 +383,7 @@ button{font:inherit;color:inherit;cursor:pointer}
     for (let i = 0; i < 4; i++){
       const k = S.inv[i], b = document.createElement('button');
       b.className = 'slot' + (k ? ' has' : '') + (k && S.sel === k ? ' sel' : '');
-      if (k){ b.innerHTML = `${ITEMS[k].icon}<small>${ITEMS[k].name}</small>`; b.onclick = () => tapItem(k); }
+      if (k){ b.innerHTML = `${ITEMS[k].icon}<small>${k === 'uv' && P.C.battery && !S.uvOn ? '손전등(꺼짐)' : ITEMS[k].name}</small>`; b.onclick = () => tapItem(k); }
       else b.disabled = true;
       bag.appendChild(b);
     }
@@ -345,23 +392,41 @@ button{font:inherit;color:inherit;cursor:pointer}
     const m = $('msg'); m.textContent = t; m.classList.toggle('scary', !!scary);
     m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop');
   }
-  function give(k){ if (!S.inv.includes(k)) S.inv.push(k); }
+  function give(k){ if (!S.inv.includes(k)) S.inv.push(k); combine(); }
   function take(k){ S.inv = S.inv.filter(x => x !== k); if (S.sel === k) S.sel = null; }
+  function combine(){
+    if (S.inv.includes('uv') && S.inv.includes('battery')){
+      take('battery'); S.uvOn = true;
+      setTimeout(() => say('건전지를 끼웠다. 딸깍… 보라색 손전등이 켜졌다! 🔦', false), 50);
+    }
+  }
   function flicker(){ svg.classList.remove('flick'); void svg.offsetWidth; svg.classList.add('flick'); }
   function jumpScare(after){
     $('scare').hidden = false; stinger();
     setTimeout(() => { $('scare').hidden = true; after && after(); }, 950);
   }
 
-  // ---------- timer
-  function fmt(ms){ const s = Math.floor(ms/1000); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
+  // ---------- timer (3단계: countdown — when it hits 0, "it" finds you)
+  function fmt(ms){ const s = Math.max(0, Math.floor(ms/1000)); return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; }
   function fmtKo(ms){ const s = Math.floor(ms/1000), m = Math.floor(s/60); return m ? `${m}분 ${s%60}초` : `${s%60}초`; }
-  setInterval(() => { if (S && S.running) $('timer').textContent = fmt(Date.now() - S.t0); }, 500);
+  setInterval(() => {
+    if (!S || !S.running) return;
+    const el = Date.now() - S.t0;
+    if (P.C.limit){
+      const left = P.C.limit*1000 - el;
+      $('timer').textContent = '⏳ ' + fmt(left); $('timer').style.color = left < 60000 ? '#FF6B6B' : '';
+      if (left < 60000 && !S.warned){ S.warned = true; whisper(); say('…발소리가 가까워진다. 1분 남았다!', true); }
+      if (left < 60000 && Math.floor(left/1000) % 2 === 0) thump();
+      if (left <= 0) timeUp();
+    } else { $('timer').textContent = fmt(el); $('timer').style.color = ''; }
+  }, 500);
+  function thump(){ try { if (!AC || muted) return; const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.frequency.value = 55; g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.0001, t + .25); o.connect(g); g.connect(master); o.start(t); o.stop(t + .3); } catch(e){} }
 
-  // ---------- random spooky events
+  // ---------- random spooky events (faster in later stages)
   let spookT = null;
   function scheduleSpook(){
     clearTimeout(spookT);
+    const [a, b] = P.C.spook;
     spookT = setTimeout(() => {
       if (!S.running || !$('ov').hidden) { scheduleSpook(); return; }
       const r = Math.random();
@@ -369,7 +434,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       else if (r < 0.67){ whisper(); say('…어디선가 속삭이는 소리가 들린다. "같이 놀자…"', true); }
       else { show('winGhost', true); whisper(); say('창문 쪽에서 무언가 움직인 것 같다…!', true); setTimeout(() => show('winGhost', false), 1600); }
       scheduleSpook();
-    }, 28000 + Math.random()*22000);
+    }, (a + Math.random()*(b - a))*1000);
   }
 
   // ---------- interactions
@@ -377,58 +442,66 @@ button{font:inherit;color:inherit;cursor:pointer}
     if (!S.running) return;
     if (ITEMS[k].read){ openNote(); return; }
     S.sel = (S.sel === k) ? null : k;
-    if (S.sel === 'uv') say('보라색 손전등을 켰다. 숨겨진 글씨가 보일지도…');
+    if (S.sel === 'uv') say(P.C.battery && !S.uvOn ? '보라색 손전등… 켜지지 않는다. 건전지가 없나 봐.' : '보라색 손전등을 켰다. 숨겨진 글씨가 보일지도…');
     else if (S.sel) say(`${ITEMS[k].icon} ${ITEMS[k].name}을(를) 골랐다. 쓸 곳을 눌러 보자.`);
     render();
   }
 
   const FLAVOR = {
     window:['달이 유난히 밝다. 창문은 녹슬어서 꿈쩍도 안 해.', '창밖은 운동장… 아무도 없다. 아무도.'],
-    clock:['시계가 4시 44분에 멈춰 있다… 기분 나쁜 숫자야.', '초침이 움직이지 않는다. 4시 44분.'],
     desks:['책상에 "뒤를 보지마"라고 새겨져 있다…', '의자 하나가 혼자 살짝 움직인 것 같다.'],
     skeleton:['과학실에 있어야 할 해골 모형이 왜 여기에…?', '해골이 나를 보고 있는 것 같다.'],
     board:['칠판에 희미하게 "나 가 지 마"라고 적혀 있다.', '분필 가루 냄새… 누가 방금 쓴 것 같다.']
   };
   const fIdx = {};
-
   function near(e){ const p = toSvg(e); const d = Math.hypot(p.x - S.light.x, p.y - S.light.y); return {p, ok: d < R * 0.85}; }
+  const uvReady = () => S.sel === 'uv' && (!P.C.battery || S.uvOn);
 
   function tapObj(o, e){
     if (!S.running) return;
     const n = near(e);
-    if (!n.ok){ setLight(n.p.x, n.p.y); return; } // first tap just shines the light there
+    if (!n.ok){ setLight(n.p.x, n.p.y); return; }   // first tap just shines the light there
     const sel = S.sel;
+    if (P.C.battery && !S.battery && o === P.batterySpot && !sel){
+      S.battery = true; give('battery');
+      say(o === 'desks' ? '학생 책상 서랍 속에… 건전지 하나가 굴러다닌다. 🔋' : '창틀 구석에 건전지가 놓여 있다. 누가 두고 갔지…? 🔋', true);
+      render(); return;
+    }
     switch(o){
       case 'trash':
         if (!S.note){ S.note = true; give('note'); creak(); say('휴지통 속에 구겨진 쪽지가 있다. 📄'); render(); openNote(); return; }
         say('휴지통엔 이제 아무것도 없다.'); break;
+      case 'clock':
+        say(`시계가 ${clockStr()}에 멈춰 있다… 기분 나쁘게.`); break;
       case 'locker':
         if (S.locker){ say('13번 사물함은 텅 비었다. 다행이다…'); break; }
-        openDials('🔒 13번 사물함', '자물쇠에 숫자 세 개를 맞춰야 한다.', 3, LOCKER_CODE, () => {
+        openDials('🔒 13번 사물함', '자물쇠에 숫자 세 개를 맞춰야 한다.', 3, P.lockerCode, () => {
           S.locker = true; render();
           jumpScare(() => { give('deskKey'); render(); say('끼이익… 사물함 안에서 인형이 튀어나왔다!! …발밑에 교탁 열쇠가 떨어져 있다. 🔑', true); });
         });
         break;
       case 'desk':
         if (S.desk){ say('교탁 서랍은 비었다.'); break; }
-        if (sel === 'deskKey'){ S.desk = true; take('deskKey'); give('uv'); creak(); say('딸깍. 교탁 서랍 안에 보라색 손전등이 있다. 🔦'); }
+        if (sel === 'deskKey'){ S.desk = true; take('deskKey'); give('uv'); creak(); say(P.C.battery && !S.uvOn ? '딸깍. 교탁 서랍 안에 보라색 손전등이 있다… 그런데 건전지가 없다. 🔦' : '딸깍. 교탁 서랍 안에 보라색 손전등이 있다. 🔦'); }
         else if (sel) say(`${ITEMS[sel].name}은(는) 여기에 쓸 수 없다.`);
         else say('교탁 서랍이 잠겨 있다. 작은 열쇠 구멍이 있다.');
         break;
       case 'board':
-        if (sel === 'uv' && !S.uvBoard){ S.uvBoard = true; flicker(); say('보라색 빛을 비추자 칠판에 글씨가 떠올랐다! "앞자리 → 0 7"', true); break; }
-        if (S.uvBoard){ say('칠판의 보라색 글씨: 문 비밀번호 앞자리 → 0 7'); break; }
+        if (sel === 'uv' && !uvReady()){ say('손전등이 켜지지 않는다… 건전지부터 찾아야 해.'); break; }
+        if (uvReady() && !S.uvBoard){ S.uvBoard = true; flicker(); say(`보라색 빛을 비추자 칠판에 글씨가 떠올랐다! "${boardInfo()}"`, true); break; }
+        if (S.uvBoard){ say(`칠판의 보라색 글씨: 문 비밀번호 ${boardInfo()}`); break; }
         flavor('board'); break;
       case 'skeleton':
-        if (sel === 'uv' && !S.uvSkel){ S.uvSkel = true; stinger(); say('해골 갈비뼈에 숫자가 빛난다… "뒷자리 3 1"', true); break; }
-        if (S.uvSkel){ say('해골 갈비뼈의 보라색 숫자: 뒷자리 3 1'); break; }
+        if (sel === 'uv' && !uvReady()){ say('손전등이 켜지지 않는다… 건전지부터 찾아야 해.'); break; }
+        if (uvReady() && !S.uvSkel){ S.uvSkel = true; stinger(); say(`해골 갈비뼈에 숫자가 빛난다… "${skelInfo()}"`, true); break; }
+        if (S.uvSkel){ say(`해골 갈비뼈의 보라색 숫자: ${skelInfo()}`); break; }
         flavor('skeleton'); break;
       case 'window':
         S.windowSeen++;
         if (S.windowSeen === 2){ show('winGhost', true); stinger(); say('창문에 하얀 얼굴이…!!', true); setTimeout(() => show('winGhost', false), 1200); break; }
         flavor('window'); break;
       case 'door':
-        openDials('🚪 교실 문', '문에 숫자 네 개짜리 잠금장치가 달려 있다.', 4, DOOR_CODE, escape);
+        openDials('🚪 교실 문', '문에 숫자 네 개짜리 잠금장치가 달려 있다.', 4, P.doorCode, escape);
         break;
       default: flavor(o);
     }
@@ -444,11 +517,13 @@ button{font:inherit;color:inherit;cursor:pointer}
   // ---------- overlays
   function openOv(html, bind){ $('card').innerHTML = html; $('ov').hidden = false; bind && bind(); }
   function closeOv(){ $('ov').hidden = true; }
-  $('ov').addEventListener('click', e => { if (e.target === $('ov') && S.running) closeOv(); });
+  $('ov').addEventListener('click', e => { if (e.target === $('ov') && S && S.running) closeOv(); });
 
   function openNote(){
+    const how = P.C.reverse ? '시계가 멈춘 시각을<br><b>거꾸로</b> 읽어.' : '시계가 멈춘 그 시각이야.';
+    const extra = P.C.battery ? '<br><span style="font-size:20px">보라색 빛엔 건전지가 필요해.</span>' : '';
     openOv(`<h2>구겨진 쪽지</h2>
-      <div class="paper">사물함 13번… 자물쇠 번호는<br>시계가 멈춘 그 시각이야.<br><span style="color:#A33">늦기 전에 나가.</span></div>
+      <div class="paper">사물함 13번… 자물쇠 번호는<br>${how}${extra}<br><span style="color:#A33">늦기 전에 나가.</span></div>
       <button class="big" id="okBtn">…알겠어</button>`, () => $('okBtn').onclick = closeOv);
   }
   function openDials(title, desc, n, code, onOk){
@@ -472,34 +547,51 @@ button{font:inherit;color:inherit;cursor:pointer}
   // ---------- hints
   $('hintBtn').onclick = () => {
     if (!S.running) return; S.hints++;
+    const lc = P.lockerCode.join('·');
     let t;
     if (!S.note) t = '어둠 속을 손전등으로 구석구석 비춰 봐. 사물함 옆 휴지통 안은?';
-    else if (!S.locker) t = S.hints % 2 ? '쪽지를 다시 읽어 봐. 오른쪽 위 벽시계는 몇 시에 멈춰 있지?' : '시계는 4시 44분. 13번 사물함에 4·4·4!';
+    else if (!S.locker) t = S.hints % 2 ? '쪽지를 다시 읽어 봐. 오른쪽 위 벽시계는 몇 시에 멈춰 있지?' : `시계는 ${clockStr()}.${P.C.reverse ? ' 거꾸로 읽으면' : ''} 13번 사물함에 ${lc}!`;
     else if (!S.desk) t = '🔑 교탁 열쇠를 고르고 가운데 교탁을 눌러 봐.';
+    else if (P.C.battery && !S.uvOn) t = P.batterySpot === 'desks' ? '보라색 손전등에 건전지가 필요해. 앞쪽 학생 책상들을 살펴봐!' : '보라색 손전등에 건전지가 필요해. 달이 보이는 창문 쪽을 살펴봐!';
     else if (!S.uvBoard || !S.uvSkel) t = !S.uvBoard ? '🔦 보라색 손전등을 고르고 칠판을 비춰 봐.' : '보라색 손전등으로 해골 모형도 비춰 봐!';
-    else t = '칠판의 0 7 + 해골의 3 1 → 문에 0731!';
+    else t = `앞자리 ${P.front.join('')} + 뒷자리 ${P.back.join('')} → 문에 ${P.doorCode.join('')}!${P.C.swap ? ' (칠판과 해골 중 어느 쪽이 앞자리인지 잘 봐)' : ''}`;
     say('💡 ' + t);
   };
 
-  // ---------- start / end
-  function loadBest(){ try { return JSON.parse(localStorage.getItem(BEST_KEY)); } catch(e){ return null; } }
-  function saveBest(b){ try { localStorage.setItem(BEST_KEY, JSON.stringify(b)); } catch(e){} }
-
-  function intro(){
-    reset(); setLight(180, 220); render(); $('timer').textContent = '0:00'; clearTimeout(spookT);
-    say('화면을 문질러 손전등을 비추고, 비친 물건을 눌러 살펴보세요.');
-    const best = loadBest();
-    openOv(`<p style="font-size:12px;letter-spacing:.2em;color:#B07CFF">방탈출 2단계</p><h2>밤의 교실</h2>
+  // ---------- stage select / start / end
+  const unlocked = () => Math.min(3, 1 + (load('night:unlock') || 0));
+  const bestKey = n => `night:s${n}`;
+  function selectScreen(){
+    if (S) S.running = false; clearTimeout(spookT);
+    const u = unlocked();
+    openOv(`<h2>밤의 교실</h2>
       <p>깜빡 두고 온 휴대폰을 찾으러<br>밤늦게 5학년 3반 교실에 왔다.<br>그런데… <b style="color:var(--ink)">쾅!</b> 문이 저절로 잠겼다.</p>
-      <p style="font-size:12px">🔊 소리를 켜고 하면 더 무서워요 · 손가락으로 화면을 문질러 비추기</p>
-      ${best ? `<p>내 최고 기록: <b style="color:var(--ink)">${fmtKo(best.ms)}</b> · 힌트 ${best.hints}번</p>` : ''}
-      <button class="big" id="goBtn">손전등 켜기</button>`, () => {
-        $('goBtn').onclick = () => { audioInit(); creak(); closeOv(); S.running = true; S.t0 = Date.now(); scheduleSpook(); };
+      <div class="stages">${STG.map((c, i) => {
+        const n = i + 1, b = load(bestKey(n)), lock = n > u;
+        return `<button class="stg" data-n="${n}" ${lock ? 'disabled' : ''}><i>${lock ? '🔒' : ['🌙','🔋','⏳'][i]}</i>
+          <span><b>${c.name} · ${c.sub}</b><small>${lock ? `${n-1}단계를 깨면 열려요` : ['손전등 넓게 · 기본 퍼즐', '손전등 좁게 · 숫자 순서가 섞여요', '더 어둡게 · 시계를 거꾸로 · 제한시간'][i]}</small></span>
+          <em>${b ? '🏆 ' + fmtKo(b.ms) : lock ? '' : '도전 ›'}</em></button>`;
+      }).join('')}</div>
+      <p style="font-size:12px">🔊 소리를 켜면 더 무서워요 · 비밀번호는 매일 바뀌어요</p>`, () => {
+        document.querySelectorAll('.stg[data-n]').forEach(b => b.onclick = () => { if (!b.disabled) startStage(+b.dataset.n); });
       });
+  }
+  function startStage(n){
+    P = buildPuzzle(n); reset(); applyStage(); setLight(180, 220); render();
+    $('timer').textContent = P.C.limit ? '⏳ ' + fmt(P.C.limit*1000) : '0:00'; $('timer').style.color = '';
+    say(n === 1 ? '화면을 문질러 손전등을 비추고, 비친 물건을 눌러 살펴보세요.' : n === 2 ? '…또 이 교실이다. 손전등 빛이 더 약해졌다.' : '…무언가 복도에서 다가오고 있다. 4분 안에 나가야 해!', n === 3);
+    closeOv(); audioInit(); creak(); S.running = true; S.t0 = Date.now(); scheduleSpook();
+  }
+  function timeUp(){
+    S.running = false; clearTimeout(spookT);
+    jumpScare(() => openOv(`<h2>시간 초과…</h2><p>문틈으로 하얀 손이 들어왔다.<br><span style="color:#FFB3B5">"찾았다…"</span></p>
+      <button class="big" id="retry">3단계 다시 도전</button><button class="ghost" id="selBtn">단계 고르기</button>`, () => {
+        $('retry').onclick = () => startStage(3); $('selBtn').onclick = selectScreen;
+      }));
   }
 
   function shareText(ms){
-    let t = `👻 방탈출 2단계 '밤의 교실' 탈출 성공!\n⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
+    let t = `👻 밤의 교실 ${P.C.name} 탈출 성공! (${DLABEL})\n⏱ ${fmtKo(ms)} · 💡 힌트 ${S.hints}번\n`;
     if (/github\.io$/.test(location.hostname)) t += location.origin + location.pathname;
     return t.trim();
   }
@@ -513,22 +605,32 @@ button{font:inherit;color:inherit;cursor:pointer}
   function escape(){
     S.escaped = true; S.running = false; S.sel = null; clearTimeout(spookT); render(); creak();
     setLight(327, 185);
-    const ms = Date.now() - S.t0, best = loadBest(), isBest = !best || ms < best.ms;
-    if (isBest) saveBest({ms, hints:S.hints});
+    const n = P.n, ms = Date.now() - S.t0, best = load(bestKey(n)), isBest = !best || ms < best.ms;
+    if (isBest) save(bestKey(n), {ms, hints:S.hints});
+    if ((load('night:unlock') || 0) < n) save('night:unlock', n);
+    const sum = load('night:best');                        // summary read by the 점오하게 menu
+    if (!sum || n > (sum.stage || 1) || (n === sum.stage && ms < sum.ms)) save('night:best', {ms, stage:n});
     say('문이 열렸다! 복도로 뛰쳐나왔다… 등 뒤에서 "내일 또 와…"', true);
-    setTimeout(() => openOv(`<h2>탈출 성공…?</h2>
+    const endings = ['휴대폰은 찾았지만… 화면에 낯선 문자가 와 있다.<br><span style="color:#FFB3B5">"내일 밤에도 기다릴게 👻"</span>',
+                     '복도 끝 거울에 내 뒤로… 누군가 서 있었다.<br><span style="color:#FFB3B5">"다음엔 더 어둡게 해 줄게."</span>',
+                     '교문을 나서는 순간 학교의 모든 불이 켜졌다.<br><span style="color:#FFB3B5">5학년 3반 창문에서 누군가 손을 흔든다… 👋</span>'];
+    setTimeout(() => openOv(`<h2>${P.C.name} 탈출…!</h2>
       <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
-      <p>휴대폰은 찾았지만… 화면에 낯선 문자가 와 있다.<br><span style="color:#FFB3B5">"내일 밤에도 기다릴게 👻"</span></p>
-      <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
-      <button class="big" id="shareBtn">결과 복사</button>
-      <button class="ghost" id="againBtn">다시 하기</button>`, () => {
+      <p>${endings[n-1]}</p>
+      <p>${isBest ? '이 단계 최고 기록이에요!' : `이 단계 최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
+      ${n < 3 ? `<button class="big" id="nextBtn">${n+1}단계 · ${STG[n].sub} ›</button>` : ''}
+      <button class="${n < 3 ? 'ghost' : 'big'}" id="shareBtn">결과 복사</button>
+      <button class="ghost" id="selBtn">단계 고르기</button>`, () => {
+        if (n < 3) $('nextBtn').onclick = () => startStage(n + 1);
         $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
-        $('againBtn').onclick = intro;
+        $('selBtn').onclick = selectScreen;
       }), 1400);
   }
 
-  intro();
+  P = buildPuzzle(1); reset(); applyStage(); render();
+  selectScreen();
 })();
 </script>
+
 
 </html>

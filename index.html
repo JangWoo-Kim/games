@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
 <style>
-/* Lunch-tray menu: header with a lunch clock, then two shelves of game "tickets". */
+/* Lunch-tray menu: compact header with a lunch clock, then two 3-up rows of game tiles — all six fit one phone screen. */
 :root{
   --bg:#F6F1E7; --surface:#FFFDF8; --ink:#1F1B16; --muted:#7A6F62; --line:#E6DCCB;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#2F9E5B;
@@ -29,105 +29,64 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
-.wrap{max-width:520px;margin:0 auto;padding-inline:16px;padding-block:22px 32px;display:flex;flex-direction:column;gap:22px}
-header{display:flex;flex-direction:column;gap:10px}
-.brand{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
-h1{font-family:var(--f-display);font-weight:400;font-size:52px;line-height:.95;margin:0;letter-spacing:.01em}
+.wrap{max-width:520px;margin:0 auto;padding-inline:14px;padding-block:14px 14px;display:flex;flex-direction:column;gap:14px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+h1{font-family:var(--f-display);font-weight:400;font-size:40px;line-height:.95;margin:0;letter-spacing:.01em}
 h1 .five{color:var(--accent)}
-.tag{margin:6px 0 0;color:var(--muted);font-size:15px}
-.clock{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.clock i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.tag{margin:4px 0 0;color:var(--muted);font-size:13px}
+.clock{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock i{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
 .clock.lunch i{background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 25%,transparent)}
-section{display:flex;flex-direction:column;gap:10px}
-h2{font-size:12px;letter-spacing:.14em;color:var(--muted);margin:0;font-weight:800}
-.list{display:flex;flex-direction:column;gap:10px}
-a.card{display:grid;grid-template-columns:64px 1fr auto;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px 12px 12px;color:inherit;text-decoration:none;position:relative;overflow:hidden;transition:transform .12s ease}
-a.card:active{transform:scale(.98)}
-a.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
-.thumb{width:64px;height:64px;border-radius:12px;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:30px}
-.txt{min-width:0;display:flex;flex-direction:column;gap:3px}
-.name{font-family:var(--f-display);font-weight:400;font-size:21px;line-height:1.1}
-.desc{font-size:13px;color:var(--muted);line-height:1.45}
-.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
-.pill{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink)}
-.pill.done{background:color-mix(in srgb,var(--good) 18%,transparent)}
-.go{font-size:20px;color:var(--muted)}
-footer{color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
+section{display:flex;flex-direction:column;gap:8px}
+h2{font-size:11px;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+a.tile{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 6px 10px;color:inherit;text-decoration:none;text-align:center;position:relative;overflow:hidden;transition:transform .12s ease}
+a.tile:active{transform:scale(.96)}
+a.tile::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
+.thumb{width:50px;height:50px;border-radius:14px;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:26px;margin-top:2px}
+.name{font-family:var(--f-display);font-weight:400;font-size:16px;line-height:1.15;white-space:nowrap}
+.sub{font-size:11px;color:var(--muted);line-height:1.3;min-height:2.6em}
+.pill{font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 7px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pill.done{background:color-mix(in srgb,var(--good) 20%,transparent)}
+footer{color:var(--muted);font-size:11px;text-align:center}
+@media (max-width:340px){ .name{font-size:14px} .thumb{width:44px;height:44px;font-size:22px} }
 </style>
 
 <div class="wrap">
   <header>
-    <div class="brand">
-      <div>
-        <h1>점<span class="five">오</span>하게</h1>
-        <p class="tag">점심시간 <b>5분</b>, 딱 한 판.</p>
-      </div>
-      <span class="clock" id="clock"><i></i><span id="clockTxt">--:--</span></span>
+    <div>
+      <h1>점<span class="five">오</span>하게</h1>
+      <p class="tag">점심시간 <b>5분</b>, 딱 한 판.</p>
     </div>
+    <span class="clock" id="clock"><i></i><span id="clockTxt">--:--</span></span>
   </header>
 
   <section>
     <h2>매일 바뀌는 도전</h2>
-    <div class="list">
-      <a class="card" style="--c:var(--c-tower)" href="https://jangwoo-kim.github.io/games/tower/" target="_top">
-        <div class="thumb">🏗️</div>
-        <div class="txt">
-          <div class="name">오늘의 탑</div>
-          <div class="desc">타이밍 맞춰 블록 쌓기. 하루 3번, 모두 같은 탑.</div>
-          <div class="meta"><span class="pill">⏱ 1분</span><span class="pill" id="st-tower">오늘 아직 안 함</span></div>
-        </div>
-        <span class="go">›</span>
+    <div class="grid">
+      <a class="tile" style="--c:var(--c-tower)" href="https://jangwoo-kim.github.io/games/tower/" target="_top">
+        <div class="thumb">🏗️</div><div class="name">오늘의 탑</div><div class="sub">타이밍 맞춰<br>블록 쌓기</div><span class="pill" id="st-tower">⏱ 1분</span>
       </a>
-      <a class="card" style="--c:var(--c-escape)" href="https://jangwoo-kim.github.io/games/escape/" target="_top">
-        <div class="thumb">🚪</div>
-        <div class="txt">
-          <div class="name">오늘의 방탈출</div>
-          <div class="desc">잠긴 방에서 단서 찾기. 열쇠와 비밀번호가 매일 바뀌어요.</div>
-          <div class="meta"><span class="pill">⏱ 3~5분</span><span class="pill" id="st-escape">오늘 아직 안 함</span></div>
-        </div>
-        <span class="go">›</span>
+      <a class="tile" style="--c:var(--c-lunch)" href="https://jangwoo-kim.github.io/games/lunch/" target="_top">
+        <div class="thumb">🍱</div><div class="name">도시락 합치기</div><div class="sub">같은 음식끼리<br>합치기</div><span class="pill" id="st-lunch">⏱ 5분</span>
       </a>
-      <a class="card" style="--c:var(--c-lunch)" href="https://jangwoo-kim.github.io/games/lunch/" target="_top">
-        <div class="thumb">🍱</div>
-        <div class="txt">
-          <div class="name">도시락 합치기</div>
-          <div class="desc">같은 음식끼리 합쳐 도시락 완성. 넘치면 끝!</div>
-          <div class="meta"><span class="pill">⏱ 5분</span><span class="pill" id="st-lunch">오늘 아직 안 함</span></div>
-        </div>
-        <span class="go">›</span>
+      <a class="tile" style="--c:var(--c-escape)" href="https://jangwoo-kim.github.io/games/escape/" target="_top">
+        <div class="thumb">🚪</div><div class="name">오늘의 방탈출</div><div class="sub">내 방·서재·다락방<br>3단계</div><span class="pill" id="st-escape">⏱ 3~5분</span>
       </a>
     </div>
   </section>
 
   <section>
-    <h2>공포 · 소리 켜고 하면 더 무서워요</h2>
-    <div class="list">
-      <a class="card" style="--c:var(--c-hall)" href="https://jangwoo-kim.github.io/games/hall/" target="_top">
-        <div class="thumb">👻</div>
-        <div class="txt">
-          <div class="name">유령의 복도</div>
-          <div class="desc">무궁화 꽃이 피었습니다… 돌아보면 멈춰! 5단계까지.</div>
-          <div class="meta"><span class="pill">⏱ 2분</span><span class="pill" id="st-hall">5단계</span></div>
-        </div>
-        <span class="go">›</span>
+    <h2>공포 · 소리 켜면 더 무서워요</h2>
+    <div class="grid">
+      <a class="tile" style="--c:var(--c-hall)" href="https://jangwoo-kim.github.io/games/hall/" target="_top">
+        <div class="thumb">👻</div><div class="name">유령의 복도</div><div class="sub">무궁화 꽃이<br>피었습니다 5단계</div><span class="pill" id="st-hall">⏱ 2분</span>
       </a>
-      <a class="card" style="--c:var(--c-run)" href="https://jangwoo-kim.github.io/games/run/" target="_top">
-        <div class="thumb">🏃</div>
-        <div class="txt">
-          <div class="name">야근 런</div>
-          <div class="desc">밤 11시, 혼자 남은 사무실. 뒤에서 누가 부른다… 비상구까지 달려!</div>
-          <div class="meta"><span class="pill">⏱ 1~3분</span><span class="pill" id="st-run">오늘 아직 안 함</span></div>
-        </div>
-        <span class="go">›</span>
+      <a class="tile" style="--c:var(--c-run)" href="https://jangwoo-kim.github.io/games/run/" target="_top">
+        <div class="thumb">🏃</div><div class="name">야근 런</div><div class="sub">귀신 피해<br>비상구까지</div><span class="pill" id="st-run">⏱ 1~3분</span>
       </a>
-      <a class="card" style="--c:var(--c-night)" href="https://jangwoo-kim.github.io/games/night/" target="_top">
-        <div class="thumb">🔦</div>
-        <div class="txt">
-          <div class="name">밤의 교실</div>
-          <div class="desc">손전등 하나로 어두운 교실 탈출. 방탈출 2단계.</div>
-          <div class="meta"><span class="pill">⏱ 5분</span><span class="pill" id="st-night">도전 전</span></div>
-        </div>
-        <span class="go">›</span>
+      <a class="tile" style="--c:var(--c-night)" href="https://jangwoo-kim.github.io/games/night/" target="_top">
+        <div class="thumb">🔦</div><div class="name">밤의 교실</div><div class="sub">손전등 방탈출<br>3단계</div><span class="pill" id="st-night">⏱ 5분</span>
       </a>
     </div>
   </section>
@@ -144,17 +103,17 @@ footer{color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
   const fmtKo = ms => { const s = Math.floor(ms/1000), m = Math.floor(s/60); return m ? `${m}분 ${s%60}초` : `${s%60}초`; };
   const mark = (id, text) => { const el = $(id); el.textContent = text; el.classList.add('done'); };
 
-  const t = get('tower:' + dkey); if (t && t.tries) mark('st-tower', `✅ 오늘 ${t.best || 0}층`);
-  const e = get('escape:' + dkey); if (e && e.ms) mark('st-escape', `✅ 오늘 ${fmtKo(e.ms)}`);
-  const r = get('run:' + dkey); if (r && r.dist) mark('st-run', `✅ 오늘 ${r.dist.toLocaleString()}m`);
-  const l = get('lunch:' + dkey); if (l && l.score) mark('st-lunch', `✅ 오늘 ${l.score.toLocaleString()}점`);
+  const t = get('tower:' + dkey); if (t && t.tries) mark('st-tower', `✅ ${t.best || 0}층`);
+  const e = get('escape:' + dkey); if (e && e.ms) mark('st-escape', `✅ ${e.stage || 1}단계 탈출`);
+  const r = get('run:' + dkey); if (r && r.dist) mark('st-run', `✅ ${r.dist.toLocaleString()}m`);
+  const l = get('lunch:' + dkey); if (l && l.score) mark('st-lunch', `✅ ${l.score.toLocaleString()}점`);
   const h = get('hall5:best'); if (h && h.ms) mark('st-hall', `🏆 ${fmtKo(h.ms)}`);
-  const n = get('night1:best'); if (n && n.ms) mark('st-night', `🏆 ${fmtKo(n.ms)}`);
+  const n = get('night:best') || get('night1:best'); if (n && n.ms) mark('st-night', `🏆 ${n.stage || 1}단계 탈출`);
 
   function tick(){
     const d = new Date(), H = d.getHours(), M = d.getMinutes(), mins = H*60 + M;
     const el = $('clock'); let txt;
-    if (mins >= 720 && mins < 780){ txt = `점심시간 ${60 - (mins - 720)}분 남음 🍱`; el.classList.add('lunch'); }
+    if (mins >= 720 && mins < 780){ txt = `점심 ${60 - (mins - 720)}분 남음 🍱`; el.classList.add('lunch'); }
     else {
       el.classList.remove('lunch');
       if (mins < 720){ const left = 720 - mins; txt = `점심까지 ${left >= 60 ? Math.floor(left/60) + '시간 ' : ''}${left % 60}분`; }
