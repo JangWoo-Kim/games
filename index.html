@@ -29,37 +29,38 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
-.wrap{max-width:560px;margin:0 auto;padding-inline:14px;padding-block:16px 20px;display:flex;flex-direction:column;gap:18px}
-header{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+.wrap{max-width:560px;margin:0 auto;padding-inline:12px;padding-block:12px 12px;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.titleRow{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
 h1,.tag{white-space:nowrap}
 h1{font-family:var(--f-display);font-weight:400;font-size:48px;line-height:.95;margin:0;letter-spacing:.01em}
 h1 .five{color:var(--accent)}
-.tag{margin:6px 0 0;color:var(--muted);font-size:17px;font-weight:600}
-.clock{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-.clock i{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
+.tag{margin:0;color:var(--muted);font-size:17px;font-weight:600}
+.clock{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock i{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
 .clock.lunch i{background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 25%,transparent)}
-section{display:flex;flex-direction:column;gap:10px}
+section{display:flex;flex-direction:column;gap:7px}
 h2{font-size:16px;letter-spacing:.04em;color:var(--muted);margin:0;font-weight:800}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
-a.tile{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 4px 12px;color:inherit;text-decoration:none;text-align:center;position:relative;overflow:hidden;transition:transform .12s ease}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+a.tile{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:9px 3px 8px;color:inherit;text-decoration:none;text-align:center;position:relative;overflow:hidden;transition:transform .12s ease}
 a.tile:active{transform:scale(.96)}
 a.tile::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
-.thumb{width:62px;height:62px;border-radius:16px;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:33px;margin-top:2px}
-.name{font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1.15;word-break:keep-all;min-height:2.3em;display:flex;align-items:center;justify-content:center}
-.sub{font-size:14px;color:var(--muted);line-height:1.35;min-height:2.7em;word-break:keep-all;font-weight:600}
-.pill{font-size:13px;font-weight:800;border-radius:999px;padding:4px 9px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb{width:44px;height:44px;border-radius:12px;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:24px;margin-top:2px}
+.name{font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1.15;word-break:keep-all;min-height:2.3em;line-height:1.1;display:flex;align-items:center;justify-content:center}
+.sub{font-size:14px;color:var(--muted);line-height:1.3;min-height:2.6em;word-break:keep-all;font-weight:600}
+.pill{font-size:13px;font-weight:800;border-radius:999px;padding:3px 8px;margin-top:2px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pill.done{background:color-mix(in srgb,var(--good) 20%,transparent)}
-footer{color:var(--muted);font-size:14px;line-height:1.6;text-align:center;word-break:keep-all}
-@media (max-width:370px){ .name{font-size:18px} .sub{font-size:13px} .pill{font-size:12px;padding:4px 7px} .thumb{width:54px;height:54px;font-size:29px} h1{font-size:42px} .clock{font-size:13px} }
+footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-break:keep-all}
+@media (max-width:370px){ .name{font-size:18px} .sub{font-size:13px} .pill{font-size:12px;padding:3px 6px} .thumb{width:40px;height:40px;font-size:22px} h1{font-size:42px} .clock{font-size:11px} }
 </style>
 
 <div class="wrap">
   <header>
-    <div>
+    <div class="titleRow">
       <h1>점<span class="five">오</span>하게</h1>
-      <p class="tag">점심시간 <b>5분</b>, 하는 게임.</p>
+      <span class="clock" id="clock"><i></i><span id="clockTxt">--:--</span></span>
     </div>
-    <span class="clock" id="clock"><i></i><span id="clockTxt">--:--</span></span>
+    <p class="tag">점심시간 <b>5분</b>, 하는 게임.</p>
   </header>
 
   <section>
@@ -72,7 +73,7 @@ footer{color:var(--muted);font-size:14px;line-height:1.6;text-align:center;word-
         <div class="thumb">🍱</div><div class="name">도시락 합치기</div><div class="sub">같은 음식끼리<br>합치기</div><span class="pill" id="st-lunch">⏱ 5분</span>
       </a>
       <a class="tile" style="--c:var(--c-escape)" href="https://jangwoo-kim.github.io/games/escape/" target="_top">
-        <div class="thumb">🚪</div><div class="name">오늘의 방탈출</div><div class="sub">내 방·서재·다락방<br>3단계</div><span class="pill" id="st-escape">⏱ 3~5분</span>
+        <div class="thumb">🚪</div><div class="name">오늘의 방탈출</div><div class="sub">방 3개<br>3단계 탈출</div><span class="pill" id="st-escape">⏱ 3~5분</span>
       </a>
     </div>
   </section>
@@ -81,7 +82,7 @@ footer{color:var(--muted);font-size:14px;line-height:1.6;text-align:center;word-
     <h2>공포 · 소리 켜면 더 무서워요</h2>
     <div class="grid">
       <a class="tile" style="--c:var(--c-hall)" href="https://jangwoo-kim.github.io/games/hall/" target="_top">
-        <div class="thumb">👻</div><div class="name">유령의 복도</div><div class="sub">무궁화 꽃이<br>피었습니다 5단계</div><span class="pill" id="st-hall">⏱ 2분</span>
+        <div class="thumb">👻</div><div class="name">유령의 복도</div><div class="sub">무궁화 꽃이<br>피었습니다</div><span class="pill" id="st-hall">⏱ 2분</span>
       </a>
       <a class="tile" style="--c:var(--c-run)" href="https://jangwoo-kim.github.io/games/run/" target="_top">
         <div class="thumb">🏃</div><div class="name">야근 런</div><div class="sub">귀신 피해<br>비상구까지</div><span class="pill" id="st-run">⏱ 1~3분</span>
