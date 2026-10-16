@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
 <style>
-/* Lunch-tray menu: compact header with a lunch clock, then two 3-up rows of game tiles — all six fit one phone screen. */
+/* Lunch-tray menu: header with a lunch clock, then two 3-up rows of game tiles. Large type for easy reading. */
 :root{
   --bg:#F6F1E7; --surface:#FFFDF8; --ink:#1F1B16; --muted:#7A6F62; --line:#E6DCCB;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#2F9E5B;
@@ -29,27 +29,28 @@
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
-.wrap{max-width:520px;margin:0 auto;padding-inline:14px;padding-block:14px 14px;display:flex;flex-direction:column;gap:14px}
-header{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
-h1{font-family:var(--f-display);font-weight:400;font-size:40px;line-height:.95;margin:0;letter-spacing:.01em}
+.wrap{max-width:560px;margin:0 auto;padding-inline:14px;padding-block:16px 20px;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
+h1,.tag{white-space:nowrap}
+h1{font-family:var(--f-display);font-weight:400;font-size:48px;line-height:.95;margin:0;letter-spacing:.01em}
 h1 .five{color:var(--accent)}
-.tag{margin:4px 0 0;color:var(--muted);font-size:13px}
-.clock{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
-.clock i{width:7px;height:7px;border-radius:50%;background:var(--muted);flex:none}
+.tag{margin:6px 0 0;color:var(--muted);font-size:17px;font-weight:600}
+.clock{display:inline-flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.clock i{width:9px;height:9px;border-radius:50%;background:var(--muted);flex:none}
 .clock.lunch i{background:var(--good);box-shadow:0 0 0 4px color-mix(in srgb,var(--good) 25%,transparent)}
-section{display:flex;flex-direction:column;gap:8px}
-h2{font-size:11px;letter-spacing:.12em;color:var(--muted);margin:0;font-weight:800}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-a.tile{display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 6px 10px;color:inherit;text-decoration:none;text-align:center;position:relative;overflow:hidden;transition:transform .12s ease}
+section{display:flex;flex-direction:column;gap:10px}
+h2{font-size:16px;letter-spacing:.04em;color:var(--muted);margin:0;font-weight:800}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+a.tile{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px 4px 12px;color:inherit;text-decoration:none;text-align:center;position:relative;overflow:hidden;transition:transform .12s ease}
 a.tile:active{transform:scale(.96)}
 a.tile::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
-.thumb{width:50px;height:50px;border-radius:14px;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:26px;margin-top:2px}
-.name{font-family:var(--f-display);font-weight:400;font-size:16px;line-height:1.15;white-space:nowrap}
-.sub{font-size:11px;color:var(--muted);line-height:1.3;min-height:2.6em}
-.pill{font-size:10.5px;font-weight:800;border-radius:999px;padding:3px 7px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thumb{width:62px;height:62px;border-radius:16px;background:var(--c);display:flex;align-items:center;justify-content:center;font-size:33px;margin-top:2px}
+.name{font-family:var(--f-display);font-weight:400;font-size:20px;line-height:1.15;word-break:keep-all;min-height:2.3em;display:flex;align-items:center;justify-content:center}
+.sub{font-size:14px;color:var(--muted);line-height:1.35;min-height:2.7em;word-break:keep-all;font-weight:600}
+.pill{font-size:13px;font-weight:800;border-radius:999px;padding:4px 9px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pill.done{background:color-mix(in srgb,var(--good) 20%,transparent)}
-footer{color:var(--muted);font-size:11px;text-align:center}
-@media (max-width:340px){ .name{font-size:14px} .thumb{width:44px;height:44px;font-size:22px} }
+footer{color:var(--muted);font-size:14px;line-height:1.6;text-align:center;word-break:keep-all}
+@media (max-width:370px){ .name{font-size:18px} .sub{font-size:13px} .pill{font-size:12px;padding:4px 7px} .thumb{width:54px;height:54px;font-size:29px} h1{font-size:42px} .clock{font-size:13px} }
 </style>
 
 <div class="wrap">
