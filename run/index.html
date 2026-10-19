@@ -34,9 +34,12 @@ h1 b{color:var(--accent);font-weight:400}
 .stage{flex:1 1 0;min-height:0;position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);touch-action:none;background:#000}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
 .toast{position:absolute;left:50%;transform:translateX(-50%);top:40px;max-width:92%;width:max-content;text-align:center;font:800 16px var(--f-body);pointer-events:none;background:rgba(20,16,26,.78);padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .2s}
-.pad{flex:none;display:grid;grid-template-columns:1fr 1.15fr 1.15fr 1fr;gap:8px}
-.pad button{height:62px;border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:800 13px var(--f-body);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;touch-action:none;cursor:pointer}
-.pad button span{font-size:20px;line-height:1}
+.pad{flex:none;display:grid;grid-template-columns:1fr 1.05fr 1fr;grid-template-rows:58px 58px;grid-template-areas:"l u r" "l d r";gap:3px 8px;width:100%;max-width:340px;margin:0 auto}
+.pad button{border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;touch-action:none;cursor:pointer;padding:0}
+.pad button svg{width:40px;height:40px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.pad [data-k="U"]{grid-area:u;border-radius:14px 14px 6px 6px}.pad [data-k="D"]{grid-area:d;border-radius:6px 6px 14px 14px}
+.pad [data-k="L"]{grid-area:l;align-self:center;height:84px}.pad [data-k="R"]{grid-area:r;align-self:center;height:84px}
+.pad [data-k="D"] svg{transform:rotate(180deg)}.pad [data-k="L"] svg{transform:rotate(-90deg)}.pad [data-k="R"] svg{transform:rotate(90deg)}
 .pad button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .guide{display:flex;flex-direction:column;gap:6px;text-align:left}
 .guide div{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:7px 10px;font-size:13px;color:var(--muted)}
@@ -75,10 +78,10 @@ h1 b{color:var(--accent);font-weight:400}
   </div>
   <div class="stage" id="stage"><canvas id="cv"></canvas><div class="toast" id="toast"></div></div>
   <div class="pad" id="pad">
-    <button data-k="L" aria-label="왼쪽"><span>◀</span>왼쪽</button>
-    <button data-k="U" aria-label="점프"><span>▲</span>점프</button>
-    <button data-k="D" aria-label="슬라이드"><span>▼</span>슬라이드</button>
-    <button data-k="R" aria-label="오른쪽"><span>▶</span>오른쪽</button>
+    <button data-k="U" aria-label="점프"><svg viewBox="0 0 24 24"><path d="M12 2.5 20.5 11.5H15.5V21.5H8.5V11.5H3.5Z"/></svg></button>
+    <button data-k="L" aria-label="왼쪽"><svg viewBox="0 0 24 24"><path d="M12 2.5 20.5 11.5H15.5V21.5H8.5V11.5H3.5Z"/></svg></button>
+    <button data-k="R" aria-label="오른쪽"><svg viewBox="0 0 24 24"><path d="M12 2.5 20.5 11.5H15.5V21.5H8.5V11.5H3.5Z"/></svg></button>
+    <button data-k="D" aria-label="슬라이드"><svg viewBox="0 0 24 24"><path d="M12 2.5 20.5 11.5H15.5V21.5H8.5V11.5H3.5Z"/></svg></button>
   </div>
 </div>
 <div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
