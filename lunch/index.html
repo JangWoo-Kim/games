@@ -291,7 +291,9 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
   let G = null;
   function newGame(){
     G = {balls:[], score:0, rng:mulberry(hash('lunch:' + DKEY)), cur:0, next:0, aim:W/2, canDrop:true, cool:0,
-         over:false, overT:0, running:false, maxT:0, merges:0, fx:[], id:0};
+         over:false, overT:0, running:false, maxT:0, merges:0, fx:[], id:0,
+         // dynamic pace: heat builds while the box is half full; 3 quick merges in a row buy a slow-down
+         fill:0, heat:0, rush:false, slow:0, combo:0, dropMerged:true, clock:0, auto:0, banner:null};
     G.cur = pick(); G.next = pick(); G.aim = (box.l + box.r)/2;
     $('score').textContent = '0'; ladder();
   }
@@ -321,13 +323,48 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
   function drop(){
     if (!G.canDrop || G.over) return;
     const t = G.cur, r = rad(t);
+    if (!G.dropMerged) G.combo = 0; G.dropMerged = false;
     G.balls.push({id:++G.id, t, x:clampAim(t), y:box.line - r - 6*S, vx:0, vy:0, r, a:0, age:0});
-    G.cur = G.next; G.next = pick(); G.canDrop = false; G.cool = .45; thud();
+    G.cur = G.next; G.next = pick(); G.canDrop = false; G.cool = .45 * (G.slow > 0 ? 1 : 1 - G.heat*.45); G.auto = autoLimit(); thud();
+  }
+  // ---------- pace
+  const RUSH_AT = .5;
+  const gMul = () => G.slow > 0 ? .55 : 1 + G.heat*.9;              // how fast food falls
+  const autoLimit = () => 3.4 - G.heat*1.9;                          // seconds before food drops by itself
+  function measureFill(){
+    let top = box.b;
+    for (const b of G.balls) if (b.age > .8 && Math.abs(b.vy) < 160*S) top = Math.min(top, b.y - b.r);
+    return Math.max(0, Math.min(1, (box.b - top) / (box.b - box.line)));
+  }
+  function banner(txt, col){ G.banner = {txt, col, t:0}; }
+  function pace(dt){
+    G.clock += dt;
+    G.fill = measureFill();
+    if (G.slow > 0){ G.slow -= dt; if (G.slow <= 0){ G.slow = 0; if (G.rush) banner('🔥 다시 빨라져요!', 'danger'); } }
+    if (G.fill >= RUSH_AT){
+      if (!G.rush){ G.rush = true; if (G.slow <= 0) banner('🔥 반이나 찼어요! 빨라져요', 'danger'); }
+      if (G.slow <= 0) G.heat = Math.min(1, G.heat + dt/35);
+    } else if (G.fill < RUSH_AT - .12){
+      G.rush = false; G.heat = Math.max(0, G.heat - dt/18);
+    }
+    // in a rush, food drops by itself when you hesitate
+    if (G.rush && G.slow <= 0 && G.canDrop && !G.over){
+      G.auto -= dt; if (G.auto <= 0) drop();
+    } else if (G.canDrop) G.auto = autoLimit();
+  }
+  // a "combo" = consecutive drops that each make at least one merge
+  function onMergeCombo(){
+    if (G.dropMerged) return;
+    G.dropMerged = true; G.combo++;
+    if (G.combo >= 3 && G.slow <= 0 && (G.rush || G.heat > 0)){
+      G.slow = 6; G.heat = Math.max(0, G.heat - .35); G.combo = 0;
+      banner('🐢 3연속 합치기! 잠깐 느려져요', 'calm');
+    } else if (G.combo >= 2) G.fx.push({x:(box.l+box.r)/2, y:box.line + 34*S, r:0, t:0, txt:`${G.combo}연속 합치기!`});
   }
 
   // ---------- physics
   function step(dt){
-    const g = 2300*S, bs = G.balls;
+    const g = 2300*S*gMul(), bs = G.balls;
     for (const b of bs){
       b.vy += g*dt; b.x += b.vx*dt; b.y += b.vy*dt; b.age += dt;
       b.vx *= .996; b.vy *= .999; b.a += b.vx*dt / b.r;
@@ -364,7 +401,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
     const t = a.t + 1, r = rad(t);
     const nb = {id:++G.id, t, x:(a.x+b.x)/2, y:(a.y+b.y)/2, vx:(a.vx+b.vx)/2, vy:Math.min(a.vy, b.vy)/2 - 120*S, r, a:0, age:1, born:.18};
     G.balls.push(nb);
-    G.score += PTS[t]; G.merges++;
+    G.score += PTS[t]; G.merges++; onMergeCombo();
     $('score').textContent = G.score.toLocaleString();
     G.fx.push({x:nb.x, y:nb.y, r, t:0, e:FOOD[t].e, pts:PTS[t]});
     pop(t);
@@ -402,12 +439,29 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
       ctx.strokeStyle = C.muted; ctx.globalAlpha = .35; ctx.lineWidth = 1.5*S; ctx.setLineDash([3*S, 5*S]);
       ctx.beginPath(); ctx.moveTo(x, y + r); ctx.lineTo(x, box.b); ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha = 1;
       if (G.canDrop) drawFood({t:G.cur, x, y, r, a:0});
+      // auto-drop countdown ring while rushing
+      if (G.canDrop && G.rush && G.slow <= 0){
+        const k = Math.max(0, G.auto / autoLimit());
+        ctx.strokeStyle = C.danger; ctx.lineWidth = 3.5*S; ctx.globalAlpha = .85;
+        ctx.beginPath(); ctx.arc(x, y, r + 6*S, -Math.PI/2, -Math.PI/2 + Math.PI*2*k); ctx.stroke(); ctx.globalAlpha = 1;
+      }
       // next preview
       const nr = 14*S, nx = box.r - nr - 6*S, ny = box.t + pad + nr + 8*S;
       ctx.fillStyle = C.muted; ctx.font = `700 ${10*S+2}px Gothic A1, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
       ctx.fillText('다음', nx - nr - 6*S, ny);
       drawFood({t:G.next, x:nx, y:ny, r:nr, a:0});
+      // speed meter (top-left)
+      const mx = box.l + 8*S, my = ny, lv = G.slow > 0 ? 0 : (G.rush ? 1 + Math.round(G.heat*3) : 0);
+      ctx.textAlign = 'left'; ctx.fillStyle = G.slow > 0 ? '#3B8FD9' : (lv ? C.danger : C.muted);
+      ctx.fillText(G.slow > 0 ? `🐢 느리게 ${Math.ceil(G.slow)}초` : '속도', mx, my);
+      if (G.slow <= 0) for (let i = 0; i < 4; i++){
+        ctx.globalAlpha = i < lv ? 1 : .22; ctx.fillStyle = i < lv ? C.danger : C.muted;
+        roundRect(mx + 30*S + i*11*S, my - 6*S, 8*S, 12*S, 2*S); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
     }
+    // slow-motion tint
+    if (G.slow > 0){ ctx.fillStyle = 'rgba(80,160,255,.08)'; ctx.fillRect(box.l, box.t, box.r - box.l, box.b - box.t); }
     for (const b of G.balls) drawFood(b);
     // effects
     for (const f of G.fx){
@@ -417,6 +471,15 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
       ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (1 + k*.6), 0, Math.PI*2); ctx.stroke();
       ctx.fillStyle = C.ink; ctx.font = `800 ${12*S+4}px Gothic A1, sans-serif`; ctx.textAlign = 'center'; ctx.fillText('+' + f.pts, f.x, f.y - f.r - k*26*S);
       ctx.globalAlpha = 1;
+    }
+    // banner
+    if (G.banner){
+      const bn = G.banner, a = bn.t < .2 ? bn.t/.2 : (bn.t > 1.4 ? Math.max(0, (1.7 - bn.t)/.3) : 1);
+      const by = box.t + (box.b - box.t)*.42, bw = box.r - box.l - 16*S, bh = 40*S;
+      ctx.globalAlpha = a; ctx.fillStyle = bn.col === 'calm' ? '#2F7FC9' : C.danger;
+      roundRect((box.l + box.r)/2 - bw/2, by - bh/2, bw, bh, 12*S); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = `800 ${15*S+3}px Gothic A1, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(bn.txt, (box.l + box.r)/2, by); ctx.globalAlpha = 1;
     }
   }
   function roundRect(x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r); ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); }
@@ -428,13 +491,15 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
     if (G.running && !G.over){
       const n = 6; for (let i = 0; i < n; i++) step(dt/n);
       for (const b of G.balls) if (b.born){ b.born -= dt; if (b.born <= 0) b.born = 0; }
-      if (!G.canDrop){ G.cool -= dt; if (G.cool <= 0) G.canDrop = true; }
+      if (!G.canDrop){ G.cool -= dt; if (G.cool <= 0){ G.canDrop = true; G.auto = autoLimit(); } }
+      pace(dt);
       // overflow check: settled food above the line
       const above = G.balls.some(b => b.age > 1.1 && b.y - b.r < box.line && Math.abs(b.vy) < 120*S);
       G.overT = above ? G.overT + dt : 0;
       if (G.overT > 2) gameOver();
     }
     G.fx.forEach(f => f.t += dt); G.fx = G.fx.filter(f => f.t < .6);
+    if (G.banner){ G.banner.t += dt; if (G.banner.t > 1.7) G.banner = null; }
     draw();
     requestAnimationFrame(frame);
   }
@@ -453,6 +518,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
       <p>같은 음식 두 개가 닿으면<br><b style="color:var(--ink)">한 단계 큰 음식</b>으로 합쳐져요.</p>
       <div class="evo">${evoImg(MAXT, 30)}</div>
       <p style="font-size:13px">👆 좌우로 끌어서 위치를 정하고 손을 떼면 떨어져요<br>음식이 점선 위로 넘치면 끝 · 오늘은 모두 <b style="color:var(--ink)">같은 순서</b></p>
+      <p style="font-size:13px">🔥 도시락이 <b style="color:var(--ink)">반쯤 차면 빨라지고</b>, 머뭇거리면 저절로 떨어져요<br>🐢 <b style="color:var(--ink)">3연속 합치기</b>에 성공하면 잠깐 느려져요</p>
       ${b ? `<p>오늘 내 최고: <b style="color:var(--ink)">${b.score.toLocaleString()}점</b> · ${img(b.maxT,18)} ${FOOD[b.maxT].n}까지</p>` : ''}
       <button class="big" id="go">시작하기</button>`, () => $('go').onclick = () => { audio(); closeOv(); G.running = true; });
   }

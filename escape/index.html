@@ -67,6 +67,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 .stg small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
 .stg em{font-style:normal;font-size:12px;font-weight:800;color:var(--accent);white-space:nowrap}
 .stg[disabled]{opacity:.45;cursor:not-allowed}
+.unit{align-self:center;font-weight:800;font-size:18px}
+.pile{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;font-size:34px;background:var(--panel2);border-radius:14px;padding:12px}
+.flip{transform:scaleX(-1);filter:blur(.6px);opacity:.85}
+.mbk{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mbk button{border:0;border-radius:14px;height:64px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4);font-size:15px}
+.mbk button:active{filter:brightness(1.25);transform:scale(.96)}
+.mbDots{display:flex;justify-content:center;gap:8px}
+.mbDots i{width:16px;height:16px;border-radius:50%;border:2px solid var(--line)}
 h1{white-space:nowrap}
 .hintBtn,.chip{white-space:nowrap}
 </style>
@@ -85,6 +93,7 @@ h1{white-space:nowrap}
 
   <div class="stage">
     <svg id="scene" viewBox="0 0 360 400" aria-label="방 그림">
+      <g id="room1">
       <!-- wall & floor -->
       <rect id="wallRect" x="0" y="0" width="360" height="272" fill="#F4E4C8"/>
       <g opacity=".35" fill="#E8D2AA">
@@ -221,6 +230,238 @@ h1{white-space:nowrap}
         <text id="glowText" x="196" y="150" text-anchor="middle" font-size="19" font-weight="800" fill="#B6FF9C" filter="url(#gl)" font-family="Gothic A1,sans-serif"></text>
         <text id="glowSub" x="196" y="166" text-anchor="middle" font-size="9" font-weight="700" fill="#B6FF9C" opacity=".85" font-family="Gothic A1,sans-serif"></text>
       </g>
+      </g>
+      <!-- ===== stage 2: kitchen ===== -->
+      <g id="room2" display="none">
+        <rect width="360" height="272" fill="#E4F1EA"/>
+        <rect x="88" y="118" width="208" height="84" fill="#D3E8DD"/>
+        <g stroke="#BFDACB" stroke-width="1.5">
+          <line x1="88" y1="139" x2="296" y2="139"/><line x1="88" y1="160" x2="296" y2="160"/><line x1="88" y1="181" x2="296" y2="181"/>
+          <line x1="114" y1="118" x2="114" y2="202"/><line x1="140" y1="118" x2="140" y2="202"/><line x1="166" y1="118" x2="166" y2="202"/><line x1="192" y1="118" x2="192" y2="202"/><line x1="218" y1="118" x2="218" y2="202"/><line x1="244" y1="118" x2="244" y2="202"/><line x1="270" y1="118" x2="270" y2="202"/>
+        </g>
+        <rect x="0" y="266" width="360" height="8" fill="#C9D9CF"/>
+        <rect x="0" y="272" width="360" height="128" fill="#F4F0E6"/>
+        <g fill="#D9CBB2">
+          <rect x="0" y="272" width="30" height="32"/><rect x="60" y="272" width="30" height="32"/><rect x="120" y="272" width="30" height="32"/><rect x="180" y="272" width="30" height="32"/><rect x="240" y="272" width="30" height="32"/><rect x="300" y="272" width="30" height="32"/>
+          <rect x="30" y="304" width="30" height="32"/><rect x="90" y="304" width="30" height="32"/><rect x="150" y="304" width="30" height="32"/><rect x="210" y="304" width="30" height="32"/><rect x="270" y="304" width="30" height="32"/><rect x="330" y="304" width="30" height="32"/>
+          <rect x="0" y="336" width="30" height="32"/><rect x="60" y="336" width="30" height="32"/><rect x="120" y="336" width="30" height="32"/><rect x="180" y="336" width="30" height="32"/><rect x="240" y="336" width="30" height="32"/><rect x="300" y="336" width="30" height="32"/>
+          <rect x="30" y="368" width="30" height="32"/><rect x="90" y="368" width="30" height="32"/><rect x="150" y="368" width="30" height="32"/><rect x="210" y="368" width="30" height="32"/><rect x="270" y="368" width="30" height="32"/><rect x="330" y="368" width="30" height="32"/>
+        </g>
+
+        <!-- window over the sink -->
+        <g data-obj="window">
+          <rect x="102" y="40" width="72" height="66" fill="#A8DAF5" stroke="#FFFFFF" stroke-width="6"/>
+          <ellipse cx="126" cy="62" rx="12" ry="6" fill="#fff"/>
+          <line x1="138" y1="40" x2="138" y2="106" stroke="#fff" stroke-width="4"/>
+          <path d="M98,36 h80 v10 q-10,14 -20,0 q-10,14 -20,0 q-10,14 -20,0 q-10,14 -20,0z" fill="#F28B82"/>
+        </g>
+
+        <!-- wall shelf with spices -->
+        <g data-obj="spices">
+          <rect x="196" y="100" width="82" height="6" fill="#9B6A43"/>
+          <rect x="202" y="80" width="14" height="20" rx="3" fill="#E0565B"/><rect x="202" y="76" width="14" height="5" fill="#fff"/>
+          <rect x="222" y="84" width="14" height="16" rx="3" fill="#F2C230"/><rect x="222" y="80" width="14" height="5" fill="#fff"/>
+          <rect x="242" y="78" width="14" height="22" rx="3" fill="#7A5236"/><rect x="242" y="74" width="14" height="5" fill="#fff"/>
+          <rect x="262" y="86" width="12" height="14" rx="3" fill="#4CAF6A"/><rect x="262" y="82" width="12" height="5" fill="#fff"/>
+        </g>
+
+        <!-- fridge -->
+        <g data-obj="fridge">
+          <rect x="12" y="90" width="72" height="180" rx="6" fill="#F7FBFF" stroke="#B8C7D3" stroke-width="2"/>
+          <line x1="12" y1="148" x2="84" y2="148" stroke="#B8C7D3" stroke-width="2"/>
+          <rect x="72" y="104" width="5" height="30" rx="2" fill="#B8C7D3"/><rect x="72" y="160" width="5" height="44" rx="2" fill="#B8C7D3"/>
+          <circle cx="28" cy="110" r="5" fill="#E0565B"/><circle cx="44" cy="124" r="5" fill="#3B6FD4"/><rect x="50" y="104" width="10" height="10" rx="2" fill="#F2C230"/>
+          <g id="freezerOpen" display="none">
+            <rect x="14" y="92" width="68" height="55" fill="#CFE6F2"/>
+            <rect x="22" y="104" width="52" height="4" fill="#B8D4E3"/><rect x="22" y="126" width="52" height="4" fill="#B8D4E3"/>
+            <polygon points="12,90 -2,96 -2,144 12,148" fill="#E6EEF5" stroke="#B8C7D3" stroke-width="2"/>
+          </g>
+        </g>
+        <!-- recipe card stuck on the fridge -->
+        <g data-obj="recipe">
+          <rect x="20" y="210" width="46" height="44" fill="#FFFDF2" stroke="#E2D6B5" transform="rotate(-4 43 232)"/>
+          <circle cx="43" cy="210" r="4" fill="#E0565B"/>
+          <g stroke="#B9A98A" stroke-width="1.5"><line x1="26" y1="222" x2="58" y2="220"/><line x1="26" y1="230" x2="56" y2="228"/><line x1="26" y1="238" x2="52" y2="236"/></g>
+          <text x="43" y="249" text-anchor="middle" font-size="7.5" fill="#7A5236" font-weight="800" font-family="Gothic A1,sans-serif">요리 메모</text>
+        </g>
+
+        <!-- counter + cupboards -->
+        <rect x="90" y="200" width="196" height="10" fill="#8A6A4A"/>
+        <g data-obj="cupboard">
+          <rect x="94" y="210" width="188" height="60" fill="#F1E6D2" stroke="#D6C6A8" stroke-width="2"/>
+          <line x1="156" y1="210" x2="156" y2="270" stroke="#D6C6A8" stroke-width="2"/><line x1="220" y1="210" x2="220" y2="270" stroke="#D6C6A8" stroke-width="2"/>
+          <rect x="146" y="234" width="4" height="14" rx="2" fill="#A08860"/><rect x="162" y="234" width="4" height="14" rx="2" fill="#A08860"/>
+          <rect x="230" y="234" width="4" height="14" rx="2" fill="#A08860"/>
+          <g id="cupLock"><circle cx="156" cy="226" r="4" fill="#C9A22A"/><rect x="155" y="226" width="2" height="5" fill="#3A2A20"/></g>
+          <g id="cupOpen" display="none">
+            <rect x="158" y="212" width="60" height="56" fill="#5A4632"/>
+            <rect x="160" y="238" width="56" height="3" fill="#7A6040"/>
+            <polygon points="218,210 236,216 236,276 218,270" fill="#F1E6D2" stroke="#D6C6A8" stroke-width="2"/>
+          </g>
+        </g>
+        <!-- sink on the counter -->
+        <g data-obj="sink">
+          <rect x="102" y="194" width="50" height="8" rx="3" fill="#C7D0D6"/>
+          <path d="M136,194 v-16 h-12 v5" stroke="#A9B2B6" stroke-width="3.5" fill="none"/>
+        </g>
+
+        <!-- microwave + cord + outlet -->
+        <g data-obj="micro">
+          <rect x="194" y="152" width="70" height="48" rx="5" fill="#DADDE0" stroke="#A9AFB5" stroke-width="2"/>
+          <rect x="200" y="158" width="40" height="36" rx="3" fill="#2E3440"/>
+          <rect x="244" y="158" width="16" height="10" rx="2" fill="#10261A"/>
+          <text id="mwDisp" x="252" y="166" text-anchor="middle" font-size="6.5" font-weight="800" fill="#2A3A30" font-family="Gothic A1,sans-serif">--</text>
+          <g fill="#A9AFB5"><circle cx="248" cy="176" r="2"/><circle cx="256" cy="176" r="2"/><circle cx="248" cy="184" r="2"/><circle cx="256" cy="184" r="2"/></g>
+          <g id="mwGlow" display="none"><rect x="200" y="158" width="40" height="36" rx="3" fill="#FFE9A8" opacity=".6"/></g>
+        </g>
+        <g data-obj="outlet">
+          <rect x="268" y="150" width="28" height="56" fill="transparent"/>
+          <rect x="276" y="160" width="14" height="18" rx="2" fill="#FFFFFF" stroke="#C9D3D9"/>
+          <circle cx="281" cy="169" r="1.4" fill="#555"/><circle cx="285" cy="169" r="1.4" fill="#555"/>
+          <path id="cordOut" d="M264,192 q12,2 10,10 q-2,8 6,12" stroke="#333" stroke-width="2.5" fill="none"/>
+          <rect id="plugOut" x="276" y="212" width="8" height="6" rx="1" fill="#333"/>
+          <path id="cordIn" display="none" d="M264,192 q16,0 16,-12 q0,-8 3,-11" stroke="#333" stroke-width="2.5" fill="none"/>
+        </g>
+
+        <!-- back door with a fruit lock -->
+        <g data-obj="door">
+          <rect x="296" y="102" width="56" height="168" rx="3" fill="#6FA8C8"/>
+          <rect x="304" y="112" width="40" height="40" rx="3" fill="#CFEAF7" stroke="#4E86A6" stroke-width="3"/>
+          <rect x="304" y="164" width="40" height="94" rx="3" fill="none" stroke="#4E86A6" stroke-width="3"/>
+          <rect x="304" y="190" width="30" height="16" rx="3" fill="#2E3440"/>
+          <g fill="#E4F1EA"><rect x="306" y="193" width="5" height="10" rx="1"/><rect x="313" y="193" width="5" height="10" rx="1"/><rect x="320" y="193" width="5" height="10" rx="1"/><rect x="327" y="193" width="5" height="10" rx="1"/></g>
+          <circle cx="342" cy="214" r="4" fill="#E8C25A"/>
+          <g id="door2Open" display="none">
+            <rect x="296" y="102" width="56" height="168" fill="#FFF3C4"/>
+            <polygon points="296,102 314,94 314,278 296,270" fill="#4E86A6"/>
+            <text x="334" y="196" text-anchor="middle" font-size="22">🌳</text>
+          </g>
+        </g>
+
+        <!-- table with fruit bowl and cookies -->
+        <ellipse cx="172" cy="322" rx="104" ry="22" fill="#B98A5A"/>
+        <rect x="96" y="330" width="8" height="52" fill="#8A6040"/><rect x="240" y="330" width="8" height="52" fill="#8A6040"/>
+        <ellipse cx="172" cy="318" rx="104" ry="20" fill="#D4A673"/>
+        <g data-obj="bowl">
+          <rect x="88" y="280" width="84" height="54" fill="transparent"/>
+          <g id="bowlFruit" font-size="13" text-anchor="middle"></g>
+          <path d="M96,312 h70 q-4,18 -35,18 q-31,0 -35,-18z" fill="#3B6FD4"/>
+          <path d="M100,318 h62" stroke="#fff" stroke-width="1.5" opacity=".6"/>
+        </g>
+        <g data-obj="cookies">
+          <rect x="180" y="294" width="80" height="40" fill="transparent"/>
+          <ellipse cx="220" cy="318" rx="34" ry="11" fill="#FFFFFF" stroke="#D6C6A8"/>
+          <g id="plateCookies"></g>
+        </g>
+
+        <!-- sleepy cat -->
+        <g data-obj="cat">
+          <ellipse cx="44" cy="350" rx="28" ry="14" fill="#F2A65A"/>
+          <circle cx="22" cy="342" r="11" fill="#F2A65A"/>
+          <polygon points="14,334 16,324 22,332" fill="#F2A65A"/><polygon points="24,332 30,323 31,334" fill="#F2A65A"/>
+          <path d="M16,342 q3,2 6,0 M24,342 q3,2 6,0" stroke="#5A3A24" stroke-width="1.4" fill="none"/>
+          <path d="M70,352 q16,-2 12,-14" stroke="#F2A65A" stroke-width="6" fill="none" stroke-linecap="round"/>
+          <g stroke="#D98A3A" stroke-width="2"><line x1="40" y1="338" x2="44" y2="346"/><line x1="52" y1="338" x2="56" y2="346"/></g>
+          <text x="40" y="326" font-size="9" fill="#7A6F62" font-family="Gothic A1,sans-serif">z z</text>
+        </g>
+      </g>
+      <!-- ===== stage 3: attic ===== -->
+      <g id="room3" display="none">
+        <rect width="360" height="272" fill="#A27E5A"/>
+        <g stroke="#8E6C4A" stroke-width="2"><line x1="40" y1="0" x2="40" y2="272"/><line x1="90" y1="0" x2="90" y2="272"/><line x1="140" y1="0" x2="140" y2="272"/><line x1="220" y1="0" x2="220" y2="272"/><line x1="270" y1="0" x2="270" y2="272"/><line x1="320" y1="0" x2="320" y2="272"/></g>
+        <polygon points="0,0 136,0 0,136" fill="#6E5038"/><polygon points="224,0 360,0 360,136" fill="#6E5038"/>
+        <g stroke="#5A3F2A" stroke-width="6"><line x1="0" y1="136" x2="136" y2="0"/><line x1="224" y1="0" x2="360" y2="136"/></g>
+        <g stroke="#5E4430" stroke-width="2"><line x1="0" y1="40" x2="40" y2="0"/><line x1="0" y1="90" x2="90" y2="0"/><line x1="270" y1="0" x2="360" y2="90"/><line x1="320" y1="0" x2="360" y2="40"/></g>
+        <rect x="0" y="266" width="360" height="8" fill="#7A5A3E"/>
+        <rect x="0" y="272" width="360" height="128" fill="#9B7652"/>
+        <g stroke="#7E5E40" stroke-width="2"><line x1="0" y1="300" x2="360" y2="300"/><line x1="0" y1="330" x2="360" y2="330"/><line x1="0" y1="364" x2="360" y2="364"/></g>
+        <g fill="#E8D9B8" opacity=".35"><circle cx="60" cy="200" r="1.5"/><circle cx="200" cy="140" r="1.2"/><circle cx="300" cy="190" r="1.5"/><circle cx="170" cy="220" r="1"/></g>
+
+        <!-- round window + curtain -->
+        <g data-obj="curtain">
+          <circle cx="180" cy="62" r="28" fill="#2B3A6A" stroke="#5A3F2A" stroke-width="6"/>
+          <circle cx="192" cy="52" r="7" fill="#F4EBC6"/>
+          <g fill="#F4EBC6"><circle cx="164" cy="50" r="1"/><circle cx="170" cy="74" r="1"/><circle cx="196" cy="74" r="1"/></g>
+          <line x1="180" y1="34" x2="180" y2="90" stroke="#5A3F2A" stroke-width="3"/><line x1="152" y1="62" x2="208" y2="62" stroke="#5A3F2A" stroke-width="3"/>
+          <rect x="146" y="28" width="68" height="5" fill="#5A3F2A"/>
+          <path id="curtainCloth" d="M150,32 h44 v58 q-11,6 -22,0 q-11,6 -22,0z" fill="#8E5BA8" opacity=".95"/>
+          <path id="curtainPulled" display="none" d="M150,32 h14 v60 q-7,4 -14,0z" fill="#8E5BA8"/>
+        </g>
+
+        <!-- hanging bulb with pull chain -->
+        <g data-obj="bulb">
+          <rect x="96" y="0" width="34" height="96" fill="transparent"/>
+          <line x1="112" y1="0" x2="112" y2="38" stroke="#333" stroke-width="2"/>
+          <rect x="107" y="36" width="10" height="8" fill="#555"/>
+          <circle id="bulbGlass" cx="112" cy="52" r="9" fill="#D8D2C2"/>
+          <line x1="116" y1="56" x2="122" y2="86" stroke="#B9A15A" stroke-width="1.2"/>
+          <circle cx="122" cy="88" r="2.4" fill="#B9A15A"/>
+        </g>
+
+        <!-- chest of drawers -->
+        <rect x="14" y="166" width="94" height="104" rx="3" fill="#6B4A2E"/>
+        <rect x="12" y="160" width="98" height="8" rx="2" fill="#7E5A3A"/>
+        <g data-obj="d1"><rect x="20" y="174" width="82" height="28" rx="2" fill="#8C6440" stroke="#5A3F2A"/><circle cx="61" cy="188" r="3" fill="#E8C25A"/><g id="d1Open" display="none"><rect x="16" y="184" width="90" height="20" fill="#5A3F2A" stroke="#3A2A1A"/></g></g>
+        <g data-obj="d2"><rect x="20" y="206" width="82" height="28" rx="2" fill="#8C6440" stroke="#5A3F2A"/><circle cx="61" cy="220" r="3" fill="#E8C25A"/><g id="d2Open" display="none"><rect x="16" y="216" width="90" height="20" fill="#5A3F2A" stroke="#3A2A1A"/></g></g>
+        <g data-obj="d3"><rect x="20" y="238" width="82" height="28" rx="2" fill="#8C6440" stroke="#5A3F2A"/><circle cx="61" cy="252" r="3" fill="#E8C25A"/><g id="d3Open" display="none"><rect x="16" y="248" width="90" height="20" fill="#5A3F2A" stroke="#3A2A1A"/></g></g>
+        <!-- candle on the chest -->
+        <rect x="80" y="140" width="8" height="20" fill="#F4EBC6"/><path d="M84,132 q4,4 0,8 q-4,-4 0,-8z" fill="#F2C230"/>
+
+        <!-- standing mirror -->
+        <g data-obj="mirror">
+          <rect x="140" y="252" width="4" height="18" fill="#5A3F2A"/><rect x="128" y="266" width="28" height="4" rx="2" fill="#5A3F2A"/>
+          <ellipse cx="142" cy="196" rx="22" ry="58" fill="#C9DCE3" stroke="#B9A15A" stroke-width="5"/>
+          <path d="M130,160 q4,-14 12,-18" stroke="#fff" stroke-width="3" opacity=".7" fill="none"/>
+          <path d="M150,230 q2,10 -2,16" stroke="#fff" stroke-width="2" opacity=".5" fill="none"/>
+        </g>
+
+        <!-- music box on a stool -->
+        <g data-obj="musicbox">
+          <rect x="176" y="196" width="60" height="74" fill="transparent"/>
+          <rect x="186" y="240" width="40" height="6" fill="#7E5A3A"/><rect x="190" y="246" width="5" height="24" fill="#6B4A2E"/><rect x="217" y="246" width="5" height="24" fill="#6B4A2E"/>
+          <rect x="184" y="218" width="44" height="22" rx="3" fill="#C0603A" stroke="#8A3F22" stroke-width="2"/>
+          <g fill="#E0565B"><circle cx="192" cy="229" r="3"/></g><g fill="#F2C230"><circle cx="201" cy="229" r="3"/></g><g fill="#3B6FD4"><circle cx="210" cy="229" r="3"/></g><g fill="#4CAF6A"><circle cx="219" cy="229" r="3"/></g>
+          <g id="mbLid"><rect x="182" y="210" width="48" height="9" rx="3" fill="#D47A50" stroke="#8A3F22" stroke-width="2"/></g>
+          <g id="mbOpen" display="none"><polygon points="182,212 230,212 226,196 186,196" fill="#D47A50" stroke="#8A3F22" stroke-width="2"/><text x="206" y="208" text-anchor="middle" font-size="8">🩰</text></g>
+          <rect x="228" y="226" width="6" height="3" fill="#B9A15A"/>
+        </g>
+
+        <!-- hat stand, hatbox, boots -->
+        <rect x="298" y="128" width="4" height="138" fill="#5A3F2A"/><rect x="286" y="264" width="28" height="4" rx="2" fill="#5A3F2A"/>
+        <ellipse cx="300" cy="128" rx="20" ry="5" fill="#3A3A50"/><path d="M288,128 q0,-18 12,-18 q12,0 12,18z" fill="#3A3A50"/><rect x="288" y="122" width="24" height="4" fill="#B04A4A"/>
+        <g data-obj="hatbox">
+          <rect x="250" y="236" width="44" height="34" rx="3" fill="#E7B8C4" stroke="#B57A8A" stroke-width="2"/>
+          <ellipse cx="272" cy="236" rx="22" ry="6" fill="#F2CED7" stroke="#B57A8A" stroke-width="2"/>
+          <path d="M252,252 h40" stroke="#fff" stroke-width="3"/>
+        </g>
+        <g data-obj="boots">
+          <rect x="310" y="226" width="44" height="46" fill="transparent"/>
+          <path d="M316,232 h12 v28 h10 v10 h-22z" fill="#2F5A3A"/><path d="M334,236 h12 v26 h8 v8 h-20z" fill="#3A6E47"/>
+        </g>
+
+        <!-- trunk -->
+        <g data-obj="trunk">
+          <rect x="28" y="304" width="118" height="58" rx="5" fill="#6E8B9C" stroke="#3E5361" stroke-width="3"/>
+          <rect x="28" y="304" width="118" height="18" rx="5" fill="#7FA0B3" stroke="#3E5361" stroke-width="3"/>
+          <g fill="#B9A15A"><rect x="44" y="304" width="6" height="58"/><rect x="124" y="304" width="6" height="58"/></g>
+          <rect x="80" y="316" width="14" height="14" rx="2" fill="#C9A22A"/><rect x="86" y="320" width="2" height="6" fill="#3A2A20"/>
+          <g id="trunkOpen" display="none"><rect x="30" y="300" width="114" height="10" fill="#2A2A2A"/><polygon points="28,304 146,304 140,284 34,284" fill="#7FA0B3" stroke="#3E5361" stroke-width="3"/></g>
+        </g>
+
+        <!-- floor hatch (the exit) -->
+        <g data-obj="hatch">
+          <polygon points="214,316 320,316 332,368 202,368" fill="#7E5A3A" stroke="#5A3F2A" stroke-width="3"/>
+          <g stroke="#5A3F2A" stroke-width="2"><line x1="246" y1="316" x2="240" y2="368"/><line x1="288" y1="316" x2="294" y2="368"/></g>
+          <g id="hatchNails" fill="#C8C8C8"><circle cx="220" cy="324" r="2"/><circle cx="314" cy="324" r="2"/><circle cx="210" cy="360" r="2"/><circle cx="324" cy="360" r="2"/><circle cx="267" cy="342" r="2"/></g>
+          <rect x="258" y="330" width="18" height="6" rx="3" fill="#3A2A1A"/>
+          <g id="hatchOpen" display="none">
+            <polygon points="214,316 320,316 332,368 202,368" fill="#FFF3C4"/>
+            <g stroke="#8A6A4A" stroke-width="3"><line x1="246" y1="320" x2="242" y2="368"/><line x1="290" y1="320" x2="294" y2="368"/><line x1="244" y1="332" x2="291" y2="332"/><line x1="243" y1="346" x2="292" y2="346"/><line x1="242" y1="360" x2="293" y2="360"/></g>
+            <polygon points="214,316 320,316 316,292 218,292" fill="#7E5A3A" stroke="#5A3F2A" stroke-width="3"/>
+          </g>
+        </g>
+        <rect id="dark3" x="0" y="0" width="360" height="400" fill="#0B0B18" opacity=".62" pointer-events="none"/>
+      </g>
     </svg>
   </div>
 
@@ -242,15 +483,27 @@ h1{white-space:nowrap}
     note:{icon:'📜', name:'쪽지', read:true},
     note2:{icon:'📃', name:'금고 쪽지', read:true},
     driver:{icon:'🪛', name:'드라이버'},
-    doorKey:{icon:'🗝️', name:'문 열쇠'}
+    doorKey:{icon:'🗝️', name:'문 열쇠'},
+    // stage 2 · kitchen
+    ice:{icon:'🧊', name:'꽁꽁 언 열쇠'},
+    cupKey:{icon:'🔑', name:'찬장 열쇠'},
+    doorNote:{icon:'📃', name:'찬장 쪽지', read:true},
+    // stage 3 · attic
+    pieces:{icon:'🧩', name:'쪽지 조각'},
+    mnote:{icon:'📜', name:'거꾸로 쪽지', read:true},
+    trunkKey:{icon:'🗝️', name:'트렁크 열쇠'},
+    hammer:{icon:'🔨', name:'장도리'}
   };
+  const FRUITS = [{e:'🍎', n:'사과'}, {e:'🍌', n:'바나나'}, {e:'🍊', n:'귤'}, {e:'🍇', n:'포도'}];
+  const MB = [{k:'R', n:'빨강', c:'#E0565B', f:523}, {k:'Y', n:'노랑', c:'#F2C230', f:659}, {k:'B', n:'파랑', c:'#3B6FD4', f:784}, {k:'G', n:'초록', c:'#4CAF6A', f:880}];
+  const SPOTS3 = {d1:'맨 위 서랍', d2:'가운데 서랍', d3:'맨 아래 서랍', hatbox:'모자 상자', boots:'장화', curtain:'창문 커튼'};
   const COLORS = {R:'#D9534F', B:'#3B6FD4', Y:'#F2C230', G:'#4CAF6A'};
   const INK = {R:'#D9534F', B:'#3B6FD4', Y:'#C99A1E', G:'#3E9A5A'};
   const CNAME = {R:'빨강', B:'파랑', Y:'노랑', G:'초록'};
   const THEMES = [
     {name:'내 방',   icon:'🛏️', wall:'#F4E4C8', floor:'#C8955F', rug:'#C8504A', desc:'열쇠 → 손전등 → 쪽지 → 금고'},
-    {name:'서재',    icon:'📚', wall:'#DCE7D5', floor:'#9C7550', rug:'#3B6FD4', desc:'+ 불을 끄면 보이는 비밀번호'},
-    {name:'다락방',  icon:'🕯️', wall:'#D8C2A4', floor:'#7E5638', rug:'#6B4C8A', desc:'+ 4칸 금고 · 드라이버 · 시계의 비밀'}
+    {name:'부엌',    icon:'🍳', desc:'전자레인지 · 꽁꽁 언 열쇠 · 과일 자물쇠'},
+    {name:'다락방',  icon:'🕯️', desc:'쪽지 조각 3개 · 거울 · 오르골'}
   ];
   const NOW = new Date();
   const DKEY = `${NOW.getFullYear()}-${String(NOW.getMonth()+1).padStart(2,'0')}-${String(NOW.getDate()).padStart(2,'0')}`;
@@ -276,6 +529,8 @@ h1{white-space:nowrap}
   // ---- build today's puzzle for a stage (same for everyone on the same day)
   let P;
   function buildPuzzle(stage){
+    if (stage === 2) return buildKitchen();
+    if (stage === 3) return buildAttic();
     const rng = mulberry(hash(stage === 1 ? 'escape:' + DKEY : `escape:${DKEY}:s${stage}`));
     const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
     let counts;
@@ -285,18 +540,36 @@ h1{white-space:nowrap}
     const order = shuffle(['R','B','Y','G']).slice(0, stage === 3 ? 4 : 3);
     const keySpot = ['rug','plant','bed','desk'][Math.floor(rng()*4)];
     const p = {stage, shelf1:books.slice(0, 6), shelf2:books.slice(6), order, safeCode:order.map(c => counts[c]), keySpot};
-    if (stage >= 2){
-      p.clockH = 1 + Math.floor(rng()*12); p.clockM = 10 + Math.floor(rng()*50);
-    }
-    if (stage === 2){ p.glow = Array.from({length:4}, () => Math.floor(rng()*10)); p.doorCode = p.glow; }
-    if (stage === 3){ p.glow = Array.from({length:2}, () => Math.floor(rng()*10)); p.doorCode = [...p.glow, Math.floor(p.clockM/10), p.clockM%10]; }
     return p;
+  }
+  function seeded(stage){
+    const rng = mulberry(hash(`escape:${DKEY}:s${stage}`));
+    const shuffle = a => { for (let i = a.length - 1; i > 0; i--){ const j = Math.floor(rng() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+    return {rng, shuffle};
+  }
+  function buildKitchen(){
+    const {rng, shuffle} = seeded(2);
+    const fruit = shuffle([1, 2, 3, 4]);                       // how many of each fruit (all different)
+    const cookies = 2 + Math.floor(rng()*8);                    // 2..9
+    const pile = shuffle(fruit.flatMap((c, i) => Array(c).fill(i)));
+    const order = [0, 1, 2, 3].sort((a, b) => fruit[b] - fruit[a]);
+    return {stage:2, fruit, cookies, pile, microCode:[cookies, 0], doorCode:order};
+  }
+  function buildAttic(){
+    const {rng, shuffle} = seeded(3);
+    const spots = shuffle(Object.keys(SPOTS3)).slice(0, 3);
+    const mel = []; while (mel.length < 5){ const x = Math.floor(rng()*4); if (x !== mel[mel.length-1]) mel.push(x); }
+    return {stage:3, spots, melody:mel};
   }
 
   let S;
   function reset(){
     S = {inv:[], sel:null, rug:false, found:false, drawer:false, lit:false, safe:false, dark:false, clockOpen:false, escaped:false,
-         hints:0, t0:0, running:false};
+         hints:0, t0:0, running:false,
+         // kitchen
+         freezer:false, plugged:false, thawed:false, cup:false, recipe:false,
+         // attic
+         bulb:false, got:[], opened:{}, mirror:false, mb:false, trunk:false};
   }
 
   // ---- drawing
@@ -313,15 +586,23 @@ h1{white-space:nowrap}
     });
     g.innerHTML = html;
   }
+  const PILE = [[112,300],[124,298],[136,297],[148,298],[160,300],[118,290],[130,288],[142,288],[154,290],[136,280]];
   function applyStage(){
     const t = THEMES[P.stage - 1];
-    $('wallRect').setAttribute('fill', t.wall); $('floorRect').setAttribute('fill', t.floor); $('rugMain').setAttribute('fill', t.rug);
-    drawBooks($('booksSmall'), [P.shelf1, P.shelf2], 268, 66, [126,173], [168,214], 1);
+    [1, 2, 3].forEach(i => show('room' + i, i === P.stage));
     document.querySelector('h1').innerHTML = `🚪 ${t.name} <small style="font:800 12px 'Gothic A1',sans-serif;color:var(--accent);vertical-align:middle">${P.stage}단계</small>`;
-    if (P.stage === 2){ $('glowText').textContent = P.glow.join(' '); $('glowSub').textContent = '🚪 문 비밀번호'; }
-    else if (P.stage === 3){ $('glowText').textContent = P.glow.join(' ') + ' ★ ★'; $('glowSub').textContent = '문 비밀번호 앞 두 자리'; }
-    else { $('glowText').textContent = ''; $('glowSub').textContent = ''; }
-    tickClock();
+    $('scene').style.background = P.stage === 2 ? '#E4F1EA' : P.stage === 3 ? '#A27E5A' : '#F4E4C8';
+    if (P.stage === 1){
+      drawBooks($('booksSmall'), [P.shelf1, P.shelf2], 268, 66, [126,173], [168,214], 1);
+      $('glowText').textContent = ''; $('glowSub').textContent = '';
+      tickClock();
+    } else if (P.stage === 2){
+      $('bowlFruit').innerHTML = P.pile.map((f, i) => `<text x="${PILE[i][0]}" y="${PILE[i][1] + 10}">${FRUITS[f].e}</text>`).join('');
+      $('plateCookies').innerHTML = Array.from({length:P.cookies}, (_, i) => {
+        const a = i / P.cookies * Math.PI * 2, rr = P.cookies > 5 ? 18 : 12;
+        return `<circle cx="${(220 + Math.cos(a)*rr).toFixed(1)}" cy="${(316 + Math.sin(a)*rr*.32).toFixed(1)}" r="5" fill="#C98A4A" stroke="#8A5A2A"/>`;
+      }).join('');
+    }
   }
 
   // fit the scene into whatever height is left on screen (keeps 360:400 ratio)
@@ -338,13 +619,26 @@ h1{white-space:nowrap}
   function render(){
     show('rugFlip', S.rug); show('drawerOpen', S.drawer); show('lightSpot', S.lit);
     show('safeOpen', S.safe); show('doorOpen', S.escaped);
-    show('darkness', S.dark); show('glow', S.dark && P.stage >= 2); show('clockOpen', S.clockOpen);
+    show('darkness', S.dark); show('glow', false); show('clockOpen', S.clockOpen);
+    if (P.stage === 2){
+      show('freezerOpen', S.freezer); show('cordOut', !S.plugged); show('plugOut', !S.plugged); show('cordIn', S.plugged);
+      show('cupLock', !S.cup); show('cupOpen', S.cup); show('door2Open', S.escaped);
+      $('mwDisp').textContent = S.plugged ? (S.thawed ? '끝!' : '0:00') : '--';
+      $('mwDisp').setAttribute('fill', S.plugged ? '#7DFFA8' : '#2A3A30');
+    }
+    if (P.stage === 3){
+      show('dark3', !S.bulb); $('bulbGlass').setAttribute('fill', S.bulb ? '#FFE680' : '#D8D2C2');
+      ['d1','d2','d3'].forEach(d => show(d + 'Open', !!S.opened[d]));
+      show('curtainCloth', !S.opened.curtain); show('curtainPulled', !!S.opened.curtain);
+      show('mbLid', !S.mb); show('mbOpen', S.mb); show('trunkOpen', S.trunk);
+      show('hatchNails', !S.escaped); show('hatchOpen', S.escaped);
+    }
     const bag = $('bag'); bag.innerHTML = '';
     for (let i = 0; i < 4; i++){
       const k = S.inv[i];
       const b = document.createElement('button');
       b.className = 'slot' + (k ? ' has' : '') + (k && S.sel === k ? ' sel' : '');
-      if (k){ b.innerHTML = `${ITEMS[k].icon}<small>${ITEMS[k].name}</small>`; b.onclick = () => tapItem(k); }
+      if (k){ b.innerHTML = `${ITEMS[k].icon}<small>${k === 'pieces' ? `쪽지 조각 ${S.got.length}/3` : ITEMS[k].name}</small>`; b.onclick = () => tapItem(k); }
       else b.disabled = true;
       bag.appendChild(b);
     }
@@ -356,8 +650,7 @@ h1{white-space:nowrap}
   // ---- clock & timer (stage 1: real time; stages 2–3: stopped at today's secret time)
   function tickClock(){
     let h, m;
-    if (P && P.stage >= 2){ h = P.clockH % 12 + P.clockM/60; m = P.clockM; }
-    else { const d = new Date(); m = d.getMinutes(); h = d.getHours()%12 + m/60; }
+    const d = new Date(); m = d.getMinutes(); h = d.getHours()%12 + m/60;
     $('mHand').setAttribute('transform', `rotate(${m*6} 250 62)`);
     $('hHand').setAttribute('transform', `rotate(${h*30} 250 62)`);
   }
@@ -368,7 +661,12 @@ h1{white-space:nowrap}
   // ---- interactions
   function tapItem(k){
     if (!S.running) return;
-    if (ITEMS[k].read){ k === 'note' ? openNote() : openNote2(); return; }
+    if (k === 'mnote'){ // readable *and* usable: tapping picks it up so it can be held up to the mirror
+      S.sel = (S.sel === k) ? null : k; render();
+      if (S.sel){ say('📜 거꾸로 쪽지를 골랐다. 거울에 비춰 볼까? 🪞'); openMirrorNote(); }
+      return;
+    }
+    if (ITEMS[k].read){ ({note:openNote, note2:openNote2, doorNote:openDoorNote})[k](); return; }
     S.sel = (S.sel === k) ? null : k;
     if (S.sel) say(`${ITEMS[k].icon} ${ITEMS[k].name}을(를) 골랐다. 이제 쓸 곳을 눌러 보자.`);
     render();
@@ -379,7 +677,10 @@ h1{white-space:nowrap}
     clock:['째깍째깍… 시간이 흐르고 있어. 서두르자!', '시계는 지금 시각을 가리키고 있어.'],
     desk:['책상 위엔 파란 공책 하나. 펼쳐 보니 낙서뿐이야.', '책상 아래 서랍이 있어.'],
     plant:['화분엔 흙만 가득. 아무것도 없어.', '잎이 싱싱해. 누가 물을 잘 줬나 봐.'],
-    bed:['폭신한 침대… 지금은 잘 때가 아니야!', '이불을 들춰 봤지만 아무것도 없어.']
+    bed:['폭신한 침대… 지금은 잘 때가 아니야!', '이불을 들춰 봤지만 아무것도 없어.'],
+    spices:['소금, 고춧가루, 후추, 바질… 양념통뿐이야.', '에취! 후추 냄새가 코를 찔러.'],
+    sink:['설거지가 쌓여 있다. 나가고 나서 하자!', '수도꼭지에서 물이 똑똑 떨어진다.'],
+    cat:['고양이가 쿨쿨 자고 있다. 깨우지 말자… 🐱', '냐아옹… 고양이가 꼬리를 흔든다.']
   };
   const flavorIdx = {};
   const clockStr = () => `${P.clockH}시 ${P.clockM}분`;
@@ -387,6 +688,8 @@ h1{white-space:nowrap}
   function tapObj(o){
     if (!S.running) return;
     const sel = S.sel;
+    if (P.stage === 2){ tap2(o, sel); render(); return; }
+    if (P.stage === 3){ tap3(o, sel); render(); return; }
     switch(o){
       case 'rug':
         S.rug = true;
@@ -408,30 +711,21 @@ h1{white-space:nowrap}
         if (S.safe) say('금고는 텅 비었어.');
         else openDials('🔒 금고', `숫자 ${P.safeCode.length}개를 맞춰야 열리는 금고야.`, P.order.map(c => COLORS[c]), P.safeCode, () => {
           S.safe = true;
-          if (P.stage === 1){ give('doorKey'); say('철컥! 금고가 열렸다. 커다란 문 열쇠 발견! 🗝️'); }
-          else if (P.stage === 2){ give('doorKey'); give('note2'); say('철컥! 문 열쇠와 쪽지가 들어 있다. 🗝️📃'); render(); openNote2(); return; }
-          else { give('driver'); give('note2'); say('철컥! 드라이버와 쪽지가 들어 있다. 🪛📃'); render(); openNote2(); return; }
+          give('doorKey'); say('철컥! 금고가 열렸다. 커다란 문 열쇠 발견! 🗝️');
         });
         break;
       case 'lamp':
         S.dark = !S.dark;
-        if (S.dark) say(P.stage >= 2 ? '딸깍, 불을 껐다… 어? 벽에 뭔가 빛나고 있다! ✨' : '딸깍, 불을 껐다. 깜깜해… 아무것도 안 보여.');
+        if (S.dark) say('딸깍, 불을 껐다. 깜깜해… 아무것도 안 보여.');
         else say('딸깍, 다시 불을 켰다.');
         break;
       case 'clock':
-        if (P.stage === 3 && sel === 'driver' && !S.clockOpen){ S.clockOpen = true; take('driver'); give('doorKey'); say(`드라이버로 시계 뒷판 나사를 풀었다… 안에 문 열쇠가! 🗝️ (시계는 ${clockStr()}에 멈춰 있다)`); break; }
-        if (P.stage === 3 && S.clockOpen){ say(`시계 뒷판은 열려 있어. 바늘은 ${clockStr()}에 멈춰 있다.`); break; }
-        if (P.stage >= 2){ say(P.stage === 3 ? `시계가 ${clockStr()}에 멈춰 있다. 뒷판에 작은 나사가 보여…` : `시계가 ${clockStr()}에 멈춰 있다.`); break; }
         flavor(o); break;
       case 'door':
-        if (sel === 'doorKey'){
-          if (P.stage === 1){ escape(); return; }
-          openDials('🚪 문 잠금장치', '열쇠는 맞았다! 이제 숫자 4개짜리 비밀번호를 입력해야 해.', null, P.doorCode, escape);
-          break;
-        }
+        if (sel === 'doorKey'){ escape(); return; }
         if (S.inv.includes('doorKey')) say('문 열쇠를 먼저 골라서 문을 눌러 봐!');
         else if (sel) say(`${ITEMS[sel].name}은(는) 문에 맞지 않아.`);
-        else say(P.stage === 1 ? '문이 꽉 잠겨 있어. 커다란 열쇠 구멍이 보여.' : '문에 열쇠 구멍과 숫자 4개짜리 잠금장치가 달려 있어.');
+        else say('문이 꽉 잠겨 있어. 커다란 열쇠 구멍이 보여.');
         break;
       default:
         if (o === P.keySpot && !S.found && !sel){ S.found = true; give('smallKey'); say(FOUND[o]); break; }
@@ -439,6 +733,81 @@ h1{white-space:nowrap}
     }
     render();
   }
+  // ===== stage 2 · kitchen: fridge → plug in → microwave (cookies × 10초) → cupboard → fruit lock
+  function tap2(o, sel){
+    switch(o){
+      case 'fridge':
+        if (!S.freezer){ S.freezer = true; give('ice'); say('냉동실 문을 열었다. 얼음 속에 열쇠가 꽁꽁 얼어 있다! 🧊'); }
+        else say('냉장고엔 우유랑 김치뿐이야. 차가워!');
+        break;
+      case 'recipe': S.recipe = true; openRecipe(); return;
+      case 'outlet':
+        if (!S.plugged){ S.plugged = true; say('빠져 있던 전자레인지 플러그를 콘센트에 꽂았다. 삑! 전원이 들어왔다. 🔌'); }
+        else say('플러그는 잘 꽂혀 있어.');
+        break;
+      case 'micro':
+        if (!S.plugged){ say('전자레인지가 꺼져 있어. 플러그가 빠져 있네… 🔌'); break; }
+        if (S.thawed){ say('전자레인지 안은 텅 비었어.'); break; }
+        if (sel === 'ice'){
+          openDials('⏲️ 전자레인지', '몇 초 돌릴까? (요리 메모를 봐!)', null, P.microCode, () => {
+            S.thawed = true; take('ice'); give('cupKey'); render(); show('mwGlow', true);
+            setTimeout(() => show('mwGlow', false), 900);
+            say('위이잉… 띵! 🔔 얼음이 녹고 열쇠가 나왔다. 찬장 열쇠다! 🔑');
+          }, null, '초');
+          return;
+        }
+        say(sel ? `${ITEMS[sel].name}은(는) 데울 필요가 없어.` : '전자레인지에 전원이 들어왔다. 뭘 데워 볼까?');
+        break;
+      case 'cupboard':
+        if (S.cup){ say('찬장 안엔 그릇뿐이야.'); break; }
+        if (sel === 'cupKey'){ S.cup = true; take('cupKey'); give('doorNote'); say('딸깍! 찬장이 열렸다. 그릇 사이에 쪽지가 있다. 📃'); render(); openDoorNote(); return; }
+        say(sel ? `${ITEMS[sel].name}은(는) 찬장에 맞지 않아.` : '가운데 찬장에 작은 열쇠 구멍이 있어. 잠겨 있다.');
+        break;
+      case 'bowl': openBowl(); return;
+      case 'cookies': openCookies(); return;
+      case 'door':
+        openDials('🚪 뒷문 과일 자물쇠', '그림 4칸을 맞춰야 열리는 자물쇠야.', null, P.doorCode, escape, FRUITS.map(f => f.e));
+        return;
+      default: flavor(o);
+    }
+  }
+
+  // ===== stage 3 · attic: bulb → 3 torn pieces → mirror → music box → trunk → hammer → hatch
+  function tap3(o, sel){
+    if (o === 'bulb'){ S.bulb = !S.bulb; say(S.bulb ? '줄을 당기자 딸깍, 전구가 켜졌다. 💡 다락방이 보인다!' : '딸깍, 다시 어두워졌다.'); return; }
+    if (!S.bulb && o !== 'hatch'){ say('너무 어두워서 잘 안 보여… 천장에 매달린 전구 줄을 당겨 보자.'); return; }
+    if (SPOTS3[o]){
+      const first = !S.opened[o]; S.opened[o] = true;
+      if (P.spots.includes(o) && !S.got.includes(o)){
+        S.got.push(o);
+        if (S.got.length < 3){ give('pieces'); say(`${SPOTS3[o]} 속에서 찢어진 쪽지 조각을 찾았다! 🧩 (${S.got.length}/3)`); }
+        else { take('pieces'); give('mnote'); say('마지막 조각! 세 조각을 맞추니 쪽지가 됐다… 그런데 글씨가 거꾸로 써 있다?! 📜'); render(); openMirrorNote(); }
+        return;
+      }
+      say(first ? `${SPOTS3[o]}을(를) 뒤져 봤지만… 먼지뿐이야.` : `${SPOTS3[o]}은(는) 이미 살펴봤어.`);
+      return;
+    }
+    switch(o){
+      case 'mirror':
+        if (sel === 'mnote'){ S.mirror = true; openMirror(); return; }
+        say(S.inv.includes('mnote') ? '거울… 거꾸로 쓴 쪽지를 비춰 보면 어떨까?' : '먼지 낀 거울. 내 얼굴이 비친다… 뒤에 누가 있는 건 아니겠지?');
+        break;
+      case 'musicbox':
+        if (S.mb){ say('오르골 안의 작은 발레리나가 빙글빙글 돈다. 🩰'); break; }
+        openMusicBox(); return;
+      case 'trunk':
+        if (S.trunk){ say('트렁크 안엔 낡은 옷뿐이야.'); break; }
+        if (sel === 'trunkKey'){ S.trunk = true; take('trunkKey'); give('hammer'); say('철컥! 트렁크가 열렸다. 안에 장도리가 있다! 🔨'); break; }
+        say(sel ? `${ITEMS[sel].name}은(는) 맞지 않아.` : '커다란 트렁크. 자물쇠로 잠겨 있다.');
+        break;
+      case 'hatch':
+        if (sel === 'hammer'){ escape(); return; }
+        say(S.bulb ? '바닥 문이다! 그런데 못이 박혀서 열리지 않아. 못을 뽑을 도구가 필요해.' : '발밑에… 바닥 문 같은 게 있는데 어두워서 잘 안 보여.');
+        break;
+      default: flavor(o);
+    }
+  }
+
   function flavor(o){
     const list = FLAVOR[o]; if (!list) return;
     flavorIdx[o] = ((flavorIdx[o] ?? -1) + 1) % list.length;
@@ -466,6 +835,61 @@ h1{white-space:nowrap}
       : '문 열쇠는 시계 속에 숨겼어. 🕰️<br>문 비밀번호 = <b>불을 끄면 보이는 두 자리</b><br>+ <b>시계가 가리키는 \'분\'</b>';
     openOv(`<h2>📃 금고 쪽지</h2><div class="note">${body}</div><button class="big" id="okBtn">알겠어!</button>`, () => $('okBtn').onclick = closeOv);
   }
+  function openRecipe(){
+    openOv(`<h2>📝 요리 메모</h2><div class="note">꽁꽁 언 것 녹이는 법 🧊<br>접시 위 <b>쿠키 개수 × 10초</b>만큼<br>전자레인지에 돌리기!</div><button class="big" id="okBtn">알겠어!</button>`, () => $('okBtn').onclick = closeOv);
+  }
+  function openDoorNote(){
+    openOv(`<h2>📃 찬장 쪽지</h2><div class="note">뒷문 과일 자물쇠는…<br>과일 바구니에 <b>많이 있는 과일부터</b><br>순서대로 맞춰! 🍎🍌🍊🍇</div><button class="big" id="okBtn">알겠어!</button>`, () => $('okBtn').onclick = closeOv);
+  }
+  function openBowl(){
+    openOv(`<h2>🧺 과일 바구니</h2><div class="pile">${P.pile.map(f => `<span>${FRUITS[f].e}</span>`).join('')}</div>
+      <p>${S.inv.includes('doorNote') || S.cup ? '과일이 각각 몇 개인지 세어 볼까?' : '맛있어 보이는 과일들이 담겨 있어.'}</p><button class="big" id="okBtn">닫기</button>`, () => $('okBtn').onclick = closeOv);
+    say('식탁 위 과일 바구니. 사과, 바나나, 귤, 포도가 섞여 있어.');
+  }
+  function openCookies(){
+    openOv(`<h2>🍪 쿠키 접시</h2><div class="pile">${Array.from({length:P.cookies}, () => '<span>🍪</span>').join('')}</div>
+      <p>${S.recipe ? '요리 메모에 쿠키 개수가 필요하다고 했지?' : '고소한 냄새… 하나 먹고 싶다!'}</p><button class="big" id="okBtn">닫기</button>`, () => $('okBtn').onclick = closeOv);
+    say('쿠키가 접시에 담겨 있어.');
+  }
+  const melWords = () => P.melody.map(i => MB[i].n).join(' → ');
+  function openMirrorNote(){
+    openOv(`<h2>📜 거꾸로 쪽지</h2><div class="note"><div class="flip">오르골은 이 순서로 눌러<br>${melWords()}</div></div>
+      <p>글씨가 거울에 비친 것처럼 거꾸로야… 읽기 힘들다.<br>이 쪽지를 고른 채로 <b style="color:var(--ink)">거울</b>을 눌러 보자 🪞</p><button class="big" id="okBtn">닫기</button>`, () => $('okBtn').onclick = closeOv);
+  }
+  function openMirror(){
+    openOv(`<h2>🪞 거울에 비춰 보니</h2><div class="note">오르골은 이 순서로 눌러<br>${P.melody.map(i => `<b style="color:${MB[i].c}">● ${MB[i].n}</b>`).join(' → ')}</div>
+      <button class="big" id="okBtn">알겠어!</button>`, () => $('okBtn').onclick = closeOv);
+    say('거울에 쪽지를 비추니 글씨가 똑바로 보인다! ✨');
+  }
+  let AC = null;
+  function tone(f){
+    try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); AC.resume && AC.resume();
+      const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.2, t + .01); g.gain.exponentialRampToValueAtTime(.0001, t + .6);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .65); } catch(e){}
+  }
+  function openMusicBox(){
+    let got = [];
+    openOv(`<h2>🎶 오르골</h2><p>색깔 단추 네 개가 있어. 순서대로 누르면 열릴 것 같아.</p>
+      <div class="mbk">${MB.map((m, i) => `<button data-i="${i}" style="background:${m.c}">${m.n}</button>`).join('')}</div>
+      <div class="mbDots" id="mbDots">${P.melody.map(() => '<i></i>').join('')}</div>
+      <button class="ghost" id="noBtn">닫기</button>`, () => {
+        $('noBtn').onclick = closeOv;
+        const dots = () => $('mbDots').querySelectorAll('i').forEach((d, k) => d.style.background = k < got.length ? MB[got[k]].c : '');
+        document.querySelectorAll('.mbk button').forEach(b => b.onclick = () => {
+          const i = +b.dataset.i; tone(MB[i].f); got.push(i); dots();
+          if (got[got.length-1] !== P.melody[got.length-1]){
+            setTimeout(() => { const c = $('card'); c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake'); got = []; dots(); }, 200);
+            say('띠링… 음이 틀렸나 봐. 처음부터 다시!'); return;
+          }
+          if (got.length === P.melody.length){
+            S.mb = true; give('trunkKey');
+            setTimeout(() => { [0,1,2,3].forEach(k => setTimeout(() => tone(MB[k].f*1.5), k*120)); closeOv(); render();
+              say('♪ 오르골 뚜껑이 열리고 발레리나가 돈다. 그 아래에 트렁크 열쇠가! 🗝️'); }, 350);
+          }
+        });
+      });
+  }
   function openShelf(){
     openOv(`<h2>📚 책장</h2>
       <svg viewBox="0 0 264 196" style="width:100%;height:auto;border-radius:10px">
@@ -481,15 +905,15 @@ h1{white-space:nowrap}
       });
     say('책장에 책이 색깔별로 꽂혀 있어. 아래 칸엔 금고가 있네.');
   }
-  function openDials(title, desc, dots, code, onOk){
-    const v = code.map(() => 0);
-    const dial = i => `<div class="dial">${dots ? `<span class="c" style="background:${dots[i]}"></span>` : ''}<button data-i="${i}" data-d="1">▲</button><div class="d" id="d${i}">0</div><button data-i="${i}" data-d="-1">▼</button></div>`;
+  function openDials(title, desc, dots, code, onOk, syms, unit){
+    const v = code.map(() => 0), N = syms ? syms.length : 10, lab = x => syms ? syms[x] : x;
+    const dial = i => `<div class="dial">${dots ? `<span class="c" style="background:${dots[i]}"></span>` : ''}<button data-i="${i}" data-d="1">▲</button><div class="d" id="d${i}">${lab(0)}</div><button data-i="${i}" data-d="-1">▼</button></div>`;
     openOv(`<h2>${title}</h2><p>${desc}</p>
-      <div class="dials" id="dials">${code.map((_, i) => dial(i)).join('')}</div>
+      <div class="dials" id="dials">${code.map((_, i) => dial(i)).join('')}${unit ? `<span class="unit">${unit}</span>` : ''}</div>
       <button class="big" id="tryBtn">열어 보기</button>
       <button class="ghost" id="noBtn">닫기</button>`, () => {
         $('dials').querySelectorAll('button').forEach(b => b.onclick = () => {
-          const i = +b.dataset.i; v[i] = (v[i] + (+b.dataset.d) + 10) % 10; $('d'+i).textContent = v[i];
+          const i = +b.dataset.i; v[i] = (v[i] + (+b.dataset.d) + N) % N; $('d'+i).textContent = lab(v[i]);
         });
         $('noBtn').onclick = closeOv;
         $('tryBtn').onclick = () => {
@@ -503,18 +927,34 @@ h1{white-space:nowrap}
   function hint(){
     if (!S.running) return;
     S.hints++;
+    if (P.stage === 2){
+      const order = P.doorCode.map(i => FRUITS[i].e).join(' ');
+      let t;
+      if (!S.freezer) t = '왼쪽 큰 냉장고를 열어 봐. 차가운 곳에 뭔가 있을지도?';
+      else if (!S.plugged) t = '전자레인지가 꺼져 있어. 오른쪽 벽 콘센트에 플러그를 꽂아 봐! 🔌';
+      else if (!S.thawed) t = !S.recipe ? '냉장고에 붙은 요리 메모를 읽어 봐.' : (S.hints % 2 ? '식탁 위 쿠키를 세어 봐. 개수 × 10초야!' : `쿠키가 ${P.cookies}개 → ${P.cookies}0초! 🧊를 고르고 전자레인지를 눌러.`);
+      else if (!S.cup) t = '🔑 찬장 열쇠를 고르고 조리대 아래 가운데 찬장을 눌러 봐.';
+      else t = S.hints % 2 ? '과일 바구니를 눌러서 과일을 종류별로 세어 봐. 많은 것부터!' : `많은 순서대로 ${order} → 뒷문 자물쇠에 맞춰!`;
+      say('💡 ' + t); return;
+    }
+    if (P.stage === 3){
+      const left = P.spots.filter(x => !S.got.includes(x)).map(x => SPOTS3[x]);
+      let t;
+      if (!S.bulb) t = '천장에 매달린 전구의 줄을 당겨서 불부터 켜자! 💡';
+      else if (S.got.length < 3) t = S.hints % 2 ? '찢어진 쪽지 조각 3개가 다락방 여기저기 숨어 있어. 서랍, 모자 상자, 장화, 커튼…' : `남은 조각은 ${left[0]}에 있어!`;
+      else if (!S.mirror) t = '📜 거꾸로 쪽지를 고르고 가운데 거울을 눌러 봐. 🪞';
+      else if (!S.mb) t = `오르골을 눌러서 ${melWords()} 순서로 단추를 눌러!`;
+      else if (!S.trunk) t = '🗝️ 트렁크 열쇠를 고르고 바닥의 파란 트렁크를 눌러 봐.';
+      else t = '🔨 장도리를 고르고 바닥 문을 눌러서 못을 뽑아! 탈출이다!';
+      say('💡 ' + t); return;
+    }
     const names = P.order.map(c => CNAME[c]).join('·');
     let t;
     if (!S.found) t = SPOT_HINT[P.keySpot];
     else if (!S.drawer) t = '가방의 🔑 작은 열쇠를 누르고, 책상 서랍을 눌러 봐.';
     else if (!S.lit) t = '🔦 손전등을 고르고 어두운 곳을 비춰 봐. 침대 밑!';
     else if (!S.safe) t = S.hints % 2 ? `책장을 눌러 크게 보고, ${names} 책이 각각 몇 권인지 세어 봐.` : `센 숫자를 금고 다이얼에 ${names} 순서로 맞춰 봐.`;
-    else if (P.stage === 1) t = '🗝️ 문 열쇠를 고르고 문을 눌러!';
-    else if (P.stage === 3 && !S.clockOpen) t = '🪛 드라이버를 고르고 벽시계를 눌러 봐. 뒷판에 나사가 있어!';
-    else if (!S.dark && !S.sawGlow) t = '책상 위 스탠드를 눌러서 불을 꺼 봐. 벽에 뭔가 보일지도?';
-    else t = P.stage === 2 ? `문 열쇠를 고르고 문을 눌러서 빛나던 숫자 ${P.doorCode.join('')}을(를) 입력해!`
-                           : `빛나던 두 자리 + 시계의 '분'(${P.clockM}) → ${P.doorCode.join('')}! 문 열쇠를 고르고 문을 눌러.`;
-    if (S.dark) S.sawGlow = true;
+    else t = '🗝️ 문 열쇠를 고르고 문을 눌러!';
     say('💡 ' + t);
   }
   $('hintBtn').onclick = hint;
@@ -539,7 +979,7 @@ h1{white-space:nowrap}
   function startStage(n){
     P = buildPuzzle(n); reset(); applyStage(); render();
     $('timer').textContent = '⏱ 0:00';
-    say(n === 1 ? '방 안의 물건을 눌러서 살펴보세요.' : n === 2 ? '서재에 갇혔다… 이번엔 문에 비밀번호도 걸려 있어.' : '어둑한 다락방… 이번 문은 더 꼼꼼하게 잠겨 있다.');
+    say(n === 1 ? '방 안의 물건을 눌러서 살펴보세요.' : n === 2 ? '이번엔 부엌에 갇혔다! 뒷문엔 이상한 과일 자물쇠가 달려 있어. 🍎' : '삐걱… 캄캄한 다락방이다. 출구는 바닥 어딘가에 있대. 🕯️');
     closeOv(); S.running = true; S.t0 = Date.now();
   }
 
@@ -560,14 +1000,14 @@ h1{white-space:nowrap}
   }
 
   function escape(){
-    S.escaped = true; S.running = false; S.sel = null; S.dark = false; render();
+    S.escaped = true; S.running = false; S.sel = null; S.dark = false; S.bulb = true; render();
     const ms = Date.now() - S.t0, n = P.stage;
     const best = load(bestKey(n)), isBest = !best || ms < best.ms;
     if (isBest) save(bestKey(n), {ms, hints:S.hints});
     if ((load('escape:unlock') || 0) < n) save('escape:unlock', n);
     const today = load('escape:' + DKEY);                       // summary read by the 점오하게 menu
     if (!today || n > (today.stage || 1) || (n === (today.stage || 1) && ms < today.ms)) save('escape:' + DKEY, {ms, hints:S.hints, stage:n});
-    say('문이 열렸다! 밝은 빛이 쏟아진다… ☀️');
+    say(P.stage === 3 ? '장도리로 못을 쑥쑥 뽑았다! 바닥 문 아래로 사다리가… 탈출이다! 🪜' : '문이 열렸다! 밝은 빛이 쏟아진다… ☀️');
     setTimeout(() => openOv(`<h2>🎉 ${n}단계 탈출!</h2>
       <div class="stats"><span class="chip">${THEMES[n-1].icon} ${THEMES[n-1].name}</span><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
       <p>${isBest ? '오늘 이 단계 최고 기록이에요!' : `오늘 이 단계 최고는 ${fmtKo(best.ms)}이에요.`}</p>
