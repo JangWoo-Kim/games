@@ -99,6 +99,7 @@ h1 b{color:var(--accent);font-weight:400}
   </svg>
 </div>
 
+<script src="../jo.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -370,6 +371,66 @@ h1 b{color:var(--accent);font-weight:400}
         }
       }
     }
+    drawAds(cam, far, zEnd, side);
+  }
+
+  // ---------- wall billboards: house ads for our other games now; sponsor images can replace them later
+  const ADS = [
+    {e:'🏗️', t:'오늘의 탑', s:'오늘 몇 층까지?', c:'#4B6BFF'},
+    {e:'🍱', t:'도시락 합치기', s:'같은 음식끼리 합쳐!', c:'#E8892B'},
+    {e:'👻', t:'유령의 복도', s:'무궁화 꽃이… 5단계', c:'#6B6F80'},
+    {e:'🚪', t:'오늘의 방탈출', s:'부엌 · 다락방 탈출', c:'#E0715A'},
+    {e:'🔦', t:'밤의 학교', s:'과학실 · 음악실', c:'#7B5BD0'},
+    {e:'📢', t:'광고 모집', s:'이 자리 비어 있어요', c:'#2F9E5B'}
+  ];
+  const AD_IMG = ADS.map(a => {
+    const c = document.createElement('canvas'); c.width = 320; c.height = 150; const g = c.getContext('2d');
+    g.fillStyle = '#15171C'; g.fillRect(0, 0, 320, 150);
+    g.fillStyle = a.c; g.fillRect(8, 8, 304, 134);
+    g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(8, 8, 304, 40);
+    g.font = '64px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(a.e, 58, 80);
+    g.fillStyle = '#fff'; g.textAlign = 'left'; g.font = '800 34px "Black Han Sans","Gothic A1",sans-serif'; g.fillText(a.t, 104, 64);
+    g.font = '700 21px "Gothic A1",sans-serif'; g.fillStyle = 'rgba(255,255,255,.9)'; g.fillText(a.s, 104, 104);
+    g.font = '800 14px "Gothic A1",sans-serif'; g.fillStyle = 'rgba(255,255,255,.75)'; g.textAlign = 'right'; g.fillText('점오하게', 304, 132);
+    return c;
+  });
+  const AD_PERIOD = 27, AD_LEN = 2, AD_Y0 = -1.75, AD_Y1 = -.5;
+  function adAt(wz, sx){ // which poster (or none) starts at this slice on this wall
+    const m = ((wz % AD_PERIOD) + AD_PERIOD) % AD_PERIOD;
+    if (!((sx < 0 && m === 0) || (sx > 0 && m === 18))) return -1;
+    return ((Math.floor(wz / AD_PERIOD) * 7 + (sx > 0 ? 3 : 0)) % ADS.length + ADS.length) % ADS.length;
+  }
+  function drawAds(cam, far, zEnd, side){
+    const N = 28;
+    for (let wz = Math.floor(cam + far); wz >= Math.floor(cam) - AD_LEN; wz--){
+      for (const sx of [-1, 1]){
+        const k = adAt(wz, sx); if (k < 0) continue;
+        const za = wz - cam, zb = za + AD_LEN;
+        if (zb < 1.1 || za > far) continue;
+        if (sx === side && zb > zEnd - 2.4) continue;          // the wall is open at the corner
+        const img = AD_IMG[k], fog = Math.min(1, Math.max(0, (za - 3)/42));
+        ctx.save(); ctx.globalAlpha = 1 - fog*.9;
+        { const zs = Math.max(1.1, za); quad([pr(sx*HALF,AD_Y0,zs), pr(sx*HALF,AD_Y0,zb), pr(sx*HALF,AD_Y1,zb), pr(sx*HALF,AD_Y1,zs)], ADS[k].c); }
+        for (let i = 0; i < N; i++){                            // thin vertical strips ≈ perspective
+          const z0 = za + AD_LEN*i/N, z1 = za + AD_LEN*(i + 1)/N; if (z0 < 1.1) continue;
+          const t0 = pr(sx*HALF, AD_Y0, z0), b0 = pr(sx*HALF, AD_Y1, z0), t1 = pr(sx*HALF, AD_Y0, z1);
+          const u0 = sx < 0 ? i/N : 1 - (i + 1)/N, uw = 1/N;    // keep text readable on both walls
+          const srcX = (sx < 0 ? u0 : u0) * img.width;
+          const b1 = pr(sx*HALF, AD_Y1, z1);
+          ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.scale(DPR, DPR);
+          ctx.save(); ctx.beginPath(); ctx.moveTo(t0[0], t0[1]); ctx.lineTo(t1[0], t1[1]); ctx.lineTo(b1[0], b1[1]); ctx.lineTo(b0[0], b0[1]); ctx.closePath();
+          ctx.clip();
+          ctx.transform(t1[0] - t0[0], t1[1] - t0[1], b0[0] - t0[0], b0[1] - t0[1], t0[0], t0[1]);
+          if (sx > 0) ctx.transform(-1, 0, 0, 1, 1, 0);
+          ctx.drawImage(img, srcX, 0, uw*img.width, img.height, -0.06, 0, 1.12, 1);
+          ctx.restore();
+        }
+        ctx.restore();
+        // frame light so the poster pops a little
+        const a = pr(sx*HALF, AD_Y0, Math.max(1.1, za)), b = pr(sx*HALF, AD_Y1, Math.max(1.1, za));
+        ctx.strokeStyle = `rgba(255,255,255,${.25*(1 - fog)})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      }
+    }
   }
 
   function drawObstacles(){
@@ -602,10 +663,12 @@ h1 b{color:var(--accent);font-weight:400}
     setTimeout(() => openOv(`<h2>${title}</h2><p>${msg}</p>
       <div class="stats"><span class="chip">${STAGES[G.stage].name}</span><span class="chip">🏁 ${dist.toLocaleString()}m</span><span class="chip">🔋 ${G.coffee}개</span></div>
       <p>${isBest ? '오늘 최고 기록이에요! 🎉' : `오늘 최고는 ${b.dist.toLocaleString()}m예요.`}</p>
+      <div id="joRank"></div>
       <button class="big" id="sh">결과 복사</button>
       <button class="ghost" id="again">다시 달리기</button>`, () => {
         $('sh').onclick = () => copy(shareText(dist), $('sh'));
         $('again').onclick = () => { newGame(); closeOv(); G.running = true; };
+        if (window.JO) JO.mini('run', $('joRank'), {score:dist, stage:G.stage + 1, day:DKEY});
       }), 900);
   }
   function crash(why){ sfx.crash(); G.shake = .4; end('쾅!', why); }

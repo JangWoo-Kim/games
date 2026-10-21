@@ -82,6 +82,7 @@ button{font:inherit;color:inherit;cursor:pointer}
   </svg>
 </div>
 
+<script src="../jo.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -366,7 +367,9 @@ button{font:inherit;color:inherit;cursor:pointer}
       if (G.lives <= 0){
         openOv(`<h2>잡혔다…</h2><p>복도의 그녀가 웃는다.<br>"이제 너도 술래야."</p>
           <p>${G.stage+1}단계에서 잡혔어요.</p>
-          <button class="big" id="b1">처음부터 다시</button>`, () => $('b1').onclick = () => { newRun(); begin(); });
+          <div id="joRank"></div>
+          <button class="big" id="b1">처음부터 다시</button>`, () => { $('b1').onclick = () => { newRun(); begin(); };
+            if (window.JO) JO.mini('hall', $('joRank'), {stage:G.stage}); });
       } else {
         openOv(`<h2>들켰다!</h2><p>귀신이 돌아볼 땐 손을 떼야 해요.<br>남은 목숨 ${heartStr()}</p>
           <button class="big" id="b1">${G.stage+1}단계 다시 도전</button>`, () => $('b1').onclick = () => { resetStage(); begin(); });
@@ -392,10 +395,12 @@ button{font:inherit;color:inherit;cursor:pointer}
       <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">${heartStr()}</span></div>
       <p>학교 밖으로 나왔다. 뒤를 돌아보니…<br>창문마다 하얀 얼굴이 손을 흔들고 있다. 👋</p>
       <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
+      <div id="joRank"></div>
       <button class="big" id="b1">결과 복사</button>
       <button class="ghostBtn" id="b2">다시 하기</button>`, () => {
         $('b1').onclick = () => copy(shareText(ms), $('b1'));
         $('b2').onclick = () => { newRun(); begin(); };
+        if (window.JO) JO.mini('hall', $('joRank'), {stage:STAGES.length, ms}, 'clear');
       });
   }
   function shareText(ms){
@@ -409,7 +414,7 @@ button{font:inherit;color:inherit;cursor:pointer}
       try{ document.execCommand('copy'); done(); }catch(e){ btn.textContent='복사 실패 — 화면을 캡처해 주세요'; } ta.remove(); };
     try { navigator.clipboard.writeText(text).then(done, fb); } catch(e){ fb(); }
   }
-  function begin(){ closeOv(); audioInit(); G.running = true; }
+  function begin(){ closeOv(); audioInit(); G.running = true; if (window.JO) JO.log('hall', 'start', {stage:G.stage + 1}); }
 
   function intro(){
     newRun();

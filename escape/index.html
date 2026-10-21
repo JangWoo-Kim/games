@@ -474,6 +474,7 @@ h1{white-space:nowrap}
 
 <div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
 
+<script src="../jo.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -981,6 +982,7 @@ h1{white-space:nowrap}
     $('timer').textContent = '⏱ 0:00';
     say(n === 1 ? '방 안의 물건을 눌러서 살펴보세요.' : n === 2 ? '이번엔 부엌에 갇혔다! 뒷문엔 이상한 과일 자물쇠가 달려 있어. 🍎' : '삐걱… 캄캄한 다락방이다. 출구는 바닥 어딘가에 있대. 🕯️');
     closeOv(); S.running = true; S.t0 = Date.now();
+    if (window.JO) JO.log('escape', 'start', {stage:n, day:DKEY});
   }
 
   function shareText(ms){
@@ -1011,12 +1013,14 @@ h1{white-space:nowrap}
     setTimeout(() => openOv(`<h2>🎉 ${n}단계 탈출!</h2>
       <div class="stats"><span class="chip">${THEMES[n-1].icon} ${THEMES[n-1].name}</span><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
       <p>${isBest ? '오늘 이 단계 최고 기록이에요!' : `오늘 이 단계 최고는 ${fmtKo(best.ms)}이에요.`}</p>
+      <div id="joRank"></div>
       ${n < 3 ? `<button class="big" id="nextBtn">${n+1}단계 · ${THEMES[n].name}로 ›</button>` : '<p>🏆 오늘의 방 3개를 모두 탈출했어요!</p>'}
       <button class="${n < 3 ? 'ghost' : 'big'}" id="shareBtn">결과 복사</button>
       <button class="ghost" id="selBtn">단계 고르기</button>`, () => {
         if (n < 3) $('nextBtn').onclick = () => startStage(n + 1);
         $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
         $('selBtn').onclick = selectScreen;
+        if (window.JO) JO.mini('escape', $('joRank'), {stage:n, ms, hints:S.hints, day:DKEY}, 'clear');
       }), 700);
   }
 

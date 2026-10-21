@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>점오하게 기록실</title>
+<style>
+/* Owner's dashboard: who played what, how far, where people get stuck. Reads the same public play log. */
+:root{--bg:#F4F1EA;--surface:#FFFFFF;--ink:#1F1B16;--muted:#776E62;--line:#E3DACB;--accent:#E8892B;--bar:#F2A93B;--good:#2F9E5B;--bad:#D9534F}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#14120F;--surface:#1E1B17;--ink:#F3EDE2;--muted:#A79C8C;--line:#332E26;--accent:#F2A93B;--bar:#C98426;--good:#5BD08A;--bad:#FF7A7F;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#14120F;--surface:#1E1B17;--ink:#F3EDE2;--muted:#A79C8C;--line:#332E26;--accent:#F2A93B;--bar:#C98426;--good:#5BD08A;--bad:#FF7A7F;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;font-size:14px}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:16px 32px;display:flex;flex-direction:column;gap:14px}
+h1{margin:0;font-size:24px}
+h2{margin:0 0 8px;font-size:15px}
+.sub{color:var(--muted);margin:2px 0 0}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.bar button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font:inherit;font-weight:700;cursor:pointer}
+.bar button.on{background:var(--ink);color:var(--bg)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi small{color:var(--muted);font-weight:700}
+.kpi b{display:block;font-size:26px;font-variant-numeric:tabular-nums;margin-top:2px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--muted);font-size:12px;font-weight:700}
+.meter{display:inline-block;height:8px;border-radius:4px;background:var(--bar);vertical-align:middle;margin-right:6px}
+.ok{color:var(--good);font-weight:700}.warn{color:var(--bad);font-weight:700}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+.note{color:var(--muted);font-size:12px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <h1>📊 점오하게 기록실</h1>
+    <p class="sub" id="sub">불러오는 중…</p>
+  </div>
+  <div class="bar" id="range"><button data-d="1">오늘</button><button data-d="7" class="on">최근 7일</button><button data-d="30">최근 30일</button><button id="reload">↻ 새로고침</button></div>
+  <div class="kpis" id="kpis"></div>
+  <div class="card"><h2>게임별 인기</h2><div class="scroll" id="games"></div></div>
+  <div class="card"><h2>날짜별 판 수</h2><div class="scroll" id="days"></div></div>
+  <div class="card"><h2>어디서 막히나 (단계별 성공률)</h2><div class="grid2" id="funnel"></div>
+    <p class="note">시작 = 그 단계에 들어간 횟수, 성공 = 그 단계를 깬 횟수. 성공률이 낮은 단계가 어려운 곳이에요.<br>유령의 복도는 다음 단계에 들어간 횟수를 성공으로 셉니다.</p></div>
+  <div class="card"><h2>최근 기록 30개</h2><div class="scroll" id="recent"></div></div>
+  <p class="note">이 페이지 주소는 메뉴에 연결되어 있지 않아요. 기록에는 랜덤 닉네임과 점수만 있어요.</p>
+</div>
+<script src="../jo.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  if (!window.JO){ $('sub').textContent = 'jo.js를 불러오지 못했어요.'; return; }
+  const {url, key} = JO._cfg, H = {apikey:key, Authorization:'Bearer ' + key};
+  const ORDER = ['tower','lunch','escape','hall','run','night'], R = JO.RULE;
+  const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  let range = 7;
+  document.querySelectorAll('#range [data-d]').forEach(b => b.onclick = () => { range = +b.dataset.d; document.querySelectorAll('#range [data-d]').forEach(x => x.classList.toggle('on', x === b)); load(); });
+  $('reload').onclick = () => load();
+  const dayStr = k => { const d = new Date(); d.setDate(d.getDate() - k); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+
+  async function fetchAll(since){
+    let all = [], from = 0;
+    for (;;){
+      const r = await fetch(`${url}/rest/v1/plays?select=*&day=gte.${since}&order=id.asc`, {headers:{...H, Range:`${from}-${from + 999}`}});
+      if (!r.ok) throw new Error(r.status);
+      const rows = await r.json(); all = all.concat(rows);
+      if (rows.length < 1000 || all.length > 50000) break; from += 1000;
+    }
+    return all;
+  }
+  async function load(){
+    const since = dayStr(range - 1), today = dayStr(0);
+    $('sub').textContent = `${since} ~ ${today} · 불러오는 중…`;
+    let rows;
+    try { rows = await fetchAll(since); } catch(e){ $('sub').textContent = '불러오지 못했어요 (인터넷 또는 Supabase 확인): ' + e.message; return; }
+    const plays = rows.filter(r => r.event !== 'start');
+    const players = new Set(rows.map(r => r.pid));
+    $('sub').textContent = `${since} ~ ${today} · 기록 ${rows.length.toLocaleString()}줄 · ${new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit'})} 기준`;
+    const todayPlays = plays.filter(r => r.day === today).length, todayPeople = new Set(rows.filter(r => r.day === today).map(r => r.pid)).size;
+    const byG = Object.fromEntries(ORDER.map(g => [g, plays.filter(r => r.game === g)]));
+    const top = ORDER.slice().sort((a, b) => byG[b].length - byG[a].length)[0];
+    $('kpis').innerHTML = [
+      ['판 수 (끝까지 한 판)', plays.length.toLocaleString()],
+      ['참여한 사람', players.size.toLocaleString() + '명'],
+      ['오늘 판 수 · 사람', `${todayPlays} · ${todayPeople}명`],
+      ['가장 인기', plays.length ? `${R[top].icon} ${R[top].name}` : '-']
+    ].map(([k, v]) => `<div class="kpi"><small>${k}</small><b style="${String(v).length > 8 ? 'font-size:18px' : ''}">${v}</b></div>`).join('');
+
+    // per game
+    const maxN = Math.max(1, ...ORDER.map(g => byG[g].length));
+    $('games').innerHTML = `<table><tr><th>게임</th><th style="text-align:left">판 수</th><th>사람</th><th>1인당</th><th>오늘</th><th>다시 한 사람</th></tr>${ORDER.map(g => {
+      const L = byG[g], ppl = {}; L.forEach(r => ppl[r.pid] = (ppl[r.pid] || 0) + 1);
+      const n = Object.keys(ppl).length, again = Object.values(ppl).filter(v => v > 1).length;
+      return `<tr><td>${R[g].icon} ${R[g].name}</td><td style="text-align:left"><span class="meter" style="width:${Math.round(L.length / maxN * 120)}px"></span>${L.length}</td><td>${n}</td><td>${n ? (L.length / n).toFixed(1) : '-'}</td><td>${L.filter(r => r.day === today).length}</td><td>${n ? Math.round(again / n * 100) + '%' : '-'}</td></tr>`;
+    }).join('')}</table>`;
+
+    // by day
+    const days = []; for (let k = range - 1; k >= 0; k--) days.push(dayStr(k));
+    $('days').innerHTML = `<table><tr><th>날짜</th>${ORDER.map(g => `<th>${R[g].icon}</th>`).join('')}<th>합계</th><th>사람</th></tr>${days.slice().reverse().map(d => {
+      const L = plays.filter(r => r.day === d);
+      return `<tr><td>${d.slice(5)}</td>${ORDER.map(g => `<td>${L.filter(r => r.game === g).length || ''}</td>`).join('')}<td><b>${L.length}</b></td><td>${new Set(rows.filter(r => r.day === d).map(r => r.pid)).size}</td></tr>`;
+    }).join('')}</table>`;
+
+    // funnel
+    $('funnel').innerHTML = ['escape','night','hall'].map(g => {
+      const G = rows.filter(r => r.game === g), N = g === 'hall' ? 5 : 3;
+      const st = n => G.filter(r => r.event === 'start' && r.stage === n).length;
+      const ok = n => g === 'hall' ? (n < N ? st(n + 1) : G.filter(r => r.event === 'clear').length) : G.filter(r => r.event === 'clear' && r.stage === n).length;
+      const hint = n => { const C = G.filter(r => r.event === 'clear' && r.stage === n && r.hints != null); return C.length ? (C.reduce((a, r) => a + r.hints, 0) / C.length).toFixed(1) : '-'; };
+      const t = n => { const C = G.filter(r => r.event === 'clear' && r.stage === n && r.ms); if (!C.length) return '-'; const m = C.map(r => r.ms).sort((a, b) => a - b)[Math.floor(C.length / 2)]; return JO.fmtKo(m); };
+      return `<div><h2 style="font-size:14px">${R[g].icon} ${R[g].name}</h2><table><tr><th>단계</th><th>시작</th><th>성공</th><th>성공률</th>${g !== 'hall' ? '<th>평균 힌트</th><th>보통 시간</th>' : ''}</tr>${Array.from({length:N}, (_, i) => {
+        const n = i + 1, s = st(n), c = ok(n), p = s ? Math.round(c / s * 100) : null;
+        return `<tr><td>${n}단계</td><td>${s}</td><td>${c}</td><td class="${p == null ? '' : p < 40 ? 'warn' : 'ok'}">${p == null ? '-' : p + '%'}</td>${g !== 'hall' ? `<td>${hint(n)}</td><td>${t(n)}</td>` : ''}</tr>`;
+      }).join('')}</table></div>`;
+    }).join('');
+
+    // recent
+    const ev = {start:'시작', end:'끝', clear:'성공'};
+    $('recent').innerHTML = `<table><tr><th>시각</th><th style="text-align:left">닉네임</th><th style="text-align:left">게임</th><th>내용</th><th>결과</th></tr>${rows.slice(-30).reverse().map(r =>
+      `<tr><td>${new Date(r.created_at).toLocaleString('ko-KR', {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}</td><td style="text-align:left">${JO.iconOf(r.nick)} ${esc(r.nick)}</td><td style="text-align:left">${R[r.game] ? R[r.game].icon + ' ' + R[r.game].name : esc(r.game)}</td><td>${ev[r.event] || r.event}${r.stage ? ' · ' + r.stage + '단계' : ''}${r.hints ? ' · 힌트 ' + r.hints : ''}</td><td>${r.event === 'start' ? '' : R[r.game] ? R[r.game].show(r) : ''}</td></tr>`).join('')}</table>`;
+  }
+  load();
+})();
+</script>
+</body>
+</html>

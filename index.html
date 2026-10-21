@@ -50,6 +50,8 @@ a.tile::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;back
 .sub{font-size:14px;color:var(--muted);line-height:1.3;min-height:2.6em;word-break:keep-all;font-weight:600}
 .pill{font-size:13px;font-weight:800;border-radius:999px;padding:3px 8px;margin-top:2px;background:color-mix(in srgb,var(--c) 14%,transparent);color:var(--ink);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pill.done{background:color-mix(in srgb,var(--good) 20%,transparent)}
+.meRow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+.rankBtn{font-size:13px;font-weight:800;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:5px 12px;text-decoration:none;white-space:nowrap}
 footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-break:keep-all}
 @media (max-width:370px){ .name{font-size:18px} .sub{font-size:13px} .pill{font-size:12px;padding:3px 6px} .thumb{width:40px;height:40px;font-size:22px} h1{font-size:42px} .clock{font-size:11px} }
 </style>
@@ -61,6 +63,7 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
       <span class="clock" id="clock"><i></i><span id="clockTxt">--:--</span></span>
     </div>
     <p class="tag">점심시간 <b>5분</b>, 하는 게임.</p>
+    <div class="meRow"><span id="nick"></span><a class="rankBtn" href="https://jangwoo-kim.github.io/games/rank/" target="_top">🏆 오늘의 랭킹</a></div>
   </header>
 
   <section>
@@ -93,9 +96,10 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
     </div>
   </section>
 
-  <footer>설치·가입 없이 바로 플레이 · 기록은 이 기기에만 저장돼요</footer>
+  <footer>설치·가입 없이 바로 플레이 · 랭킹엔 랜덤 닉네임만 올라가요</footer>
 </div>
 
+<script src="jo.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -125,6 +129,7 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
     $('clockTxt').textContent = txt;
   }
   tick(); setInterval(tick, 30000);
+  if (window.JO) JO.nickChip($('nick'));
 })();
 </script>
 

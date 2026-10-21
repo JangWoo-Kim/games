@@ -465,6 +465,7 @@ h1{white-space:nowrap;font-size:26px!important}
   </svg>
 </div>
 
+<script src="../jo.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -1033,6 +1034,7 @@ h1{white-space:nowrap;font-size:26px!important}
       : n === 2 ? '교실을 빠져나왔지만… 정신을 차려 보니 과학실이다. 약품 냄새가 코를 찌른다.'
       : '…어디선가 피아노 소리. 음악실 문이 등 뒤에서 닫혔다. 4분 안에 나가야 해!', n === 3);
     closeOv(); audioInit(); creak(); S.running = true; S.t0 = Date.now(); scheduleSpook();
+    if (window.JO) JO.log('night', 'start', {stage:n, day:DKEY});
   }
   function timeUp(){
     S.running = false; clearTimeout(spookT);
@@ -1070,12 +1072,14 @@ h1{white-space:nowrap;font-size:26px!important}
       <div class="stats"><span class="chip">⏱ ${fmtKo(ms)}</span><span class="chip">💡 힌트 ${S.hints}번</span></div>
       <p>${endings[n-1]}</p>
       <p>${isBest ? '이 단계 최고 기록이에요!' : `이 단계 최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
+      <div id="joRank"></div>
       ${n < 3 ? `<button class="big" id="nextBtn">${n+1}단계 · ${STG[n].sub} ›</button>` : ''}
       <button class="${n < 3 ? 'ghost' : 'big'}" id="shareBtn">결과 복사</button>
       <button class="ghost" id="selBtn">단계 고르기</button>`, () => {
         if (n < 3) $('nextBtn').onclick = () => startStage(n + 1);
         $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
         $('selBtn').onclick = selectScreen;
+        if (window.JO) JO.mini('night', $('joRank'), {stage:n, ms, hints:S.hints, day:DKEY}, 'clear');
       }), 1400);
   }
 

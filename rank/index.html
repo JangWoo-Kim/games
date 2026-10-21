@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>점오하게 랭킹</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
+<style>
+/* Today's leaderboard for all six games. Same lunch-tray palette as the menu. */
+:root{
+  --bg:#F6F1E7; --surface:#FFFDF8; --ink:#1F1B16; --muted:#7A6F62; --line:#E6DCCB;
+  --accent:#F2A93B; --accent-ink:#2A1C05; --me:rgba(242,169,59,.2);
+  --f-display:"Black Han Sans","Gothic A1",system-ui,sans-serif;
+  --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15130F;--surface:#1F1C17;--ink:#F3EDE2;--muted:#A79C8C;--line:#332E26;--me:rgba(242,169,59,.22);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15130F;--surface:#1F1C17;--ink:#F3EDE2;--muted:#A79C8C;--line:#332E26;--me:rgba(242,169,59,.22);color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body)}
+.wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:12px 24px;display:flex;flex-direction:column;gap:12px}
+.home{font-size:13px;font-weight:700;color:inherit;opacity:.65;text-decoration:none}
+h1{font-family:var(--f-display);font-weight:400;font-size:36px;margin:0;line-height:1}
+.sub{color:var(--muted);font-size:14px;margin:4px 0 0}
+.me{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tab{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 4px;font:800 14px var(--f-body);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.days{display:flex;gap:6px}
+.days button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:5px 12px;font:700 13px var(--f-body);cursor:pointer}
+.days button.on{background:var(--ink);color:var(--bg)}
+.board{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:6px 10px}
+.row{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;padding:9px 4px;border-bottom:1px solid var(--line);font-size:15px}
+.row:last-child{border-bottom:0}
+.row b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .n{text-align:center;font-weight:800}
+.row.mine{background:var(--me);border-radius:10px}
+.empty{padding:24px;text-align:center;color:var(--muted)}
+.play{display:block;text-align:center;background:var(--accent);color:var(--accent-ink);border-radius:12px;padding:12px;font-weight:800;text-decoration:none}
+.foot{font-size:12px;color:var(--muted);line-height:1.6;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div>
+    <a class="home" href="../" target="_top">← 점오하게</a>
+    <h1>🏆 오늘의 랭킹</h1>
+    <p class="sub" id="sub">매일 자정에 새로 시작해요</p>
+  </div>
+  <div class="me"><span id="nick"></span></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="days"><button data-d="0" class="on">오늘</button><button data-d="1">어제</button></div>
+  <div class="board" id="board"><div class="empty">불러오는 중…</div></div>
+  <a class="play" id="play" href="#">이 게임 하러 가기 ›</a>
+  <p class="foot">같은 사람은 그날 가장 좋은 기록 하나만 올라가요.<br>방탈출·밤의 학교·유령의 복도는 <b>높은 단계 → 빠른 시간</b> 순이에요.</p>
+</div>
+<script src="../jo.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  if (!window.JO){ $('board').innerHTML = '<div class="empty">랭킹을 불러올 수 없어요.</div>'; return; }
+  const ORDER = ['tower','lunch','escape','hall','run','night'];
+  let game = ORDER.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tower', back = 0;
+  JO.nickChip($('nick'));
+  const dayStr = k => { const d = new Date(); d.setDate(d.getDate() - k); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+  const esc = t => String(t).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  $('tabs').innerHTML = ORDER.map(g => `<button class="tab" data-g="${g}">${JO.RULE[g].icon} ${JO.RULE[g].name.replace('오늘의 ', '')}</button>`).join('');
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => { game = b.dataset.g; try { history.replaceState(null, '', '#' + game); } catch(e){} load(); });
+  document.querySelectorAll('.days button').forEach(b => b.onclick = () => { back = +b.dataset.d; document.querySelectorAll('.days button').forEach(x => x.classList.toggle('on', x === b)); load(); });
+  JO.onNick(() => load());
+  async function load(){
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.g === game));
+    $('play').href = `../${game}/`; $('play').textContent = `${JO.RULE[game].icon} ${JO.RULE[game].name} 하러 가기 ›`;
+    const day = dayStr(back), me = JO.player().pid;
+    $('sub').textContent = `${day.slice(5).replace('-', '월 ')}일 · ${JO.RULE[game].name}`;
+    $('board').innerHTML = '<div class="empty">불러오는 중…</div>';
+    try {
+      const list = await JO.board(game, day);
+      if (!list.length){ $('board').innerHTML = `<div class="empty">아직 기록이 없어요.<br>첫 번째 주인공이 되어 보세요!</div>`; return; }
+      $('board').innerHTML = list.slice(0, 50).map((x, i) => `<div class="row${x.pid === me ? ' mine' : ''}"><span class="n">${['🥇','🥈','🥉'][i] || i + 1}</span><span>${JO.iconOf(x.nick)} ${esc(x.nick)}${x.pid === me ? ' (나)' : ''}</span><b>${JO.RULE[game].show(x)}</b></div>`).join('')
+        + (list.length > 50 ? `<div class="empty">외 ${list.length - 50}명</div>` : '');
+      const mi = list.findIndex(x => x.pid === me);
+      if (mi >= 50) $('board').innerHTML += `<div class="row mine"><span class="n">${mi + 1}</span><span>${JO.iconOf(list[mi].nick)} ${esc(list[mi].nick)} (나)</span><b>${JO.RULE[game].show(list[mi])}</b></div>`;
+    } catch(e){ $('board').innerHTML = '<div class="empty">지금은 랭킹을 불러올 수 없어요.<br>인터넷 연결을 확인해 주세요.</div>'; }
+  }
+  load();
+})();
+</script>
+</body>
+</html>

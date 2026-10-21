@@ -74,6 +74,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
 </div>
 <div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
 
+<script src="../jo.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -532,10 +533,12 @@ h1{font-family:var(--f-display);font-weight:400;font-size:28px;margin:0;line-hei
       <div class="stats"><span class="chip">${G.score.toLocaleString()}점</span><span class="chip">${img(G.maxT,20)} ${FOOD[G.maxT].n}까지</span></div>
       <div class="evo">${evoImg(G.maxT, 30)}</div>
       <p>${isBest ? '오늘 최고 기록이에요! 🎉' : `오늘 최고는 ${b.score.toLocaleString()}점이에요.`}</p>
+      <div id="joRank"></div>
       <button class="big" id="sh">결과 복사</button>
       <button class="ghost" id="again">다시 하기</button>`, () => {
         $('sh').onclick = () => copy(shareText(), $('sh'));
         $('again').onclick = () => { newGame(); closeOv(); G.running = true; };
+        if (window.JO) JO.mini('lunch', $('joRank'), {score:G.score, stage:G.maxT + 1, day:DKEY});
       }), 500);
   }
   function shareText(){
