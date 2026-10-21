@@ -664,9 +664,8 @@ h1 b{color:var(--accent);font-weight:400}
       <div class="stats"><span class="chip">${STAGES[G.stage].name}</span><span class="chip">🏁 ${dist.toLocaleString()}m</span><span class="chip">🔋 ${G.coffee}개</span></div>
       <p>${isBest ? '오늘 최고 기록이에요! 🎉' : `오늘 최고는 ${b.dist.toLocaleString()}m예요.`}</p>
       <div id="joRank"></div>
-      <button class="big" id="sh">결과 복사</button>
-      <button class="ghost" id="again">다시 달리기</button>`, () => {
-        $('sh').onclick = () => copy(shareText(dist), $('sh'));
+      <button class="big" id="again">다시 달리기</button>
+      <a class="ghost" href="https://jangwoo-kim.github.io/games/" target="_top" style="display:block;text-align:center;text-decoration:none;color:inherit">← 메뉴로</a>`, () => {
         $('again').onclick = () => { newGame(); closeOv(); G.running = true; };
         if (window.JO) JO.mini('run', $('joRank'), {score:dist, stage:G.stage + 1, day:DKEY});
       }), 900);

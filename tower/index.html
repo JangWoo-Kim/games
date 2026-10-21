@@ -75,6 +75,7 @@ canvas{display:block;width:100%;height:100%}
       <div class="pActions">
         <button id="btnStart" class="btn primary">시작</button>
         <button id="btnShare" class="btn ghost" hidden>결과 복사</button>
+        <a id="btnMenu" class="btn ghost" href="https://jangwoo-kim.github.io/games/" target="_top" style="text-decoration:none" hidden>← 메뉴로</a>
       </div>
       <p id="pNote" class="note"></p>
       <div id="joRank"></div>
@@ -216,7 +217,7 @@ canvas{display:block;width:100%;height:100%}
   function showPanel(title, body, startLabel, startDisabled, share, note){
     $('pTitle').textContent = title; $('pBody').textContent = body;
     $('btnStart').textContent = startLabel; $('btnStart').disabled = !!startDisabled;
-    $('btnShare').hidden = !share; $('pNote').textContent = note || '';
+    $('btnShare').hidden = true; $('btnMenu').hidden = !share; $('pNote').textContent = note || '';
     $('panel').hidden = false; $('joRank').innerHTML = '';
   }
   function showIntro(){

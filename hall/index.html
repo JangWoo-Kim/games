@@ -368,11 +368,13 @@ button{font:inherit;color:inherit;cursor:pointer}
         openOv(`<h2>잡혔다…</h2><p>복도의 그녀가 웃는다.<br>"이제 너도 술래야."</p>
           <p>${G.stage+1}단계에서 잡혔어요.</p>
           <div id="joRank"></div>
-          <button class="big" id="b1">처음부터 다시</button>`, () => { $('b1').onclick = () => { newRun(); begin(); };
+          <button class="big" id="b1">처음부터 다시</button>
+          <a class="ghostBtn" href="https://jangwoo-kim.github.io/games/" target="_top" style="display:block;text-align:center;text-decoration:none;color:inherit">← 메뉴로</a>`, () => { $('b1').onclick = () => { newRun(); begin(); };
             if (window.JO) JO.mini('hall', $('joRank'), {stage:G.stage}); });
       } else {
         openOv(`<h2>들켰다!</h2><p>귀신이 돌아볼 땐 손을 떼야 해요.<br>남은 목숨 ${heartStr()}</p>
-          <button class="big" id="b1">${G.stage+1}단계 다시 도전</button>`, () => $('b1').onclick = () => { resetStage(); begin(); });
+          <button class="big" id="b1">${G.stage+1}단계 다시 도전</button>
+          <a class="ghostBtn" href="https://jangwoo-kim.github.io/games/" target="_top" style="display:block;text-align:center;text-decoration:none;color:inherit">← 메뉴로</a>`, () => $('b1').onclick = () => { resetStage(); begin(); });
       }
     }, 1000);
   }
@@ -396,9 +398,8 @@ button{font:inherit;color:inherit;cursor:pointer}
       <p>학교 밖으로 나왔다. 뒤를 돌아보니…<br>창문마다 하얀 얼굴이 손을 흔들고 있다. 👋</p>
       <p>${isBest ? '새 최고 기록이에요!' : `최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
       <div id="joRank"></div>
-      <button class="big" id="b1">결과 복사</button>
-      <button class="ghostBtn" id="b2">다시 하기</button>`, () => {
-        $('b1').onclick = () => copy(shareText(ms), $('b1'));
+      <button class="big" id="b2">다시 하기</button>
+      <a class="ghostBtn" href="https://jangwoo-kim.github.io/games/" target="_top" style="display:block;text-align:center;text-decoration:none;color:inherit">← 메뉴로</a>`, () => {
         $('b2').onclick = () => { newRun(); begin(); };
         if (window.JO) JO.mini('hall', $('joRank'), {stage:STAGES.length, ms}, 'clear');
       });

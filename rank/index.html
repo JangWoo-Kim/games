@@ -18,7 +18,7 @@
 *{box-sizing:border-box}[hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body)}
 .wrap{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:12px 24px;display:flex;flex-direction:column;gap:12px}
-.home{font-size:13px;font-weight:700;color:inherit;opacity:.65;text-decoration:none}
+.home{display:inline-flex;align-items:center;gap:6px;font-size:16px;font-weight:800;color:var(--ink);text-decoration:none;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:7px 14px;margin-bottom:10px}
 h1{font-family:var(--f-display);font-weight:400;font-size:36px;margin:0;line-height:1}
 .sub{color:var(--muted);font-size:14px;margin:4px 0 0}
 .me{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -43,7 +43,7 @@ h1{font-family:var(--f-display);font-weight:400;font-size:36px;margin:0;line-hei
 <body>
 <div class="wrap">
   <div>
-    <a class="home" href="../" target="_top">← 점오하게</a>
+    <a class="home" href="../" target="_top">← 메뉴로 돌아가기</a>
     <h1>🏆 오늘의 랭킹</h1>
     <p class="sub" id="sub">매일 자정에 새로 시작해요</p>
   </div>

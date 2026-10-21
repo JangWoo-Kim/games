@@ -1039,7 +1039,7 @@ h1{white-space:nowrap;font-size:26px!important}
   function timeUp(){
     S.running = false; clearTimeout(spookT);
     jumpScare(() => openOv(`<h2>시간 초과…</h2><p>피아노가 저절로 마지막 음을 쳤다.<br><span style="color:#FFB3B5">"찾았다…"</span></p>
-      <button class="big" id="retry">3단계 다시 도전</button><button class="ghost" id="selBtn">단계 고르기</button>`, () => {
+      <button class="big" id="retry">3단계 다시 도전</button><button class="ghost" id="selBtn">단계 고르기</button><a class="ghost" href="https://jangwoo-kim.github.io/games/" target="_top" style="display:block;text-align:center;text-decoration:none;color:inherit">← 메뉴로</a>`, () => {
         $('retry').onclick = () => startStage(3); $('selBtn').onclick = selectScreen;
       }));
   }
@@ -1074,10 +1074,9 @@ h1{white-space:nowrap;font-size:26px!important}
       <p>${isBest ? '이 단계 최고 기록이에요!' : `이 단계 최고 기록은 ${fmtKo(best.ms)}이에요.`}</p>
       <div id="joRank"></div>
       ${n < 3 ? `<button class="big" id="nextBtn">${n+1}단계 · ${STG[n].sub} ›</button>` : ''}
-      <button class="${n < 3 ? 'ghost' : 'big'}" id="shareBtn">결과 복사</button>
-      <button class="ghost" id="selBtn">단계 고르기</button>`, () => {
+      <button class="${n < 3 ? 'ghost' : 'big'}" id="selBtn">단계 고르기</button>
+      <a class="ghost" href="https://jangwoo-kim.github.io/games/" target="_top" style="display:block;text-align:center;text-decoration:none;color:inherit">← 메뉴로</a>`, () => {
         if (n < 3) $('nextBtn').onclick = () => startStage(n + 1);
-        $('shareBtn').onclick = () => copy(shareText(ms), $('shareBtn'));
         $('selBtn').onclick = selectScreen;
         if (window.JO) JO.mini('night', $('joRank'), {stage:n, ms, hints:S.hints, day:DKEY}, 'clear');
       }), 1400);
