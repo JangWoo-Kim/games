@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
 <style>
 /* Hexa (Columns-style): a stick of 3 jewels falls; cycle their order and line up 3+ of a colour in any direction.
-   Night-arcade palette, single fixed look by design. Fits one phone screen: header, board canvas, cross pad. */
+   Night-arcade palette, single fixed look by design. Fits one phone screen: header + a tall board. Touch only: tap left/right to move, tap the falling stick to rotate, swipe down to drop fast. */
 :root{
   --bg:#141226; --surface:#1F1C38; --panel:#262248; --ink:#F4F0FF; --muted:#A59FCB; --line:#38335F;
   --accent:#FFC94A; --accent-ink:#2A1C05; --good:#6BE3A0; --danger:#FF6B7A;
@@ -26,20 +26,13 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-w
 .home{display:block;font-size:12px;font-weight:700;color:inherit;opacity:.6;text-decoration:none;margin-bottom:3px}
 h1{font-family:var(--f-display);font-weight:400;font-size:30px;margin:0;line-height:1;letter-spacing:.02em}
 h1 span{color:var(--accent)}
-.date{font-size:12px;color:var(--muted);margin-top:3px}
+.date{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap}
 .scores{display:flex;gap:6px}
 .sc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:5px 9px;display:flex;flex-direction:column;align-items:flex-end;min-width:58px}
 .sc small{font-size:10px;color:var(--muted);font-weight:700;white-space:nowrap}
 .sc b{font-family:var(--f-display);font-weight:400;font-size:19px;font-variant-numeric:tabular-nums;line-height:1.1}
 .stage{flex:1 1 0;min-height:0;position:relative;touch-action:none}
 #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-.pad{flex:none;display:grid;grid-template-columns:1fr 1.05fr 1fr;grid-template-rows:54px 54px;grid-template-areas:"l u r" "l d r";gap:3px 8px;width:100%;max-width:340px;margin:0 auto}
-.pad button{border-radius:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;touch-action:none;cursor:pointer;padding:0;font:800 11px var(--f-body)}
-.pad button svg{width:34px;height:34px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
-.pad button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.pad [data-k="U"]{grid-area:u;border-radius:14px 14px 6px 6px}.pad [data-k="D"]{grid-area:d;border-radius:6px 6px 14px 14px}
-.pad [data-k="L"]{grid-area:l;align-self:center;height:80px}.pad [data-k="R"]{grid-area:r;align-self:center;height:80px}
-.pad [data-k="L"] svg{transform:rotate(-90deg)}.pad [data-k="R"] svg{transform:rotate(90deg)}.pad [data-k="D"] svg{transform:rotate(180deg)}
 .ov{position:fixed;inset:0;background:rgba(10,8,24,.72);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:16px;z-index:10}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;width:100%;max-width:380px;display:flex;flex-direction:column;gap:12px;text-align:center}
 .card h2{font-family:var(--f-display);font-weight:400;font-size:34px;margin:0;line-height:1.1}
@@ -70,12 +63,6 @@ h1 span{color:var(--accent)}
     </div>
   </div>
   <div class="stage" id="stage"><canvas id="cv"></canvas></div>
-  <div class="pad" id="pad">
-    <button data-k="L" aria-label="왼쪽"><svg viewBox="0 0 24 24"><path d="M12 2.5 20.5 11.5H15.5V21.5H8.5V11.5H3.5Z"/></svg></button>
-    <button data-k="U" aria-label="순서 바꾸기"><svg viewBox="0 0 24 24" style="width:28px;height:28px"><path d="M19 8a8 8 0 1 0 1 6"/><path d="M20 3v5h-5"/></svg>돌리기</button>
-    <button data-k="R" aria-label="오른쪽"><svg viewBox="0 0 24 24"><path d="M12 2.5 20.5 11.5H15.5V21.5H8.5V11.5H3.5Z"/></svg></button>
-    <button data-k="D" aria-label="빨리 내리기"><svg viewBox="0 0 24 24" style="width:28px;height:28px"><path d="M12 2.5 20.5 11.5H15.5V21.5H8.5V11.5H3.5Z"/></svg>누르면 빨리</button>
-  </div>
 </div>
 <div class="ov" id="ov" hidden><div class="card" id="card"></div></div>
 
@@ -92,7 +79,7 @@ h1 span{color:var(--accent)}
     {n:'에메랄드', c:'#2ECC71', d:'#127A3E', l:'#B4F2CC', shape:'square'},
     {n:'토파즈',   c:'#FFC93C', d:'#B37A00', l:'#FFF0B8', shape:'hex'},
     {n:'자수정',   c:'#A66BFF', d:'#5B23B8', l:'#DDC6FF', shape:'tri'},
-    {n:'산호',     c:'#FF8A3D', d:'#B34A00', l:'#FFD2B3', shape:'oct'}
+    {n:'진주',     c:'#E9EEF5', d:'#8B97A8', l:'#FFFFFF', shape:'oct'}
   ];
   const SPR = GEM.map(g => {
     const S = 96, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), m = S/2;
@@ -208,19 +195,8 @@ h1 span{color:var(--accent)}
   function banner(t){ ban = {t, k:0}; }
   function hud(){ $('score').textContent = G.score.toLocaleString(); $('level').textContent = G.level; }
 
-  // ---------- input: pad, keys, swipes on the board
+  // ---------- input: touch only (plus keyboard on a computer)
   const fastOn = v => { if (G) G.fast = v; };
-  document.querySelectorAll('#pad button').forEach(b => {
-    const k = b.dataset.k;
-    b.addEventListener('pointerdown', e => {
-      e.preventDefault(); b.classList.add('on'); audio();
-      if (k === 'L') move(-1); else if (k === 'R') move(1); else if (k === 'U') rotate(); else if (k === 'D') fastOn(true);
-      if (k === 'L' || k === 'R'){ clearInterval(b._rep); b._d = setTimeout(() => { b._rep = setInterval(() => move(k === 'L' ? -1 : 1), 85); }, 230); }
-    });
-    const up = () => { b.classList.remove('on'); clearTimeout(b._d); clearInterval(b._rep); if (k === 'D') fastOn(false); };
-    ['pointerup','pointercancel','pointerleave'].forEach(ev => b.addEventListener(ev, up));
-    b.addEventListener('contextmenu', e => e.preventDefault());
-  });
   window.addEventListener('keydown', e => {
     if (!G || !G.running) return;
     const k = e.code;
@@ -230,25 +206,44 @@ h1 span{color:var(--accent)}
     else if (k === 'ArrowDown' || k === 'KeyS'){ e.preventDefault(); fastOn(true); }
   });
   window.addEventListener('keyup', e => { if (e.code === 'ArrowDown' || e.code === 'KeyS') fastOn(false); });
+  // tap left of the stick = move left, right = move right (hold to keep moving), tap the stick = rotate, swipe down = fast drop
   const st = $('stage'); let sw = null;
-  st.addEventListener('pointerdown', e => { if (!G || !G.running) return; audio(); sw = {x:e.clientX, y:e.clientY, cx:e.clientX, moved:false, t:performance.now()}; try { st.setPointerCapture(e.pointerId); } catch(_){} });
-  st.addEventListener('pointermove', e => {
-    if (!sw) return; const step = cell * .9;
-    while (e.clientX - sw.cx > step){ move(1); sw.cx += step; sw.moved = true; }
-    while (sw.cx - e.clientX > step){ move(-1); sw.cx -= step; sw.moved = true; }
-    if (e.clientY - sw.y > 40 && Math.abs(e.clientY - sw.y) > Math.abs(e.clientX - sw.x)){ fastOn(true); sw.moved = true; }
+  function zoneAt(e){
+    const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    if (!G.piece) return px < W/2 ? 'L' : 'R';
+    const cx = bx + (G.piece.x + .5)*cell, top = by + (G.piece.y - .6)*cell, bot = by + (G.piece.y + 3.6)*cell;
+    if (Math.abs(px - cx) < cell*.75 && py > top && py < bot) return 'P';
+    return px < cx ? 'L' : 'R';
+  }
+  st.addEventListener('pointerdown', e => {
+    if (!G || !G.running) return; e.preventDefault(); audio();
+    try { st.setPointerCapture(e.pointerId); } catch(_){}
+    sw = {x:e.clientX, y:e.clientY, t:performance.now(), moved:false, rep:false, zone:zoneAt(e)};
+    if (sw.zone !== 'P'){ const d = sw.zone === 'L' ? -1 : 1, me = sw;
+      me.hold = setTimeout(() => { me.rep = true; move(d); me.iv = setInterval(() => move(d), 90); }, 260); }
   });
-  st.addEventListener('pointerup', () => { if (!sw) return; if (!sw.moved && performance.now() - sw.t < 300) rotate(); fastOn(false); sw = null; });
-  st.addEventListener('pointercancel', () => { fastOn(false); sw = null; });
+  st.addEventListener('pointermove', e => {
+    if (!sw) return;
+    const dy = e.clientY - sw.y, dx = e.clientX - sw.x;
+    if (dy > 28 && dy > Math.abs(dx)){ if (!sw.moved){ clearTimeout(sw.hold); clearInterval(sw.iv); } sw.moved = true; fastOn(true); }
+  });
+  function endTouch(){
+    if (!sw) return; clearTimeout(sw.hold); clearInterval(sw.iv);
+    if (!sw.moved && !sw.rep && performance.now() - sw.t < 400){ if (sw.zone === 'P') rotate(); else move(sw.zone === 'L' ? -1 : 1); }
+    fastOn(false); sw = null;
+  }
+  st.addEventListener('pointerup', endTouch);
+  st.addEventListener('pointercancel', endTouch);
+  st.addEventListener('contextmenu', e => e.preventDefault());
 
   // ---------- layout
   let W = 0, H = 0, DPR = 1, cell = 30, bx = 0, by = 0, side = 0;
   function resize(){
     const r = st.getBoundingClientRect(); DPR = Math.min(2, window.devicePixelRatio || 1);
     W = r.width; H = r.height; cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR); ctx.setTransform(DPR,0,0,DPR,0,0);
-    side = Math.min(86, W*.24);
-    cell = Math.floor(Math.min((W - side - 18)/COLS, (H - 16)/ROWS));
-    const bw = cell*COLS; bx = Math.round((W - bw - side - 10)/2); by = Math.round((H - cell*ROWS)/2);
+    side = Math.min(84, Math.max(70, W*.21));
+    cell = Math.floor(Math.min((W - side - 16)/COLS, (H - 12)/ROWS));
+    const bw = cell*COLS; bx = Math.max(6, Math.round((W - bw - side - 8)/2)); by = Math.round((H - cell*ROWS)/2);
   }
   if ('ResizeObserver' in window) new ResizeObserver(resize).observe(st);
   window.addEventListener('resize', resize);
@@ -286,22 +281,32 @@ h1 span{color:var(--accent)}
         for (let k = 0; k < 3; k++){ const y = p.y + k; if (y >= 0) gem(p.g[k], bx + p.x*cell, by + (y + off)*cell, cell); } }
     }
     ctx.restore();
-    // side: next + info
-    const sx = bx + bw + 16, sw2 = side - 6;
-    ctx.fillStyle = '#A59FCB'; ctx.font = `800 12px "Gothic A1", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
-    ctx.fillText('다음', sx + sw2/2, by + 12);
-    ctx.fillStyle = '#1F1C38'; rr(sx, by + 18, sw2, cell*3*.8 + 14, 10); ctx.fill();
-    if (G && G.next){ const s = cell*.8; for (let k = 0; k < 3; k++) gem(G.next[k], sx + (sw2 - s)/2, by + 25 + k*s, s); }
+    // side: next, level progress, jewel kinds, how to play
+    const sx = bx + bw + 12, sw2 = side - 4, mid = sx + sw2/2;
+    const lbl = (t, y) => { ctx.fillStyle = '#A59FCB'; ctx.font = `800 11px "Gothic A1", sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.fillText(t, mid, y); };
+    lbl('다음', by + 12);
+    const ns = Math.min(cell*.72, sw2 - 18);
+    ctx.fillStyle = '#1F1C38'; rr(sx, by + 18, sw2, ns*3 + 14, 10); ctx.fill();
+    if (G && G.next) for (let k = 0; k < 3; k++) gem(G.next[k], mid - ns/2, by + 25 + k*ns, ns);
+    let y = by + 18 + ns*3 + 34;
     if (G){
-      const iy = by + 18 + cell*3*.8 + 34;
-      ctx.fillStyle = '#A59FCB'; ctx.font = `800 11px "Gothic A1", sans-serif`;
-      ctx.fillText('보석 깬 수', sx + sw2/2, iy); ctx.fillStyle = '#F4F0FF'; ctx.font = `20px "Black Han Sans", sans-serif`; ctx.fillText(G.jewels, sx + sw2/2, iy + 22);
-      ctx.fillStyle = '#A59FCB'; ctx.font = `800 11px "Gothic A1", sans-serif`; ctx.fillText('다음 레벨까지', sx + sw2/2, iy + 46);
-      const left = 24 - G.jewels % 24; ctx.fillStyle = '#F4F0FF'; ctx.font = `20px "Black Han Sans", sans-serif`; ctx.fillText(left, sx + sw2/2, iy + 68);
-      ctx.fillStyle = '#2B2750'; rr(sx + 6, iy + 76, sw2 - 12, 6, 3); ctx.fill();
-      ctx.fillStyle = '#FFC94A'; rr(sx + 6, iy + 76, (sw2 - 12)*(1 - left/24), 6, 3); ctx.fill();
-      ctx.fillStyle = '#A59FCB'; ctx.font = `800 11px "Gothic A1", sans-serif`; ctx.fillText('보석 종류', sx + sw2/2, iy + 104);
-      const n = colorsNow(), gs = Math.min(18, (sw2 - 8)/3); for (let i = 0; i < n; i++) gem(i, sx + 4 + (i % 3)*gs + (sw2 - 8 - gs*3)/2, iy + 112 + Math.floor(i/3)*gs, gs);
+      const left = 24 - G.jewels % 24;
+      lbl('레벨 업까지', y); ctx.fillStyle = '#F4F0FF'; ctx.font = `20px "Black Han Sans", sans-serif`; ctx.fillText(left + '개', mid, y + 23);
+      ctx.fillStyle = '#2B2750'; rr(sx + 4, y + 31, sw2 - 8, 6, 3); ctx.fill();
+      ctx.fillStyle = '#FFC94A'; rr(sx + 4, y + 31, (sw2 - 8)*(1 - left/24), 6, 3); ctx.fill();
+      y += 60; lbl('보석 종류', y);
+      const n = colorsNow(), gs = Math.min(20, (sw2 - 6)/3);
+      for (let i = 0; i < n; i++) gem(i, mid - gs*1.5 + (i % 3)*gs, y + 6 + Math.floor(i/3)*gs, gs);
+      y += 6 + gs*2 + 22;
+    }
+    // how to play (touch only)
+    const tips = [['👈 👉', '왼쪽·오른쪽', '누르면 이동'], ['💎', '보석 누르면', '순서 돌리기'], ['👇', '아래로 쓸면', '빨리 떨어져요']];
+    for (const [ic, a1, a2] of tips){
+      if (y + 58 > by + bh) break;
+      ctx.fillStyle = '#1F1C38'; rr(sx, y - 4, sw2, 58, 10); ctx.fill();
+      ctx.textAlign = 'center'; ctx.fillStyle = '#F4F0FF'; ctx.font = `18px sans-serif`; ctx.fillText(ic, mid, y + 16);
+      ctx.fillStyle = '#C9C3EA'; ctx.font = `800 10.5px "Gothic A1", sans-serif`; ctx.fillText(a1, mid, y + 33); ctx.fillText(a2, mid, y + 47);
+      y += 64;
     }
     // floating score text
     if (G) for (const f of G.fx){ const k = f.t/.9; ctx.globalAlpha = Math.max(0, 1 - k); ctx.fillStyle = f.big ? '#FFC94A' : '#fff';
@@ -345,9 +350,9 @@ h1 span{color:var(--accent)}
       <p>보석 3개가 <b>세로로 붙어서</b> 떨어져요.<br>같은 색 <b>3개 이상</b>을 가로·세로·대각선으로 맞추면 펑!</p>
       <div class="demo">${[0,0,0].map(i => gemImg(i)).join('')}<span style="width:10px"></span>${[1,2,3,4].map(i => gemImg(i, 26)).join('')}</div>
       <div class="how">
-        <div><i>⇦⇨</i><span>좌우로 옮기기 (화면을 밀어도 돼요)</span></div>
-        <div><i>🔄</i><span><b>돌리기</b> = 보석 3개 순서 바꾸기 (화면을 톡 쳐도 돼요)</span></div>
-        <div><i>⇩</i><span>누르고 있으면 빨리 내려와요</span></div>
+        <div><i>👈👉</i><span>보석 <b>왼쪽·오른쪽</b>을 누르면 그쪽으로 이동 (꾹 누르면 계속)</span></div>
+        <div><i>💎</i><span>떨어지는 <b>보석을 누르면</b> 3개 순서가 돌아가요</span></div>
+        <div><i>👇</i><span>화면을 <b>아래로 쓸면</b> 빨리 떨어져요</span></div>
         <div><i>⚡</i><span>터진 뒤 또 맞춰지면 <b>연쇄</b> — 점수가 2배, 3배!</span></div>
       </div>
       <p style="font-size:13px">보석 24개를 깰 때마다 레벨 업 · 빨라져요<br>맨 위까지 쌓이면 끝 · 오늘은 모두 <b>같은 순서</b></p>
