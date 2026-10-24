@@ -218,25 +218,32 @@ h1 span{color:var(--accent)}
   st.addEventListener('pointerdown', e => {
     if (!G || !G.running) return; e.preventDefault(); audio();
     try { st.setPointerCapture(e.pointerId); } catch(_){}
-    sw = {x:e.clientX, y:e.clientY, t:performance.now(), moved:false, rep:false, zone:zoneAt(e)};
-    if (sw.zone !== 'P'){ const d = sw.zone === 'L' ? -1 : 1, me = sw;
-      me.hold = setTimeout(() => { me.rep = true; move(d); me.iv = setInterval(() => move(d), 90); }, 260); }
+    const zone = zoneAt(e);
+    sw = {x:e.clientX, y:e.clientY, t:performance.now(), zone, slide:false, down:false, col0:G.piece ? G.piece.x : 2};
+    if (zone !== 'P'){                                   // react instantly on touch, keep moving while held
+      const d = zone === 'L' ? -1 : 1, me = sw; move(d); me.tapped = d;
+      me.hold = setTimeout(() => { me.iv = setInterval(() => move(d), 75); }, 280);
+    }
   });
   st.addEventListener('pointermove', e => {
-    if (!sw) return;
-    const dy = e.clientY - sw.y, dx = e.clientX - sw.x;
-    // slide sideways: the stick follows the finger one column at a time (same as before)
-    if (!sw.down && Math.abs(dx) > cell*.5 && Math.abs(dx) > dy){
-      if (!sw.slide){ sw.slide = true; sw.cx = sw.x; clearTimeout(sw.hold); clearInterval(sw.iv); sw.moved = true; }
-      const step = cell*.85;
-      while (e.clientX - sw.cx > step){ move(1); sw.cx += step; }
-      while (sw.cx - e.clientX > step){ move(-1); sw.cx -= step; }
+    if (!sw || !G || !G.piece) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y;
+    // slide: the stick goes to the column under the finger's travel (follows the finger 1:1)
+    if (!sw.down && (sw.slide || (Math.abs(dx) > 12 && Math.abs(dx) > dy))){
+      if (!sw.slide){ sw.slide = true; clearTimeout(sw.hold); clearInterval(sw.iv); }
+      const target = Math.max(0, Math.min(COLS - 1, sw.col0 + Math.round(dx / (cell*.8))));
+      let guard = 8;
+      while (G.piece && G.piece.x !== target && guard--){ const bx0 = G.piece.x; move(target > G.piece.x ? 1 : -1); if (G.piece.x === bx0) break; }
+      return;
     }
-    if (!sw.slide && dy > 28 && dy > Math.abs(dx)){ if (!sw.moved){ clearTimeout(sw.hold); clearInterval(sw.iv); } sw.moved = true; sw.down = true; fastOn(true); }
+    if (!sw.slide && dy > 26 && dy > Math.abs(dx)){
+      if (!sw.down){ clearTimeout(sw.hold); clearInterval(sw.iv); if (sw.tapped && performance.now() - sw.t < 250) move(-sw.tapped); }  // a swipe, not a tap: undo the instant step
+      sw.down = true; fastOn(true);
+    }
   });
   function endTouch(){
     if (!sw) return; clearTimeout(sw.hold); clearInterval(sw.iv);
-    if (!sw.moved && !sw.rep && performance.now() - sw.t < 400){ if (sw.zone === 'P') rotate(); else move(sw.zone === 'L' ? -1 : 1); }
+    if (sw.zone === 'P' && !sw.slide && !sw.down && performance.now() - sw.t < 450) rotate();
     fastOn(false); sw = null;
   }
   st.addEventListener('pointerup', endTouch);
