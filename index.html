@@ -162,7 +162,8 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
   let deferred = null;
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
   window.addEventListener('appinstalled', () => { $('installBtn').hidden = true; $('footTxt').hidden = false; });
-  if (!standalone){ $('installBtn').hidden = false; $('footTxt').hidden = true; }
+  // home-screen icon works reliably only on iPhone (Safari); Android phones block it, so the button shows on iPhone only
+  if (!standalone && isIOS){ $('installBtn').hidden = false; $('footTxt').hidden = true; }
   function guide(title, steps, extra){
     $('guideBox').innerHTML = `<h3>${title}</h3><ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>${extra || ''}<button class="ok" id="guideOk">알겠어요</button>`;
     $('guide').hidden = false; $('guideOk').onclick = () => $('guide').hidden = true;
