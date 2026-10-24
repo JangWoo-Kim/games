@@ -225,7 +225,14 @@ h1 span{color:var(--accent)}
   st.addEventListener('pointermove', e => {
     if (!sw) return;
     const dy = e.clientY - sw.y, dx = e.clientX - sw.x;
-    if (dy > 28 && dy > Math.abs(dx)){ if (!sw.moved){ clearTimeout(sw.hold); clearInterval(sw.iv); } sw.moved = true; fastOn(true); }
+    // slide sideways: the stick follows the finger one column at a time (same as before)
+    if (!sw.down && Math.abs(dx) > cell*.5 && Math.abs(dx) > dy){
+      if (!sw.slide){ sw.slide = true; sw.cx = sw.x; clearTimeout(sw.hold); clearInterval(sw.iv); sw.moved = true; }
+      const step = cell*.85;
+      while (e.clientX - sw.cx > step){ move(1); sw.cx += step; }
+      while (sw.cx - e.clientX > step){ move(-1); sw.cx -= step; }
+    }
+    if (!sw.slide && dy > 28 && dy > Math.abs(dx)){ if (!sw.moved){ clearTimeout(sw.hold); clearInterval(sw.iv); } sw.moved = true; sw.down = true; fastOn(true); }
   });
   function endTouch(){
     if (!sw) return; clearTimeout(sw.hold); clearInterval(sw.iv);
@@ -300,7 +307,7 @@ h1 span{color:var(--accent)}
       y += 6 + gs*2 + 22;
     }
     // how to play (touch only)
-    const tips = [['👈 👉', '왼쪽·오른쪽', '누르면 이동'], ['💎', '보석 누르면', '순서 돌리기'], ['👇', '아래로 쓸면', '빨리 떨어져요']];
+    const tips = [['👈 👉', '좌우 누르기·', '밀기 = 이동'], ['💎', '보석 누르면', '순서 돌리기'], ['👇', '아래로 쓸면', '빨리 떨어져요']];
     for (const [ic, a1, a2] of tips){
       if (y + 58 > by + bh) break;
       ctx.fillStyle = '#1F1C38'; rr(sx, y - 4, sw2, 58, 10); ctx.fill();
@@ -350,7 +357,7 @@ h1 span{color:var(--accent)}
       <p>보석 3개가 <b>세로로 붙어서</b> 떨어져요.<br>같은 색 <b>3개 이상</b>을 가로·세로·대각선으로 맞추면 펑!</p>
       <div class="demo">${[0,0,0].map(i => gemImg(i)).join('')}<span style="width:10px"></span>${[1,2,3,4].map(i => gemImg(i, 26)).join('')}</div>
       <div class="how">
-        <div><i>👈👉</i><span>보석 <b>왼쪽·오른쪽</b>을 누르면 그쪽으로 이동 (꾹 누르면 계속)</span></div>
+        <div><i>👈👉</i><span>보석 <b>왼쪽·오른쪽을 누르거나</b>, 손가락으로 <b>좌우로 밀면</b> 이동</span></div>
         <div><i>💎</i><span>떨어지는 <b>보석을 누르면</b> 3개 순서가 돌아가요</span></div>
         <div><i>👇</i><span>화면을 <b>아래로 쓸면</b> 빨리 떨어져요</span></div>
         <div><i>⚡</i><span>터진 뒤 또 맞춰지면 <b>연쇄</b> — 점수가 2배, 3배!</span></div>
