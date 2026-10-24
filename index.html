@@ -151,7 +151,9 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
   if (window.JO) JO.nickChip($('nick'));
 
   // ---------- install as an app (PWA): icon on the home screen, opens full-screen
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  // clean up the old app worker on phones that installed it earlier
+  if ('serviceWorker' in navigator) navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+  try { caches.keys().then(ks => ks.forEach(k => caches.delete(k))); } catch(e){}
   const ua = navigator.userAgent || '';
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
