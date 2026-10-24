@@ -155,6 +155,7 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
   const ua = navigator.userAgent || '';
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+  const isAndroid = /Android/i.test(ua), isSamsung = /SamsungBrowser/i.test(ua);
   const inKakao = /KAKAOTALK/i.test(ua), inApp = inKakao || /NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua);
   let deferred = null;
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
@@ -166,7 +167,7 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
   }
   $('guide').addEventListener('click', e => { if (e.target === $('guide')) $('guide').hidden = true; });
   $('installBtn').onclick = async () => {
-    if (deferred){ deferred.prompt(); try { await deferred.userChoice; } catch(e){} deferred = null; return; }
+    if (deferred && !isAndroid){ deferred.prompt(); try { await deferred.userChoice; } catch(e){} deferred = null; return; }
     if (inKakao && !isIOS){ location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent('https://jangwoo-kim.github.io/games/'); }
     if (inApp) return guide('📲 먼저 인터넷 앱으로 열어 주세요', [
         '오른쪽 위(또는 아래) <b>⋮ 또는 ⋯</b> 메뉴를 눌러요',
@@ -178,10 +179,16 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
         '목록을 내려서 <b>홈 화면에 추가</b>를 눌러요',
         '오른쪽 위 <b>추가</b>를 누르면 끝! 🍱'],
       '<p style="margin:0;color:var(--muted);font-size:13px">Safari에서만 돼요. 크롬이면 주소를 복사해서 Safari로 열어 주세요.</p>');
-    guide('📲 홈 화면에 추가', [
+    if (isSamsung) return guide('📲 홈 화면에 아이콘 만들기', [
+        '아래쪽 <b>≡</b> 메뉴를 눌러요',
+        '<b>현재 페이지 추가</b> → <b>홈 화면</b>을 눌러요',
+        '<b>추가</b>를 누르면 점오하게 아이콘이 생겨요 🍱'],
+      '<p style="margin:0;color:var(--muted);font-size:13px">‘앱 설치’ 대신 이 방법을 쓰면 보안 경고가 뜨지 않아요.</p>');
+    guide('📲 홈 화면에 아이콘 만들기', [
         '오른쪽 위 <b>⋮</b> 메뉴를 눌러요',
-        '<b>홈 화면에 추가</b> 또는 <b>앱 설치</b>를 눌러요',
-        '<b>추가</b>를 누르면 홈 화면에 점오하게 아이콘이 생겨요 🍱']);
+        '<b>홈 화면에 추가</b>를 눌러요',
+        '<b>‘설치’ 말고 ‘바로가기 만들기’</b>를 고른 뒤 <b>추가</b>를 눌러요 🍱'],
+      '<p style="margin:0;color:var(--muted);font-size:13px">‘설치’를 고르면 휴대폰에 따라 Play 프로텍트 경고가 뜰 수 있어요. 바로가기는 경고 없이 아이콘만 만들어요.</p>');
   };
 })();
 </script>
