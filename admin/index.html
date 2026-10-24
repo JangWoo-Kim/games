@@ -56,7 +56,7 @@ th{color:var(--muted);font-size:12px;font-weight:700}
   const $ = id => document.getElementById(id);
   if (!window.JO){ $('sub').textContent = 'jo.js를 불러오지 못했어요.'; return; }
   const {url, key} = JO._cfg, H = {apikey:key, Authorization:'Bearer ' + key};
-  const ORDER = ['tower','lunch','escape','hall','run','night'], R = JO.RULE;
+  const ORDER = ['tower','lunch','hexa','escape','hall','run','night'], R = JO.RULE;
   const esc = t => String(t ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   let range = 7;
   document.querySelectorAll('#range [data-d]').forEach(b => b.onclick = () => { range = +b.dataset.d; document.querySelectorAll('#range [data-d]').forEach(x => x.classList.toggle('on', x === b)); load(); });
@@ -107,8 +107,8 @@ th{color:var(--muted);font-size:12px;font-weight:700}
     }).join('')}</table>`;
 
     // funnel
-    $('funnel').innerHTML = ['escape','night','hall'].map(g => {
-      const G = rows.filter(r => r.game === g), N = g === 'hall' ? 5 : 3;
+    $('funnel').innerHTML = ['escape','hall','night'].filter(g => g !== 'night' || rows.some(r => r.game === 'night')).map(g => {
+      const G = rows.filter(r => r.game === g), N = g === 'hall' ? 5 : g === 'escape' ? 4 : 3;
       const st = n => G.filter(r => r.event === 'start' && r.stage === n).length;
       const ok = n => g === 'hall' ? (n < N ? st(n + 1) : G.filter(r => r.event === 'clear').length) : G.filter(r => r.event === 'clear' && r.stage === n).length;
       const hint = n => { const C = G.filter(r => r.event === 'clear' && r.stage === n && r.hints != null); return C.length ? (C.reduce((a, r) => a + r.hints, 0) / C.length).toFixed(1) : '-'; };

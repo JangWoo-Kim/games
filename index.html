@@ -6,7 +6,7 @@
 <title>점오하게</title>
 <meta name="description" content="점심시간 5분, 게임 한 판. 설치 없이 바로 하는 미니 게임 모음.">
 <meta property="og:title" content="점오하게 — 점심시간 5분 하는 게임">
-<meta property="og:description" content="오늘의 탑 · 도시락 합치기 · 오늘의 방탈출 · 유령의 복도 · 야근 런 · 밤의 교실">
+<meta property="og:description" content="오늘의 탑 · 도시락 합치기 · 헥사 · 오늘의 방탈출 · 유령의 복도 · 야근 런">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
 <style>
@@ -14,18 +14,18 @@
 :root{
   --bg:#F6F1E7; --surface:#FFFDF8; --ink:#1F1B16; --muted:#7A6F62; --line:#E6DCCB;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#2F9E5B;
-  --c-tower:#4B6BFF; --c-escape:#E0715A; --c-hall:#2B2F3A; --c-night:#5B3FA0; --c-lunch:#E8892B; --c-run:#1F7A46;
+  --c-tower:#4B6BFF; --c-escape:#E0715A; --c-hall:#2B2F3A; --c-hexa:#7B4BD8; --c-lunch:#E8892B; --c-run:#1F7A46;
   --f-display:"Black Han Sans","Gothic A1",system-ui,sans-serif;
   --f-body:"Gothic A1",system-ui,-apple-system,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#5BD08A;
-  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; --c-lunch:#F2A93B; --c-run:#3FBF74; color-scheme:dark }}
+  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-hexa:#A88BF0; --c-lunch:#F2A93B; --c-run:#3FBF74; color-scheme:dark }}
 :root[data-theme="dark"]{
   --bg:#15130F; --surface:#1F1C17; --ink:#F3EDE2; --muted:#A79C8C; --line:#332E26;
   --accent:#F2A93B; --accent-ink:#2A1C05; --good:#5BD08A;
-  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-night:#9C82E0; --c-lunch:#F2A93B; --c-run:#3FBF74; color-scheme:dark }
+  --c-tower:#7D93FF; --c-escape:#F08A72; --c-hall:#8A93A8; --c-hexa:#A88BF0; --c-lunch:#F2A93B; --c-run:#3FBF74; color-scheme:dark }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);-webkit-tap-highlight-color:transparent}
@@ -75,23 +75,23 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
       <a class="tile" style="--c:var(--c-lunch)" href="https://jangwoo-kim.github.io/games/lunch/" target="_top">
         <div class="thumb">🍱</div><div class="name">도시락 합치기</div><div class="sub">같은 음식끼리<br>합치기</div><span class="pill" id="st-lunch">⏱ 5분</span>
       </a>
-      <a class="tile" style="--c:var(--c-escape)" href="https://jangwoo-kim.github.io/games/escape/" target="_top">
-        <div class="thumb">🚪</div><div class="name">오늘의 방탈출</div><div class="sub">방 3개<br>3단계 탈출</div><span class="pill" id="st-escape">⏱ 3~5분</span>
+      <a class="tile" style="--c:var(--c-hexa)" href="https://jangwoo-kim.github.io/games/hexa/" target="_top">
+        <div class="thumb">💎</div><div class="name">헥사</div><div class="sub">보석 3개<br>맞춰서 펑!</div><span class="pill" id="st-hexa">⏱ 3~5분</span>
       </a>
     </div>
   </section>
 
   <section>
-    <h2>공포 · 소리 켜면 더 무서워요</h2>
+    <h2>탈출 · 소리 켜면 더 무서워요</h2>
     <div class="grid">
+      <a class="tile" style="--c:var(--c-escape)" href="https://jangwoo-kim.github.io/games/escape/" target="_top">
+        <div class="thumb">🚪</div><div class="name">오늘의 방탈출</div><div class="sub">방 4개<br>4단계 탈출</div><span class="pill" id="st-escape">⏱ 5~10분</span>
+      </a>
       <a class="tile" style="--c:var(--c-hall)" href="https://jangwoo-kim.github.io/games/hall/" target="_top">
         <div class="thumb">👻</div><div class="name">유령의 복도</div><div class="sub">무궁화 꽃이<br>피었습니다</div><span class="pill" id="st-hall">⏱ 2분</span>
       </a>
       <a class="tile" style="--c:var(--c-run)" href="https://jangwoo-kim.github.io/games/run/" target="_top">
         <div class="thumb">🏃</div><div class="name">야근 런</div><div class="sub">귀신 피해<br>비상구까지</div><span class="pill" id="st-run">⏱ 1~3분</span>
-      </a>
-      <a class="tile" style="--c:var(--c-night)" href="https://jangwoo-kim.github.io/games/night/" target="_top">
-        <div class="thumb">🔦</div><div class="name">밤의 교실</div><div class="sub">손전등 방탈출<br>3단계</div><span class="pill" id="st-night">⏱ 5분</span>
       </a>
     </div>
   </section>
@@ -114,7 +114,7 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
   const r = get('run:' + dkey); if (r && r.dist) mark('st-run', `✅ ${r.dist.toLocaleString()}m`);
   const l = get('lunch:' + dkey); if (l && l.score) mark('st-lunch', `✅ ${l.score.toLocaleString()}점`);
   const h = get('hall5:best'); if (h && h.ms) mark('st-hall', `🏆 ${fmtKo(h.ms)}`);
-  const n = get('night:best') || get('night1:best'); if (n && n.ms) mark('st-night', `🏆 ${n.stage || 1}단계 탈출`);
+  const x = get('hexa:' + dkey); if (x && x.score) mark('st-hexa', `✅ ${x.score.toLocaleString()}점`);
 
   function tick(){
     const d = new Date(), H = d.getHours(), M = d.getMinutes(), mins = H*60 + M;

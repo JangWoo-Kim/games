@@ -56,10 +56,11 @@
     lunch:  {name:'도시락 합치기', icon:'🍱', kind:'score', show: r => `${(r.score||0).toLocaleString()}점`},
     run:    {name:'야근 런',       icon:'🏃', kind:'score', show: r => `${(r.score||0).toLocaleString()}m`},
     escape: {name:'오늘의 방탈출', icon:'🚪', kind:'stage', show: r => `${r.stage}단계${r.ms ? ' · ' + fmtKo(r.ms) : ''}`},
+    hexa:   {name:'헥사',          icon:'💎', kind:'score', show: r => `${(r.score||0).toLocaleString()}점${r.stage ? ' · Lv' + r.stage : ''}`},
     night:  {name:'밤의 학교',     icon:'🔦', kind:'stage', show: r => `${r.stage}단계${r.ms ? ' · ' + fmtKo(r.ms) : ''}`},
     hall:   {name:'유령의 복도',   icon:'👻', kind:'stage', show: r => r.stage >= 5 && r.ms ? `🏆 탈출 · ${fmtKo(r.ms)}` : r.stage ? `${r.stage}단계 통과` : '1단계 도전'}
   };
-  const GAMES = ['tower','lunch','escape','hall','run','night'];
+  const GAMES = ['tower','lunch','hexa','escape','hall','run'];
   function better(game, a, b){ // is a better than b?
     if (!b) return true;
     if (RULE[game].kind === 'score') return (a.score||0) > (b.score||0);

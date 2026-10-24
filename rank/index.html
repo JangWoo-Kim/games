@@ -52,14 +52,14 @@ h1{font-family:var(--f-display);font-weight:400;font-size:36px;margin:0;line-hei
   <div class="days"><button data-d="0" class="on">오늘</button><button data-d="1">어제</button></div>
   <div class="board" id="board"><div class="empty">불러오는 중…</div></div>
   <a class="play" id="play" href="#">이 게임 하러 가기 ›</a>
-  <p class="foot">같은 사람은 그날 가장 좋은 기록 하나만 올라가요.<br>방탈출·밤의 학교·유령의 복도는 <b>높은 단계 → 빠른 시간</b> 순이에요.</p>
+  <p class="foot">같은 사람은 그날 가장 좋은 기록 하나만 올라가요.<br>방탈출·유령의 복도는 <b>높은 단계 → 빠른 시간</b> 순이에요.</p>
 </div>
 <script src="../jo.js"></script>
 <script>
 (() => {
   const $ = id => document.getElementById(id);
   if (!window.JO){ $('board').innerHTML = '<div class="empty">랭킹을 불러올 수 없어요.</div>'; return; }
-  const ORDER = ['tower','lunch','escape','hall','run','night'];
+  const ORDER = ['tower','lunch','hexa','escape','hall','run'];
   let game = ORDER.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'tower', back = 0;
   JO.nickChip($('nick'));
   const dayStr = k => { const d = new Date(); d.setDate(d.getDate() - k); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
