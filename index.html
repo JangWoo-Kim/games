@@ -6,6 +6,17 @@
 <title>점오하게</title>
 <meta name="description" content="점심시간 5분, 게임 한 판. 설치 없이 바로 하는 미니 게임 모음.">
 <meta property="og:title" content="점오하게 — 점심시간 5분 하는 게임">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://jangwoo-kim.github.io/games/">
+<meta property="og:image" content="https://jangwoo-kim.github.io/games/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F2A93B">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="점오하게">
 <meta property="og:description" content="오늘의 탑 · 도시락 합치기 · 헥사 · 오늘의 방탈출 · 유령의 복도 · 야근 런">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;600;800&display=swap">
@@ -52,6 +63,13 @@ a.tile::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;back
 .pill.done{background:color-mix(in srgb,var(--good) 20%,transparent)}
 .meRow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:2px}
 .rankBtn{font-size:13px;font-weight:800;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:5px 12px;text-decoration:none;white-space:nowrap}
+.installBtn{display:inline-flex;align-items:center;gap:6px;margin-top:0;font:800 14px var(--f-body);color:var(--ink);background:var(--surface);border:1.5px solid var(--accent);border-radius:999px;padding:7px 14px;cursor:pointer}
+.guide{position:fixed;inset:0;z-index:20;background:rgba(20,16,10,.55);display:flex;align-items:flex-end;justify-content:center;padding:16px}
+.guide .box{background:var(--surface);color:var(--ink);border-radius:18px;padding:18px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.guide h3{margin:0;font-family:var(--f-display);font-weight:400;font-size:24px}
+.guide ol{margin:0;padding-left:20px;line-height:1.8;font-size:15px}
+.guide b{color:var(--ink)}
+.guide .ok{background:var(--accent);color:var(--accent-ink);border:0;border-radius:12px;padding:12px;font:800 16px var(--f-body);cursor:pointer}
 footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-break:keep-all}
 @media (max-width:370px){ .name{font-size:18px} .sub{font-size:13px} .pill{font-size:12px;padding:3px 6px} .thumb{width:40px;height:40px;font-size:22px} h1{font-size:42px} .clock{font-size:11px} }
 </style>
@@ -96,7 +114,8 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
     </div>
   </section>
 
-  <footer>설치·가입 없이 바로 플레이 · 랭킹엔 랜덤 닉네임만 올라가요</footer>
+  <footer><span id="footTxt">설치·가입 없이 바로 플레이 · 랭킹엔 랜덤 닉네임만 올라가요</span><button class="installBtn" id="installBtn" hidden>📲 홈 화면에 아이콘 만들기 · 설치 없이 바로</button></footer>
+  <div class="guide" id="guide" hidden><div class="box" id="guideBox"></div></div>
 </div>
 
 <script src="jo.js"></script>
@@ -130,6 +149,40 @@ footer{color:var(--muted);font-size:14px;line-height:1.5;text-align:center;word-
   }
   tick(); setInterval(tick, 30000);
   if (window.JO) JO.nickChip($('nick'));
+
+  // ---------- install as an app (PWA): icon on the home screen, opens full-screen
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  const ua = navigator.userAgent || '';
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+  const inKakao = /KAKAOTALK/i.test(ua), inApp = inKakao || /NAVER|Instagram|FBAN|FBAV|Line\//i.test(ua);
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
+  window.addEventListener('appinstalled', () => { $('installBtn').hidden = true; $('footTxt').hidden = false; });
+  if (!standalone){ $('installBtn').hidden = false; $('footTxt').hidden = true; }
+  function guide(title, steps, extra){
+    $('guideBox').innerHTML = `<h3>${title}</h3><ol>${steps.map(s => `<li>${s}</li>`).join('')}</ol>${extra || ''}<button class="ok" id="guideOk">알겠어요</button>`;
+    $('guide').hidden = false; $('guideOk').onclick = () => $('guide').hidden = true;
+  }
+  $('guide').addEventListener('click', e => { if (e.target === $('guide')) $('guide').hidden = true; });
+  $('installBtn').onclick = async () => {
+    if (deferred){ deferred.prompt(); try { await deferred.userChoice; } catch(e){} deferred = null; return; }
+    if (inKakao && !isIOS){ location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent('https://jangwoo-kim.github.io/games/'); }
+    if (inApp) return guide('📲 먼저 인터넷 앱으로 열어 주세요', [
+        '오른쪽 위(또는 아래) <b>⋮ 또는 ⋯</b> 메뉴를 눌러요',
+        `<b>${isIOS ? 'Safari로 열기' : '다른 브라우저로 열기'}</b>를 골라요`,
+        '열린 화면에서 이 버튼을 <b>한 번 더</b> 눌러 주세요'],
+      '<p style="margin:0;color:var(--muted);font-size:13px">카톡 같은 앱 안의 화면에서는 아이콘을 만들 수 없어요.</p>');
+    if (isIOS) return guide('📲 아이폰 홈 화면에 추가', [
+        '아래쪽 가운데 <b>공유 버튼 (□↑)</b>을 눌러요',
+        '목록을 내려서 <b>홈 화면에 추가</b>를 눌러요',
+        '오른쪽 위 <b>추가</b>를 누르면 끝! 🍱'],
+      '<p style="margin:0;color:var(--muted);font-size:13px">Safari에서만 돼요. 크롬이면 주소를 복사해서 Safari로 열어 주세요.</p>');
+    guide('📲 홈 화면에 추가', [
+        '오른쪽 위 <b>⋮</b> 메뉴를 눌러요',
+        '<b>홈 화면에 추가</b> 또는 <b>앱 설치</b>를 눌러요',
+        '<b>추가</b>를 누르면 홈 화면에 점오하게 아이콘이 생겨요 🍱']);
+  };
 })();
 </script>
 

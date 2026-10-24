@@ -154,7 +154,9 @@ h1 span{color:var(--accent)}
   function lock(){
     const p = G.piece;
     for (let k = 0; k < 3; k++){ const y = p.y + k; if (y < 0){ gameOver(); return; } G.grid[y][p.x] = p.g[k]; }
-    G.piece = null; sfx.land(); G.chain = 0; resolve();
+    G.piece = null; sfx.land(); G.chain = 0;
+    if (G.fast){ G.fast = false; G.fastLock = true; }   // one swipe drops one stick only
+    resolve();
   }
   function findMatches(){
     const m = Array.from({length:ROWS}, () => Array(COLS).fill(false)); let any = false;
@@ -196,14 +198,14 @@ h1 span{color:var(--accent)}
   function hud(){ $('score').textContent = G.score.toLocaleString(); $('level').textContent = G.level; }
 
   // ---------- input: touch only (plus keyboard on a computer)
-  const fastOn = v => { if (G) G.fast = v; };
+  const fastOn = v => { if (!G) return; if (!v){ G.fast = false; G.fastLock = false; } else if (!G.fastLock) G.fast = true; };
   window.addEventListener('keydown', e => {
     if (!G || !G.running) return;
     const k = e.code;
     if (k === 'ArrowLeft' || k === 'KeyA'){ e.preventDefault(); move(-1); }
     else if (k === 'ArrowRight' || k === 'KeyD'){ e.preventDefault(); move(1); }
     else if (k === 'ArrowUp' || k === 'KeyW' || k === 'Space'){ e.preventDefault(); rotate(); }
-    else if (k === 'ArrowDown' || k === 'KeyS'){ e.preventDefault(); fastOn(true); }
+    else if (k === 'ArrowDown' || k === 'KeyS'){ e.preventDefault(); if (!e.repeat) fastOn(true); }
   });
   window.addEventListener('keyup', e => { if (e.code === 'ArrowDown' || e.code === 'KeyS') fastOn(false); });
   // tap left of the stick = move left, right = move right (hold to keep moving), tap the stick = rotate, swipe down = fast drop
@@ -211,8 +213,8 @@ h1 span{color:var(--accent)}
   function zoneAt(e){
     const r = cv.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
     if (!G.piece) return px < W/2 ? 'L' : 'R';
-    const cx = bx + (G.piece.x + .5)*cell, top = by + (G.piece.y - .6)*cell, bot = by + (G.piece.y + 3.6)*cell;
-    if (Math.abs(px - cx) < cell*.75 && py > top && py < bot) return 'P';
+    const cx = bx + (G.piece.x + .5)*cell;
+    if (Math.abs(px - cx) < cell*.55) return 'P';   // anywhere in the falling stick's column = rotate
     return px < cx ? 'L' : 'R';
   }
   st.addEventListener('pointerdown', e => {
@@ -314,7 +316,7 @@ h1 span{color:var(--accent)}
       y += 6 + gs*2 + 22;
     }
     // how to play (touch only)
-    const tips = [['👈 👉', '좌우 누르기·', '밀기 = 이동'], ['💎', '보석 누르면', '순서 돌리기'], ['👇', '아래로 쓸면', '빨리 떨어져요']];
+    const tips = [['👈 👉', '좌우 누르기·', '밀기 = 이동'], ['💎', '떨어지는 줄', '누르면 돌리기'], ['👇', '아래로 쓸면', '빨리 떨어져요']];
     for (const [ic, a1, a2] of tips){
       if (y + 58 > by + bh) break;
       ctx.fillStyle = '#1F1C38'; rr(sx, y - 4, sw2, 58, 10); ctx.fill();
@@ -365,8 +367,8 @@ h1 span{color:var(--accent)}
       <div class="demo">${[0,0,0].map(i => gemImg(i)).join('')}<span style="width:10px"></span>${[1,2,3,4].map(i => gemImg(i, 26)).join('')}</div>
       <div class="how">
         <div><i>👈👉</i><span>보석 <b>왼쪽·오른쪽을 누르거나</b>, 손가락으로 <b>좌우로 밀면</b> 이동</span></div>
-        <div><i>💎</i><span>떨어지는 <b>보석을 누르면</b> 3개 순서가 돌아가요</span></div>
-        <div><i>👇</i><span>화면을 <b>아래로 쓸면</b> 빨리 떨어져요</span></div>
+        <div><i>💎</i><span>보석이 떨어지는 <b>줄(세로 칸)을 누르면</b> 3개 순서가 돌아가요</span></div>
+        <div><i>👇</i><span>화면을 <b>아래로 쓸면</b> 그 보석만 빨리 떨어져요</span></div>
         <div><i>⚡</i><span>터진 뒤 또 맞춰지면 <b>연쇄</b> — 점수가 2배, 3배!</span></div>
       </div>
       <p style="font-size:13px">보석 24개를 깰 때마다 레벨 업 · 빨라져요<br>맨 위까지 쌓이면 끝 · 오늘은 모두 <b>같은 순서</b></p>

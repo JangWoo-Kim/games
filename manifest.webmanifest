@@ -1,0 +1,17 @@
+{
+  "name": "점오하게 — 점심시간 5분, 하는 게임",
+  "short_name": "점오하게",
+  "description": "설치 없이 바로 하는 미니 게임 모음. 오늘의 탑 · 도시락 합치기 · 헥사 · 방탈출 · 유령의 복도 · 야근 런",
+  "lang": "ko",
+  "start_url": "./?app=1",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F1E7",
+  "theme_color": "#F2A93B",
+  "icons": [
+    {"src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
