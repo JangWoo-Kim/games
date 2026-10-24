@@ -750,6 +750,7 @@ h1{white-space:nowrap}
     document.querySelector('h1').innerHTML = `🚪 ${t.name} <small style="font:800 12px 'Gothic A1',sans-serif;color:var(--accent);vertical-align:middle">${P.stage}단계</small>`;
     $('scene').style.background = P.stage === 2 ? '#E4F1EA' : P.stage === 3 ? '#A27E5A' : P.stage === 4 ? '#020306' : '#F4E4C8';
     if (P.stage === 4) buildBasementArt();
+    svg.style.touchAction = P.stage === 4 ? 'none' : '';
     if (P.stage === 1){
       drawBooks($('booksSmall'), [P.shelf1, P.shelf2], 268, 66, [126,173], [168,214], 1);
       $('glowText').textContent = ''; $('glowSub').textContent = '';
@@ -999,11 +1000,18 @@ h1{white-space:nowrap}
     $('glow4top').innerHTML = g;
   }
   function svgPt(e){ const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const m = svg.getScreenCTM(); return m ? p.matrixTransform(m.inverse()) : {x:180, y:230}; }
-  svg.addEventListener('pointermove', e => { if (P && P.stage === 4 && S && S.running && !S.lights){ const q = svgPt(e); S.beam = {x:q.x, y:q.y}; $('hole4').setAttribute('cx', q.x); $('hole4').setAttribute('cy', q.y); } });
-  svg.addEventListener('click', e => { if (P && P.stage === 4 && S && S.running && !S.lights){ const q = svgPt(e); S.beam = {x:q.x, y:q.y}; render4(); } });
+  // flashlight: press and drag to sweep the beam; a drag never counts as a tap on an object
+  const beamOn = () => P && P.stage === 4 && S && S.running && !S.lights;
+  let drag = null, dragged = false;
+  function aim(e){ const q = svgPt(e); S.beam = {x:q.x, y:q.y}; $('hole4').setAttribute('cx', q.x); $('hole4').setAttribute('cy', q.y); }
+  svg.addEventListener('pointerdown', e => { if (!beamOn()) return; drag = {x:e.clientX, y:e.clientY}; dragged = false; aim(e); });
+  svg.addEventListener('pointermove', e => { if (!beamOn()) return; if (drag && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 10) dragged = true; if (drag || e.pointerType === 'mouse') aim(e); });
+  ['pointerup', 'pointercancel'].forEach(ev => svg.addEventListener(ev, () => { drag = null; }));
+  svg.addEventListener('click', e => { if (dragged){ dragged = false; e.stopPropagation(); if (beamOn()) say('🔦 손전등으로 비추는 중… 살펴볼 물건을 톡 눌러 보세요.'); } }, true);
+  svg.addEventListener('click', e => { if (beamOn()){ aim(e); render4(); } });
   const NAV = new Set(['toA', 'toB', 'iron']);
   function tap4(o, sel, e){
-    if (!S.lights && !NAV.has(o) && e){ const q = svgPt(e); const far = Math.hypot(q.x - S.beam.x, q.y - S.beam.y) > 60; S.beam = {x:q.x, y:q.y}; if (far){ say('🔦 손전등으로 비췄다. 한 번 더 누르면 살펴봐요.'); return; } }
+    if (!S.lights && e){ const q = svgPt(e); S.beam = {x:q.x, y:q.y}; }
     switch(o){
       case 'toB': S.rm = 'b'; say(S.lights ? '창고다. 선반이 천장까지 닿아 있어.' : '캄캄한 창고… 먼지 냄새가 난다. 🔦'); break;
       case 'toA': S.rm = 'a'; say('보일러실로 돌아왔다. 보일러가 웅웅 울린다.'); break;
@@ -1201,7 +1209,7 @@ h1{white-space:nowrap}
     S.hints++;
     if (P.stage === 4){
       let t;
-      if (!S.memo) t = '캄캄할 땐 화면을 문질러 손전등을 비춰 봐. 보일러실 바닥의 양동이 속은?';
+      if (!S.memo) t = '화면을 누른 채 움직여서 손전등으로 비춰 봐. 보일러실 바닥의 양동이 속은?';
       else if (!S.box) t = S.hints % 2 ? '메모를 읽고 보일러 계기판 바늘을 봐. 공구함은 왼쪽 ◀ 창고에 있어.' : `계기판 숫자를 메모 순서로 읽으면 ${P.boxCode.join('')}! 창고의 빨간 공구함에 넣어.`;
       else if (!S.steamOff) t = '🔧 렌치를 고르고 보일러실의 빨간 밸브를 눌러서 김을 막아.';
       else if (!S.fuseIn) t = '🔌 퓨즈를 고르고 오른쪽 벽의 두꺼비집을 눌러.';
@@ -1264,7 +1272,7 @@ h1{white-space:nowrap}
   function startStage(n){
     P = buildPuzzle(n); reset(); applyStage(); render();
     $('timer').textContent = '⏱ 0:00';
-    say(n === 1 ? '방 안의 물건을 눌러서 살펴보세요.' : n === 2 ? '이번엔 부엌에 갇혔다! 뒷문엔 이상한 과일 자물쇠가 달려 있어. 🍎' : n === 3 ? '삐걱… 캄캄한 다락방이다. 출구는 바닥 어딘가에 있대. 🕯️' : '정전된 지하실… 화면을 문질러 손전등을 비춰 봐. 방이 3개래! 🔦');
+    say(n === 1 ? '방 안의 물건을 눌러서 살펴보세요.' : n === 2 ? '이번엔 부엌에 갇혔다! 뒷문엔 이상한 과일 자물쇠가 달려 있어. 🍎' : n === 3 ? '삐걱… 캄캄한 다락방이다. 출구는 바닥 어딘가에 있대. 🕯️' : '정전된 지하실… 화면을 누른 채 움직이면 손전등이 따라와요. 방이 3개래! 🔦');
     closeOv(); S.running = true; S.t0 = Date.now();
     if (window.JO) JO.log('escape', 'start', {stage:n, day:DKEY});
   }
